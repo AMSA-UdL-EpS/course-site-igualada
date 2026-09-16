@@ -1,0 +1,1367 @@
+[
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "",
+    "text": "En acabar el laboratori hauríeu de poder:\n\nIdentificar l’arquitectura del vostre host i distingir virtualització d’emulació.\nCrear i arrencar una màquina virtual Debian amb QEMU.\nEntendre el paper de cloud-init en la configuració inicial d’una màquina.\nConnectar-vos a la màquina virtual mitjançant SSH.\nObservar com un snapshot modifica la gestió de l’estat d’una màquina virtual.\nInstal·lar, eliminar i purgar paquets amb apt.\nInterpretar l’estat d’un paquet amb dpkg.\nJustificar tècnicament el comportament observat, no només descriure’l.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#objectius",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#objectius",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "",
+    "text": "En acabar el laboratori hauríeu de poder:\n\nIdentificar l’arquitectura del vostre host i distingir virtualització d’emulació.\nCrear i arrencar una màquina virtual Debian amb QEMU.\nEntendre el paper de cloud-init en la configuració inicial d’una màquina.\nConnectar-vos a la màquina virtual mitjançant SSH.\nObservar com un snapshot modifica la gestió de l’estat d’una màquina virtual.\nInstal·lar, eliminar i purgar paquets amb apt.\nInterpretar l’estat d’un paquet amb dpkg.\nJustificar tècnicament el comportament observat, no només descriure’l.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#quina-màquina-tenim",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#quina-màquina-tenim",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "1. Quina màquina tenim?",
+    "text": "1. Quina màquina tenim?\nAbans de crear una màquina virtual, hem de saber sobre quin maquinari estem treballant.\nExecuteu:\nuname -m\nObserveu el resultat.\n\n\n\nResultat habitual\nArquitectura\n\n\n\n\nx86_64\nx86-64\n\n\naarch64 / arm64\nARM64\n\n\n\nAls PCs del laboratori, el resultat esperat és x86_64.\n\n\n\n\n\n\nNoteParem i pensem\n\n\n\nQuina arquitectura té el vostre host?\nI una pregunta més important:\n\nPer què és rellevant que l’arquitectura del guest coincideixi amb la del host?\n\nNo busqueu encara la resposta. Feu primer una hipòtesi.\n\n\nLa idea fonamental és:\n\nVirtualitzar no és el mateix que emular.\n\nEmular vol dir traduir, instrucció per instrucció, el codi màquina d’una arquitectura (per exemple, ARM64) a una seqüència d’instruccions equivalents d’una arquitectura diferent (per exemple, x86-64). QEMU ho fa amb el seu TCG (Tiny Code Generator): interpreta o recompila dinàmicament el codi del guest, i aquesta traducció té un cost real, perquè cada instrucció del guest sol requerir diverses instruccions natives del host per reproduir-ne l’efecte.\nVirtualitzar, en canvi, vol dir executar el codi del guest directament sobre el processador físic, sense traduir-lo, sempre que guest i host comparteixin arquitectura. KVM (Kernel-based Virtual Machine) és el mecanisme del nucli de Linux que ho fa possible: converteix el mateix nucli que esteu utilitzant al host en un hipervisor, i QEMU l’aprofita per executar les instruccions del guest amb un cost pràcticament nul respecte a executar-les nadiament.\nAixò explica per què el requeriment inicial del laboratori insistia que l’arquitectura del guest coincidís amb la del host: sense aquesta coincidència, KVM no es pot fer servir, i QEMU ha de recórrer necessàriament a TCG — amb un cost de rendiment típicament d’un ordre de magnitud respecte a l’execució accelerada.\n\n\n\n\n\n\nNoteCheckpoint 1\n\n\n\nAls PCs del laboratori treballem amb x86-64 + KVM.\nHeu identificat:\n\nl’arquitectura del host;\nel mecanisme d’acceleració;\nla diferència conceptual entre virtualització i emulació.\n\nAra sí: continuem.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#una-imatge-de-màquina-no-és-una-màquina",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#una-imatge-de-màquina-no-és-una-màquina",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "2. Una imatge de màquina no és una màquina",
+    "text": "2. Una imatge de màquina no és una màquina\nDescarregarem una imatge cloud de Debian 12 (Bookworm).\nAls PCs del laboratori treballarem amb x86-64:\nwget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2\nAquesta imatge és una imatge base.\n\n\n\n\n\n\nNoteParem i pensem\n\n\n\nQuina diferència hi ha entre:\n\nuna imatge base;\nel disc de la màquina virtual;\nla màquina virtual en execució?\n\nNo són tres noms per al mateix objecte.\n\n\nVal la pena fixar aquests tres nivells abans de continuar, perquè els tornarem a fer servir constantment:\nimatge base                  → el fitxer .qcow2 immutable que heu descarregat\ndisc de treball               → una còpia pròpia d'aquesta plantilla, la que modificareu\nmàquina virtual en execució   → el procés QEMU que interpreta aquest disc i hi executa un SO\nCadascun té un cicle de vida diferent. La imatge base no hauria de canviar mai: és el punt de partida reproduïble al qual sempre podeu tornar. El disc de treball és on viu l’estat persistent — tot allò que sobreviu a apagar i tornar a arrencar la MV: fitxers, paquets instal·lats, configuració. La màquina virtual en execució hi afegeix, a més, l’estat volàtil: el contingut de la memòria RAM, els processos en marxa, les connexions obertes — tot allò que normalment es perd en apagar la màquina.\nAquesta distinció és exactament la que fa possible un snapshot: quan feu savevm, QEMU no toca la imatge base, sinó que captura conjuntament l’estat del disc de treball i l’estat volàtil de la màquina en execució, dins del mateix debian-treball.qcow2.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#com-configurem-una-màquina-sense-installar-la-manualment",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#com-configurem-una-màquina-sense-installar-la-manualment",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "3. Com configurem una màquina sense instal·lar-la manualment?",
+    "text": "3. Com configurem una màquina sense instal·lar-la manualment?\nLes imatges cloud utilitzen cloud-init per a la configuració inicial.\nCrearem un fitxer user-data:\n#cloud-config\nusers:\n  - name: estudiant\n    sudo: ALL=(ALL) NOPASSWD:ALL\n    shell: /bin/bash\n    ssh_authorized_keys:\n      - PEGUEU_AQUI_LA_VOSTRA_CLAU_PUBLICA\nSubstituïu la darrera línia per la vostra clau pública.\nPodeu consultar-la amb:\ncat ~/.ssh/id_ed25519.pub\nAra generarem el dispositiu que conté aquesta configuració:\ncloud-localds seed.img user-data\n\n\n\n\n\n\nNoteParem i pensem\n\n\n\nLa màquina encara no ha arrencat.\nCom pot ser que ja li hàgim proporcionat un usuari i una clau SSH?\nQuin paper té seed.img?\n\n\nseed.img conté la resposta a la pregunta anterior: és un petit disc (una imatge ISO9660 amb l’etiqueta cidata) que cloud-init — un servei ja preinstal·lat a les imatges cloud de Debian — llegeix durant els primers segons d’arrencada, abans que cap usuari hi pugui interactuar.\nAquest mecanisme s’anomena image-based provisioning: en lloc d’instal·lar un sistema operatiu pas a pas de manera interactiva (com faríeu amb un instal·lador clàssic), partiu d’una imatge ja construïda i li injecteu, de manera declarativa, l’estat inicial que voleu que tingui (usuaris, claus SSH, xarxa). Declarativa vol dir que vosaltres descriviu quin estat final voleu (el user-data), no els passos per arribar-hi — és cloud-init qui decideix com aplicar-ho.\nAquesta mateixa idea —descriure l’estat desitjat en lloc dels passos per aconseguir-lo— reapareixerà quan parlem d’infraestructura com a codi més endavant al curs.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#creem-el-disc-de-treball",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#creem-el-disc-de-treball",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "4. Creem el disc de treball",
+    "text": "4. Creem el disc de treball\nNo modificarem la imatge base directament.\ncp debian-12-genericcloud-amd64.qcow2 debian-treball.qcow2\nAra tenim:\ndebian-12-genericcloud-*.qcow2   ← plantilla\n                 │\n                 └── cp\n                      ↓\n             debian-treball.qcow2 ← disc de treball\n\n\n\n\n\n\nNoteParem i pensem\n\n\n\nPer què pot ser una mala pràctica modificar directament la imatge base?\nPenseu en què passaria si demà volguéssim crear una segona màquina amb la mateixa configuració inicial.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#fem-un-canvi",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#fem-un-canvi",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "7. Fem un canvi",
+    "text": "7. Fem un canvi\nDes de la sessió SSH:\ntouch ~/abans_del_snapshot.txt\nls ~\nAra tornarem al terminal on s’està executant QEMU.\nPer accedir al monitor de QEMU, premeu:\nCtrl+A\nC\nAl monitor veureu:\n(qemu)\nCreeu un snapshot:\nsavevm punt_inicial\n\n\n\n\n\n\nNoteUn snapshot no és un backup\n\n\n\nsavevm reverteix l’estat dins del mateix fitxer de disc (debian-treball.qcow2); no crea cap còpia independent en un altre suport.\nSi perdeu o corrompeu debian-treball.qcow2, perdeu també tots els snapshots que conté. Un backup real implica una còpia en un mitjà independent, precisament per sobreviure a la pèrdua del disc original.\n\n\nTorneu a la consola amb:\nCtrl+A\nC\nTorneu a la sessió SSH i feu un segon canvi:\ntouch ~/despres_del_snapshot.txt\nls ~\nAra tornarem al monitor i restaurarem l’estat:\n(qemu) loadvm punt_inicial\nTorneu a connectar-vos per SSH si és necessari.\nComproveu:\nls ~\n\n\n\n\n\n\nNoteParem i pensem\n\n\n\nQuin dels dos fitxers hauria de continuar existint?\nAbans de respondre, feu una hipòtesi sobre quin estat ha restaurat realment loadvm.\n\n\n\n\n\n\n\n\nNoteParem i pensem — temps de restauració\n\n\n\nMesureu, amb un cronòmetre extern (el del mòbil, per exemple — no cap comanda dins de la MV), el temps transcorregut des que executeu loadvm punt_inicial fins que podeu tornar a connectar-vos correctament per SSH.\nI, per separat, el temps transcorregut des que inicieu QEMU des de zero (arrencada completa de Debian) fins que podeu connectar-vos per SSH per primer cop.\nPer què un cronòmetre extern i no una comanda dins la MV? Perquè el rellotge que voleu mesurar és precisament el de l’estat que esteu restaurant: mesurar el temps de loadvm amb una marca de temps presa dins de la sessió SSH que esteu a punt de perdre (i que loadvm restaurarà a un instant anterior) no dona una mesura fiable. Mesurar des de fora evita aquest problema, i a més mesura exactament el que interessa des del punt de vista d’un servei: el temps fins que torna a ser accessible, no un detall intern d’implementació.\nCompareu els dos temps de restauració.\nRelacionant-ho amb els conceptes de MTTR i redundància vistos a la teoria:\n\nquin mecanisme restaura l’estat més ràpidament?\ncom afecta un temps de restauració curt al temps d’indisponibilitat?\namb quin tipus de recuperació s’assembla més conceptualment cada cas: cold, warm o hot?\n\nImportant: loadvm no és tècnicament un mecanisme de standby: és una funcionalitat de QEMU per restaurar l’estat d’una única màquina virtual, no una arquitectura de redundància amb una rèplica independent. Utilitzeu la classificació cold/warm/hot com una analogia per raonar sobre el temps de restauració, no com una equivalència estricta.\nPrecisió de vocabulari: el que acabeu de mesurar és un temps de restauració (una magnitud concreta, d’aquest experiment). El MTTR és un concepte més ampli — el temps mitjà de reparació d’un incident real — del qual la restauració tècnica és només un component. No useu els dos termes com a sinònims.\nGuardeu els dos temps mesurats: els necessitareu a la Pregunta 5, a la secció final de preguntes de raonament.\n\n\nEl que acabeu d’observar té una explicació precisa: savevm no ha “desat un fitxer”, ha capturat tot l’estat de la màquina virtual en aquell instant —el contingut complet de la memòria RAM i l’estat del disc de treball— dins del mateix debian-treball.qcow2. loadvm no desinstal·la res ni desfà accions una a una: substitueix tot aquest estat pel que hi havia capturat, com si féssiu un salt en el temps.\nAixò és fonamentalment diferent de com funciona, per exemple, apt purge, que sí que desfà una acció concreta (eliminar un paquet i la seva configuració) sense tocar la resta de l’estat de la màquina. Un snapshot revoca tot l’estat global de cop; una operació com apt purge modifica una part concreta d’aquest estat de manera selectiva. Aquesta diferència de granularitat és exactament la que explorarem a la pregunta següent.\n\n\n\n\n\n\nNoteParem i pensem\n\n\n\nÉs equivalent restaurar un snapshot a executar apt purge paquet?\nPenseu-hi en termes de model d’estat: què pot revertir un snapshot, què modifica explícitament apt purge, i si cadascuna d’aquestes operacions és local a un paquet o afecta l’estat global de la màquina virtual.\nDesenvoluparem la resposta completa a la Pregunta 2 de la secció final.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#actualitzem-la-informació-dels-paquets",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#actualitzem-la-informació-dels-paquets",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "8. Actualitzem la informació dels paquets",
+    "text": "8. Actualitzem la informació dels paquets\nExecuteu:\nsudo apt update\n\n\n\n\n\n\nNoteParem i pensem\n\n\n\napt update ha instal·lat actualitzacions?\nAbans de continuar, expliqueu al vostre company què creieu que ha canviat en el sistema.\n\n\napt update no instal·la ni actualitza cap paquet: només sincronitza el catàleg local amb les metadades que publica cada repositori configurat (quines versions existeixen, quines dependències tenen, on descarregar-les). Confondre “actualitzar la informació disponible” amb “actualitzar el sistema” és, probablement, l’error de comprensió més habitual amb apt.\nrepositori → metadades publicades → apt update → catàleg local de paquets\napt install, en canvi, sí que descarrega i instal·la realment el contingut d’un paquet — però ho fa consultant el catàleg local que apt update acaba de deixar preparat, no el repositori remot directament:\napt install → consulta el catàleg local → descarrega paquets → instal·la paquets\nPer això, si el catàleg local està desactualitzat, apt install pot intentar instal·lar una versió que ja no existeix al repositori, o no trobar un paquet que sí que hi és disponible.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-1-virtualització-i-emulació",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-1-virtualització-i-emulació",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "Pregunta 1 — Virtualització i emulació",
+    "text": "Pregunta 1 — Virtualització i emulació\nDurant el laboratori heu treballat amb un host x86-64 i un guest x86-64, aprofitant KVM.\nAra feu una transferència del concepte:\n\nQuè canviaria si intentéssim executar una imatge x86-64 sobre un host ARM64?\n\nLa resposta ha de distingir:\n\narquitectura del host;\narquitectura del guest;\nvirtualització;\nemulació;\nTCG;\nacceleració per maquinari.\n\nNo cal haver-ho experimentat durant el laboratori: és una pregunta teòrica de transferència basada en el concepte introduït al Checkpoint 1.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-2-snapshots-i-apt-purge",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-2-snapshots-i-apt-purge",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "Pregunta 2 — Snapshots i apt purge",
+    "text": "Pregunta 2 — Snapshots i apt purge\nCompareu conceptualment:\nloadvm punt_inicial\namb:\napt purge paquet\nNo expliqueu només «un restaura i l’altre desinstal·la».\nExpliqueu quin model d’estat modifica cadascuna de les operacions.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-3-remove-i-purge",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-3-remove-i-purge",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "Pregunta 3 — remove i purge",
+    "text": "Pregunta 3 — remove i purge\nExpliqueu què diferencia:\napt remove\nde:\napt purge\nIncloeu:\n\nestat del paquet;\nfitxers de configuració (recolzeu-vos en el que heu observat amb /etc/nanorc);\nutilitat de conservar configuració;\nsituació en què conservar-la pot ser un problema.\n\nCiteu la font que sustenta la vostra explicació tècnica: man apt-get (secció de remove/purge) o la Debian Policy sobre fitxers de configuració. No n’hi ha prou amb l’explicació oral del professor.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-4-snapshots-i-memòria-cau",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-4-snapshots-i-memòria-cau",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "Pregunta 4 — Snapshots i memòria cau",
+    "text": "Pregunta 4 — Snapshots i memòria cau\nExpliqueu per què una instal·lació de nano després d’un loadvm es va comportar diferent de la primera instal·lació.\nLa resposta ha d’identificar on es troben les diferents parts de l’estat i quines queden afectades pel snapshot. Feu servir els resultats reals de ls -lh /var/cache/apt/archives/ que vau anotar als tres moments del pas 12.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-5-restauració-i-mttr",
+    "href": "modules/unit-01-fonaments/pralab/01-qemu.html#pregunta-5-restauració-i-mttr",
+    "title": "Laboratori 1 — QEMU i gestió de paquets",
+    "section": "Pregunta 5 — Restauració i MTTR",
+    "text": "Pregunta 5 — Restauració i MTTR\nDurant l’experiment heu mesurat el temps de restauració amb loadvm i el temps d’una arrencada completa de la màquina virtual.\nSuposeu que un servei té com a objectiu recuperar-se en menys de 60 segons.\nOmpliu amb les vostres dades mesurades:\n\narrencada completa: ______ segons;\nrestauració amb loadvm: ______ segons.\n\nIndiqueu quin mecanisme compleix l’objectiu i justifiqueu-ho relacionant el temps de restauració amb el MTTR i la disponibilitat.\nImportant: el temps de restauració que heu mesurat és només una part del MTTR d’un incident real. El MTTR complet pot incloure detecció, diagnosi, intervenció i validació del servei, no només l’operació tècnica de restauració — no useu els dos termes com a sinònims.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Pralab",
+      "Laboratori 1 — QEMU i gestió de paquets"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/activities/01-fonaments.html",
+    "href": "modules/unit-01-fonaments/activities/01-fonaments.html",
+    "title": "Activitats tèoriques · Unitat 1",
+    "section": "",
+    "text": "Per complementar la sessió teòrica, proposem dues activitats per fer a casa.\nLes dues activitats són no avaluables. No cal lliurar-les ni preparar una resposta formal. L’objectiu és ampliar la perspectiva sobre dues idees que reprendrem al llarg del curs:",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Activitats",
+      "Activitats tèoriques · Unitat 1"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/activities/01-fonaments.html#activitat-1-una-lectura-per-obrir-boca",
+    "href": "modules/unit-01-fonaments/activities/01-fonaments.html#activitat-1-una-lectura-per-obrir-boca",
+    "title": "Activitats tèoriques · Unitat 1",
+    "section": "Activitat 1 — Una lectura per obrir boca",
+    "text": "Activitat 1 — Una lectura per obrir boca\n\nExercici — Lectura: The Datacenter as a Computer\nLlegeix la introducció (capítol 1) de:\n\nBarroso, L. A., Hölzle, U., i Ranganathan, P. (2018).\nThe Datacenter as a Computer: Designing Warehouse-Scale Machines.\n3a ed. Morgan & Claypool / Springer.\n\nEl llibre està disponible en accés obert a través de OAPEN:\nOAPEN Library — The Datacenter as a Computer\nÉs una obra de referència sobre warehouse-scale computing i permet fer un salt d’escala respecte dels sistemes que hem analitzat a classe: què passa quan el «sistema» ja no és un servidor, sinó un centre de dades sencer tractat com una màquina?\n\n\nQuè heu de buscar en el capítol 1?\nNo cal fer un resum del capítol. La lectura és panoràmica: busqueu les idees que permetin entendre com canvia el problema quan augmenta l’escala.\n\nPreguntes que podeu respondre amb la lectura\n\nQuè significa tractar un centre de dades com un únic ordinador?\nQuins avantatges pot aportar pensar a escala de warehouse en lloc de pensar màquina per màquina?\nQuins components o recursos passen a formar part del «sistema»?\nQuins problemes que semblaven locals en un servidor passen a ser problemes d’arquitectura quan tenim moltes màquines?\n\n\n\nIdees que deixem obertes per a més endavant\nEl capítol 1 és introductori i no cal que hi trobeu totes les respostes a les qüestions següents. Són preguntes que deixem plantejades perquè les puguem recuperar en unitats posteriors:\n\nCom es gestionen les fallades quan el nombre de components és molt gran?\nQuin paper tenen la redundància i la tolerància a fallades?\nCom canvien la monitorització i l’automatització?\nCom s’administra una infraestructura formada per milers de màquines?\n\n\n\n\n\n\n\nNote\n\n\n\nNo busquem encara les respostes. La idea és que el capítol 1 us deixi veure el problema a gran escala i que, més endavant, puguem tornar-hi amb les eines conceptuals que desenvoluparem al curs.\n\n\n\n\n\n\n\n\nTipUna pregunta per quedar-vos\n\n\n\n\nSi un centre de dades es pot veure com un únic ordinador, què passa amb el paper de l’administrador de sistemes?",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Activitats",
+      "Activitats tèoriques · Unitat 1"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/activities/01-fonaments.html#activitat-2-de-sysadmin-a-sre",
+    "href": "modules/unit-01-fonaments/activities/01-fonaments.html#activitat-2-de-sysadmin-a-sre",
+    "title": "Activitats tèoriques · Unitat 1",
+    "section": "Activitat 2 — De SysAdmin a SRE",
+    "text": "Activitat 2 — De SysAdmin a SRE\n\nExercici — Vídeo: SysAdmin to SRE\nVisualitza la xerrada de Damon Edwards:\n\nSysAdmin to SRE: creating Capacity to make tomorrow better than today\nDevOpsCon, 2019.\n\nVeure la xerrada a YouTube\nEdwards és cofundador de Rundeck, una eina orientada a l’automatització i l’operació de sistemes.\n\n\nQuè heu de buscar en aquesta activitat?\nNo intenteu retenir una llista de tecnologies. Fixeu-vos sobretot en com canvia la manera de treballar quan les operacions es tracten com un problema d’enginyeria.\nPodeu observar:\n\nQuines tasques manuals es poden automatitzar?\nCom es pot reduir el treball operatiu repetitiu?\nQuina relació apareix entre desenvolupament i operacions?\nQuin paper tenen els SLO?\nQuè significa treballar amb un error budget?\nQuina diferència hi ha entre reaccionar a incidents i dissenyar el sistema perquè sigui més fiable?\n\n\n\nLlegir també la font amb una mirada crítica\n\n\n\n\n\n\nWarning\n\n\n\nConsidereu el possible conflicte d’interès.\nDamon Edwards és cofundador de Rundeck, una empresa vinculada precisament a les eines d’automatització d’operacions. Això no invalida la xerrada ni implica que les seves afirmacions siguin incorrectes, però és un element que cal tenir present quan una font presenta tant el problema com determinades solucions.\nUna pregunta útil és:\n\nQuines afirmacions de la xerrada són principis generals d’enginyeria i quines poden estar condicionades per la perspectiva o els interessos de l’orador?\n\n\n\n\n\nFont complementària\nPer contrastar la perspectiva de la xerrada amb una font primària de Google sobre SRE, podeu consultar:\nGoogle — Site Reliability Engineering\nNo cal llegir el llibre sencer. Podeu utilitzar-lo simplement per contrastar els conceptes de fiabilitat, SLO i error budgets que apareixen a la xerrada.\n\n\n\n\n\n\nTipUna pregunta per quedar-vos\n\n\n\n\nQuina diferència hi ha entre «mantenir un sistema funcionant» i «dissenyar l’operació perquè el sistema sigui fiable»?\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\n\nL’escala canvia la manera de dissenyar i operar els sistemes.\n\n\nL’automatització i l’enginyeria canvien la manera d’administrar-los.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Activitats",
+      "Activitats tèoriques · Unitat 1"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/index.html",
+    "href": "modules/unit-01-fonaments/index.html",
+    "title": "Unitat 1 — Fonaments de l’Administració de Sistemes",
+    "section": "",
+    "text": "Sessió introductòria al rol de l’administrador de sistemes: què implica la disciplina, com ha evolucionat cap a perfils moderns com DevOps i SRE, i quin vocabulari bàsic de fiabilitat i disponibilitat ( MTBF, MTTR, SLI/SLO/SLA) s’utilitzarà al llarg del curs.\nLa part pràctica introdueix QEMU com a eina de virtualització i apt/dpkg com a gestor de paquets, amb un únic fil conductor: administrar un sistema és entendre el seu estat i ser capaç de canviar-lo de manera controlada.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Fitxa de la unitat"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/index.html#visió-general",
+    "href": "modules/unit-01-fonaments/index.html#visió-general",
+    "title": "Unitat 1 — Fonaments de l’Administració de Sistemes",
+    "section": "",
+    "text": "Sessió introductòria al rol de l’administrador de sistemes: què implica la disciplina, com ha evolucionat cap a perfils moderns com DevOps i SRE, i quin vocabulari bàsic de fiabilitat i disponibilitat ( MTBF, MTTR, SLI/SLO/SLA) s’utilitzarà al llarg del curs.\nLa part pràctica introdueix QEMU com a eina de virtualització i apt/dpkg com a gestor de paquets, amb un únic fil conductor: administrar un sistema és entendre el seu estat i ser capaç de canviar-lo de manera controlada.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Fitxa de la unitat"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/index.html#objectius-daprenentatge",
+    "href": "modules/unit-01-fonaments/index.html#objectius-daprenentatge",
+    "title": "Unitat 1 — Fonaments de l’Administració de Sistemes",
+    "section": "Objectius d’aprenentatge",
+    "text": "Objectius d’aprenentatge\n\nResultat d'Aprenentatge — En acabar aquesta unitat seràs capaç de...\n\nDescriure què és l’administració de sistemes, el rol de qui l’exerceix, i com ha evolucionat cap a perfils moderns com DevOps i SRE.\nDefinir i aplicar amb precisió el vocabulari bàsic de fiabilitat i disponibilitat d’un sistema (MTBF, MTTR, disponibilitat, redundància HA/DR/FT, SLI/SLO/SLA).\nDistingir els rols client/servidor i identificar la terminologia bàsica d’infraestructura (servidor, rack, CPD, switch).\nCrear, arrencar i gestionar l’estat d’una màquina virtual amb QEMU, incloent-hi la configuració inicial amb cloud-init i l’ús de snapshots.\nGestionar el cicle de vida de paquets amb apt/dpkg, distingint remove de purge i explicant el paper de les dependències automàtiques.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Fitxa de la unitat"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/index.html#càrrega-estimada",
+    "href": "modules/unit-01-fonaments/index.html#càrrega-estimada",
+    "title": "Unitat 1 — Fonaments de l’Administració de Sistemes",
+    "section": "Càrrega estimada",
+    "text": "Càrrega estimada\n2h de teoria + 2h de pralab, distribuïdes en dues sessions durant la primera setmana. Les activitats complementàries (Activitats per a casa) són opcionals i no tenen una durada fixada.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Fitxa de la unitat"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/index.html#prerequisits",
+    "href": "modules/unit-01-fonaments/index.html#prerequisits",
+    "title": "Unitat 1 — Fonaments de l’Administració de Sistemes",
+    "section": "Prerequisits",
+    "text": "Prerequisits\n\nPrerequisits\n\nExperiència prèvia en entorns Linux o Unix (altament recomanable).\nConeixements sòlids de les funcions principals dels Sistemes Operatius.\nExperiència treballant en mode text i amb llenguatges de scripting.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Fitxa de la unitat"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/index.html#contingut",
+    "href": "modules/unit-01-fonaments/index.html#contingut",
+    "title": "Unitat 1 — Fonaments de l’Administració de Sistemes",
+    "section": "Contingut",
+    "text": "Contingut\nTeoria\n\nFonaments de l’Administració de Sistemes\n\nPralab\n\nQEMU, cloud-init i gestió de paquets amb apt\n\nActivitats complementàries\n\nActivitats teòriques — Unitat 1\nActivitats pràctiques — Unitat 1\n\n\nPista d'Examen\nAquesta unitat no té una prova competencial pròpia. Però els seus continguts s’avaluaran en les proves escrites i són el fonament dels propers laboratoris.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Fitxa de la unitat"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#amsa-administració-i-manteniment-de-sistemes-i-aplicacions",
+    "href": "course-info/presentation-slides.html#amsa-administració-i-manteniment-de-sistemes-i-aplicacions",
+    "title": "Presentació del curs",
+    "section": "AMSA — Administració i Manteniment de Sistemes i Aplicacions",
+    "text": "AMSA — Administració i Manteniment de Sistemes i Aplicacions\n\n1r Semestre, 3r Curs del Grau en Enginyeria Informàtica\n6 ECTS · Obligatòria · Presencial\n3 ECTS de Teoria · 3 ECTS de PRALAB\nCodi: 105013 · Idioma: català (100%)\n\n\n\n\n\n(Font: Extret de Neowin)\n\n\n\n\nGuia docent\n\n\nBenvinguts al curs de Administració i Manteniment de Sistemes i Aplicacions.\nAquesta assignatura és una continuació del curs de Sistemes Operatius. Per cursar-la és altament recomanable tenir experiència prèvia en entorns Linux o Unix, una base sòlida dels conceptes dels sistemes operatius i experiència treballant en mode text i amb llenguatges de scripting.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#què-necessitem",
+    "href": "course-info/presentation-slides.html#què-necessitem",
+    "title": "Presentació del curs",
+    "section": "Què necessitem?",
+    "text": "Què necessitem?\n\nExperiència prèvia en entorns Linux o Unix.\nUna base sòlida dels conceptes principals dels Sistemes Operatius.\nExperiència treballant en mode text.\nExperiència amb llenguatges de scripting.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#temari-i",
+    "href": "course-info/presentation-slides.html#temari-i",
+    "title": "Presentació del curs",
+    "section": "Temari (I)",
+    "text": "Temari (I)\n\n\nProcés d’arrencada i inicialització del sistema\n\nBIOS i UEFI.\nGRUB.\nProcés d’arrencada de Linux.\nsystemd i gestió de serveis.\n\n\nFitxers i emmagatzematge\n\nSistemes de fitxers de Linux.\nParticions i muntatge.\nPermisos i control d’accés.\nRAID.\nLVM.\nAdministració de l’emmagatzematge.\nXifrat de discs amb LUKS.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#temari-ii",
+    "href": "course-info/presentation-slides.html#temari-ii",
+    "title": "Presentació del curs",
+    "section": "Temari (II)",
+    "text": "Temari (II)\n\n\nAutenticació i autorització\n\nUsuaris i grups de Linux, PAM.\nSSH.\nLDAP.\nAutenticació centralitzada i control d’accés.\n\n\n\n\nVirtualització i contenidors\n\nConceptes de virtualització.\nArquitectura de Docker, imatges i registres.\nDocker Compose.\nXarxes, emmagatzematge i desplegament amb contenidors.\n\n\n\n\nComputació al núvol\n\nFonaments de cloud computing.\nAmazon EC2, S3, IAM.\nDesplegament d’infraestructura.\nAWS Lambda.\n\n\n\nAquesta assignatura és una continuació del curs de Sistemes Operatius i s’organitza en dues parts: la primera se centra en els fonaments del sistema operatiu i l’emmagatzematge; la segona, en autenticació, virtualització i cloud.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#metodologia",
+    "href": "course-info/presentation-slides.html#metodologia",
+    "title": "Presentació del curs",
+    "section": "Metodologia",
+    "text": "Metodologia\n\n\nSessions de teoria\n\nConceptes fonamentals de cada unitat, exemples pràctics i casos reals d’administració de sistemes.\nLes sessions tenen un caràcter participatiu i preparen per a les activitats pràctiques i les proves competencials.\n\n\nPralabs\n\nActivitats Hands-On, CodeLabs i projectes guiats.\nTreball individual o en petits grups.\nSituacions pròpies de l’administració de sistemes.\n\n\nTreball autònom\n\nActivitats i reptes proposats.\nPreparació de les proves competencials.\nLectura de documentació tècnica.\nVisualització dels materials proporcionats.\n\n\n\nImportant: totes les sessions requereixen disposar del vostre entorn de desenvolupament.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#primera-part-del-curs",
+    "href": "course-info/presentation-slides.html#primera-part-del-curs",
+    "title": "Presentació del curs",
+    "section": "Primera part del curs",
+    "text": "Primera part del curs\n\n\n\n\n\n\n\n\nSet.\nDilluns (2h)\nDimecres (2h)\n\n\n\n\n1a\nUnitat 1: Fonaments de l’Administració de Sistemes\nUnitat 2: Procés d’Arrencada i Inicialització del Sistema\n\n\n2a\nUnitat 2: Procés d’Arrencada i Inicialització del Sistema\nUnitat 2: Procés d’Arrencada i Inicialització del Sistema\n\n\n3a\nUnitat 2: Procés d’Arrencada i Inicialització del Sistema\nExamen Competencial Pràctic 1\n\n\n4a\nUnitat 3: Sistemes de Fitxers i Emmagatzematge\nUnitat 3: Sistemes de Fitxers i Emmagatzematge\n\n\n5a\nFestiu\nUnitat 3: Sistemes de Fitxers i Emmagatzematge\n\n\n6a\nUnitat 3: Sistemes de Fitxers i Emmagatzematge\nExamen Competencial Pràctic 2\n\n\n7a\nUnitat 4: Autenticació i Autorització\nUnitat 4: Autenticació i Autorització\n\n\n8a\nUnitat 4: Autenticació i Autorització\nExamen Competencial Pràctic 3\n\n\n9a\nExamen Escrit Teòric 1\n—",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#segona-part-del-curs",
+    "href": "course-info/presentation-slides.html#segona-part-del-curs",
+    "title": "Presentació del curs",
+    "section": "Segona part del curs",
+    "text": "Segona part del curs\n\n\n\n\n\n\n\n\nSet.\nDilluns (2h)\nDimecres (2h)\n\n\n\n\n10a\nUnitat 5: Virtualització i Contenidors\nUnitat 5: Virtualització i Contenidors\n\n\n11a\nUnitat 5: Virtualització i Contenidors\nExamen Competencial Pràctic 4\n\n\n12a\nUnitat 6: Computació al Núvol\nUnitat 6: Computació al Núvol\n\n\n13a\nUnitat 6: Computació al Núvol\nExamen Competencial Pràctic 5\n\n\n14a\nProjecte\nProjecte\n\n\n15a\nProjecte\nExamen Competencial Pràctic 6\n\n\n16a\nExamen Escrit Teòric 2\n—\n\n\n17a\n—\n—\n\n\n18a\n—\n—\n\n\n19a\nRecuperacions\n—",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#avaluació-contínua",
+    "href": "course-info/presentation-slides.html#avaluació-contínua",
+    "title": "Presentació del curs",
+    "section": "Avaluació contínua",
+    "text": "Avaluació contínua\n\n\n\n\n\n\n\n\n\n\nBloc\nActivitat d’avaluació\nAcrònim\nPonderació\nRecuperable\n\n\n\n\nTeòric 1\nExamen Escrit Teòric 1\nT1\n20%\nSí\n\n\nTeòric 2\nExamen Escrit Teòric 2\nT2\n20%\nSí\n\n\nPràctic 1\nExamen Competencial Pràctic 1\nP1\n10%\nNo\n\n\nPràctic 2\nExamen Competencial Pràctic 2\nP2\n10%\nNo\n\n\nPràctic 3\nExamen Competencial Pràctic 3\nP3\n10%\nNo\n\n\nPràctic 4\nExamen Competencial Pràctic 4\nP4\n10%\nNo\n\n\nPràctic 5\nExamen Competencial Pràctic 5\nP5\n10%\nNo\n\n\nPràctic 6\nExamen Competencial Pràctic 6\nP6\n10%\nNo\n\n\nBonus\nContribucions als materials oberts\nB\n+0,5 punts\nNo\n\n\n\n\nPer superar l’assignatura cal obtenir una nota final igual o superior a 5,0.\nNo s’estableix cap nota mínima en cap activitat d’avaluació.\nTotes les activitats d’avaluació són individuals.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#càlcul-de-la-nota-final",
+    "href": "course-info/presentation-slides.html#càlcul-de-la-nota-final",
+    "title": "Presentació del curs",
+    "section": "Càlcul de la nota final",
+    "text": "Càlcul de la nota final\n\\[\nNF =\n\\min(\n0.2T1 + 0.2T2 +\n0.1P1 + 0.1P2 + 0.1P3 +\n0.1P4 + 0.1P5 + 0.1P6 +\nB,\\ 10\n)\n\\]\non:\n\nB és el bonus per contribucions als materials docents.\n0 ≤ B ≤ 0,5.\nLa nota final no pot superar els 10 punts.\n\n\nAbans de cada activitat d’avaluació es publicaran els criteris de correcció i els aspectes objecte d’avaluació.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#exàmens-teòrics",
+    "href": "course-info/presentation-slides.html#exàmens-teòrics",
+    "title": "Presentació del curs",
+    "section": "Exàmens teòrics",
+    "text": "Exàmens teòrics\nEls exàmens teòrics T1 i T2 són proves escrites que avaluen els coneixements teòrics i pràctics adquirits durant el curs. Són individuals i presencials, en les dates establertes al calendari acadèmic.\n\nNo es permet\n\ntelèfons mòbils,\nordinadors portàtils,\ntauletes,\nrellotges,\ncalculadores.\n\n\n\nEs permet\n\nEs permet un únic full DIN A4, escrit exclusivament a mà pel mateix estudiant, per les dues cares.\nNo s’admeten documents impresos, fotocòpies, reproduccions mecàniques ni materials elaborats per terceres persones.\nEl full d’apunts s’ha d’entregar amb l’examen.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#recuperació-dels-exàmens-teòrics",
+    "href": "course-info/presentation-slides.html#recuperació-dels-exàmens-teòrics",
+    "title": "Presentació del curs",
+    "section": "Recuperació dels exàmens teòrics",
+    "text": "Recuperació dels exàmens teòrics\n\nT1 i T2 són recuperables.\nLa recuperació es realitza durant la setmana de recuperació.\nCada prova de recuperació inclou únicament els continguts de l’examen teòric corresponent.\nLa qualificació obtinguda substitueix íntegrament la nota original.\nEs pot recuperar un o tots dos exàmens teòrics.\nCada examen recuperat es realitza mitjançant una prova independent.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#exàmens-competencials-pràctics",
+    "href": "course-info/presentation-slides.html#exàmens-competencials-pràctics",
+    "title": "Presentació del curs",
+    "section": "Exàmens competencials pràctics",
+    "text": "Exàmens competencials pràctics\n\n\nEls exàmens competencials pràctics P1–P6:\n\nSón individuals i presencials.\nEs realitzen durant les sessions de pralab indicades al pla docent.\nEs duen a terme als laboratoris del centre.\nS’utilitzen els equips de l’aula.\n\n\n\nEs realitzen sense accés a Internet ni a recursos externs, excepte els que el professorat autoritzi expressament.\nConsisteixen en la resolució de tasques pràctiques en un entorn controlat.\nS’utilitzen les eines i la documentació disponibles als equips del laboratori.\nNo són recuperables.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#bonus-contribucions-als-materials",
+    "href": "course-info/presentation-slides.html#bonus-contribucions-als-materials",
+    "title": "Presentació del curs",
+    "section": "Bonus — Contribucions als materials",
+    "text": "Bonus — Contribucions als materials\n\n\n\nEs poden fer contribucions com:\n\nCreació de contingut nou.\nMillora de la documentació existent.\nRevisió i correcció de materials.\n\n\nCondicions:\n\nS’han de documentar i presentar mitjançant pull requests al repositori de l’assignatura.\nHan de ser rellevants, significatives i aportar valor afegit.\nHan de ser acceptades pel professorat.\nLa puntuació depèn de la qualitat i l’impacte de la contribució.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#assistència-i-activitats-davaluació",
+    "href": "course-info/presentation-slides.html#assistència-i-activitats-davaluació",
+    "title": "Presentació del curs",
+    "section": "Assistència i activitats d’avaluació",
+    "text": "Assistència i activitats d’avaluació\n\n\nAssistència\n\nL’assistència a les classes de teoria i a les sessions de laboratori no és obligatòria.\nEs recomana assistir-hi per facilitar el seguiment de l’assignatura i la preparació de les activitats d’avaluació.\n\n\nDates\n\n\n\nActivitat d’avaluació\nData\n\n\n\n\nExamen Competencial Pràctic 1\n30/09/2026\n\n\nExamen Competencial Pràctic 2\n21/10/2026\n\n\nExamen Competencial Pràctic 3\n04/11/2026\n\n\nExamen Competencial Pràctic 4\n25/11/2026\n\n\nExamen Competencial Pràctic 5\n09/12/2026\n\n\nExamen Competencial Pràctic 6\n23/12/2026\n\n\n\n\n\nCanvi de data\n\nNomés es podrà autoritzar un canvi de data per les causes justificades previstes a la normativa d’avaluació de la UdL.\nLa sol·licitud haurà d’estar degudament documentada i tramitar-se d’acord amb el procediment establert per la Universitat de Lleida.\nLa no assistència a una activitat d’avaluació comportarà un 0, excepte si s’ha autoritzat prèviament un canvi de data.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#ús-de-la-intelligència-artificial-generativa",
+    "href": "course-info/presentation-slides.html#ús-de-la-intelligència-artificial-generativa",
+    "title": "Presentació del curs",
+    "section": "Ús de la Intel·ligència Artificial Generativa",
+    "text": "Ús de la Intel·ligència Artificial Generativa\nLes eines d’IAG poden utilitzar-se com a recurs de suport per:\n\nObtenir explicacions sobre conceptes teòrics.\nExplorar diferents estratègies de resolució.\nGenerar exemples o fragments de codi amb finalitats d’aprenentatge.\nIdentificar errors i obtenir suggeriments de millora.\nDonar suport a la documentació dels projectes.\n\n\n\nEn tots els casos, l’estudiant és responsable de comprendre, validar i adaptar les respostes proporcionades. Quan una activitat permeti l’ús d’IAG, cal declarar explícitament les parts afectades i els prompts utilitzats.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#ús-de-la-iag-no-està-permès",
+    "href": "course-info/presentation-slides.html#ús-de-la-iag-no-està-permès",
+    "title": "Presentació del curs",
+    "section": "Ús de la IAG — No està permès",
+    "text": "Ús de la IAG — No està permès\n\nPresentar com a propi codi generat íntegrament per una eina d’IAG.\nUtilitzar respostes generades automàticament sense comprendre’n el funcionament.\nUtilitzar IAG durant una activitat d’avaluació quan el seu ús no estigui expressament autoritzat.\n\n\n\nL’ús indegut de les eines d’IAG es considerarà una forma de frau acadèmic.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#revisió-de-les-activitats-davaluació",
+    "href": "course-info/presentation-slides.html#revisió-de-les-activitats-davaluació",
+    "title": "Presentació del curs",
+    "section": "Revisió de les activitats d’avaluació",
+    "text": "Revisió de les activitats d’avaluació\n\nL’estudiant té dret a sol·licitar la revisió de qualsevol activitat d’avaluació d’acord amb la normativa de la Universitat de Lleida.\nLa qualificació podrà modificar-se a l’alça o a la baixa si es detecten errades en la correcció o en l’aplicació dels criteris d’avaluació.\nSi es detecten indicis compatibles amb una possible situació de frau acadèmic, el professorat podrà convocar una revisió individual per verificar:\n\nLa comprensió dels continguts.\nLa correcta aplicació dels procediments.\nL’autoria de les respostes.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#frau-acadèmic",
+    "href": "course-info/presentation-slides.html#frau-acadèmic",
+    "title": "Presentació del curs",
+    "section": "Frau acadèmic",
+    "text": "Frau acadèmic\nEs considera frau acadèmic, entre d’altres:\n\ncòpia,\nplagi,\nsuplantació d’identitat,\nmanipulació o falsificació de resultats,\ncomunicació no autoritzada entre estudiants durant una prova,\nconsulta o utilització de material no autoritzat,\nús d’IAG o d’altres recursos tecnològics quan no estiguin expressament permesos.\n\n\n\nQualsevol incompliment serà tractat d’acord amb la normativa vigent de la Universitat de Lleida.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#materials-recursos-i-tutories",
+    "href": "course-info/presentation-slides.html#materials-recursos-i-tutories",
+    "title": "Presentació del curs",
+    "section": "Materials, recursos i tutories",
+    "text": "Materials, recursos i tutories\nMaterials i recursos\n\nApunts de l’assignatura i materials proporcionats pel professor.\nDocumentació oficial de les eines i tecnologies utilitzades.\nManuals de Linux.\nDocumentació tècnica oficial.\nExemples treballats a classe.\n\n\nTutories i Consultes\nCorreu: jordi.mateo@udl.cat",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "course-info/presentation-slides.html#bibliografia",
+    "href": "course-info/presentation-slides.html#bibliografia",
+    "title": "Presentació del curs",
+    "section": "Bibliografia",
+    "text": "Bibliografia\n\nMike Gancarz. Linux and the Unix Philosophy. Digital Press, 2003.\nEvi Nemeth, Garth Snyder, Trent R. Hein, Ben Whaley i Dan Mackin. UNIX and Linux System Administration Handbook. Pearson Education.\nAdrian Mouat. Using Docker: Developing and Deploying Software with Containers. O’Reilly Media, 2016.\nJames Turnbull. The Docker Book.\nAndreas Wittig i Michael Wittig. Amazon Web Services in Action. Manning Publications, 2015.\nAmazon Web Services. Conferències i continguts de vídeo.\nRichard Blum i Christine Bresnahan. Linux Command Line and Shell Scripting Bible, 3a edició. John Wiley & Sons, 2015.",
+    "crumbs": [
+      "Inici",
+      "Presentació del curs"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Administració i Manteniment de Sistemes i Aplicacions",
+    "section": "",
+    "text": "Aquesta assignatura proporciona una visió integral de l’administració, el manteniment i el desplegament de sistemes i aplicacions, des dels sistemes Linux fins a les infraestructures modernes al núvol. Aprendràs a configurar, gestionar, protegir i supervisar sistemes, aprofundint en l’arrencada i els serveis, l’emmagatzematge, els usuaris, els permisos i els mecanismes d’autenticació i autorització. Treballaràs amb virtualització i contenidors per desplegar aplicacions de manera eficient, reproduïble i segura, entenent els principis que permeten gestionar infraestructures modernes. Finalment, descobriràs les possibilitats de la computació al núvol amb AWS, des de la infraestructura i els serveis d’emmagatzematge fins a la gestió d’identitats i la computació sense servidor, adquirint una visió global del cicle de vida dels sistemes i les aplicacions."
+  },
+  {
+    "objectID": "index.html#professorat",
+    "href": "index.html#professorat",
+    "title": "Administració i Manteniment de Sistemes i Aplicacions",
+    "section": "Professorat",
+    "text": "Professorat\n\nJordi Mateo mailto:jordi.mateo@udl.cat"
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html",
+    "href": "course-info/contributions/contribute.html",
+    "title": "Contribuir als materials",
+    "section": "",
+    "text": "Els materials d’aquesta assignatura es desenvolupen seguint una filosofia de codi obert (open source): els materials poden ser revisats, millorats, ampliats i corregits amb la participació de la comunitat.\nCom a estudiant, pots formar part d’aquest procés i contribuir directament a la millora dels materials que utilitzaran altres estudiants en el futur.\nAquesta activitat també et permet obtenir fins a 0,5 punts addicionals sobre la qualificació final de l’assignatura.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#una-filosofia-basada-en-lopen-source",
+    "href": "course-info/contributions/contribute.html#una-filosofia-basada-en-lopen-source",
+    "title": "Contribuir als materials",
+    "section": "Una filosofia basada en l’Open Source",
+    "text": "Una filosofia basada en l’Open Source\nEl desenvolupament open source es basa en una idea senzilla: els projectes poden millorar gràcies a la participació de diferents persones.\nEn lloc que una única persona sigui responsable de detectar tots els errors, escriure tot el contingut i mantenir-lo actualitzat, altres persones poden proposar millores.\nEn aquesta activitat aplicaràs el mateix model que s’utilitza en molts projectes de programari:\n\nParteixes d’una còpia del projecte (fork).\nTreballes en una branca independent.\nFas i documentes els teus canvis.\nPuges els canvis al teu repositori.\nProposes incorporar-los al projecte original mitjançant un Pull Request.\nEl responsable del projecte revisa la proposta.\nSi la contribució és adequada, es pot incorporar al projecte principal.\n\nAixò permet experimentar i proposar canvis sense modificar directament el repositori original.\n\n\n\nFlux general de contribució al projecte\n\n\n\n\n\n\n\n\nNoteUna contribució és una proposta, no una imposició\n\n\n\nQuan obres un Pull Request, no estàs modificant directament els materials de l’assignatura.\nEstàs fent una proposta de canvi perquè el responsable del projecte la pugui revisar.\nAquesta és una de les idees fonamentals del desenvolupament open source: els canvis es poden proposar, discutir, revisar i, finalment, acceptar o rebutjar.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#fes-un-fork-del-repositori",
+    "href": "course-info/contributions/contribute.html#fes-un-fork-del-repositori",
+    "title": "Contribuir als materials",
+    "section": "1. Fes un fork del repositori",
+    "text": "1. Fes un fork del repositori\nEl primer pas és crear una còpia del repositori de l’assignatura al teu compte de GitHub.\nAquesta còpia s’anomena fork.\nEl fork et permet treballar sobre el projecte sense tenir permisos d’escriptura sobre el repositori original.\nA la pàgina principal del repositori trobaràs el botó Fork.\n\n\n\nBotó Fork del repositori principal\n\n\nSelecciona el teu compte de GitHub com a propietari del nou repositori.\n\n\n\nCreació del fork\n\n\nUn cop creat, disposaràs d’una còpia del projecte dins del teu compte.\n\n\n\n\n\n\nTipPer què fem un fork?\n\n\n\nEl fork separa el teu espai de treball del projecte original.\nPots experimentar, modificar fitxers i provar idees sense afectar els materials que utilitzen la resta d’estudiants.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#clona-el-teu-fork",
+    "href": "course-info/contributions/contribute.html#clona-el-teu-fork",
+    "title": "Contribuir als materials",
+    "section": "2. Clona el teu fork",
+    "text": "2. Clona el teu fork\nAra has de descarregar el teu fork al teu ordinador.\nDes de GitHub, copia l’URL del teu repositori i executa:\ngit clone URL\nPer exemple:\ngit clone https://github.com/el-teu-usuari/amsa.git\nA continuació, entra al directori del projecte:\ncd amsa\nA partir d’aquest moment treballaràs sobre una còpia local del repositori.\n\n\n\n\n\n\nNote\n\n\n\nTambé és possible fer alguns canvis directament des de la interfície web de GitHub. Tanmateix, si vols treballar de manera habitual amb els materials Quarto, és recomanable tenir el repositori clonat localment.\n\n\n\n\n\n\n\n\nWarningMantén el teu fork actualitzat\n\n\n\nEls materials d’aquesta assignatura canvien sovint. Si treballes durant dies o setmanes sobre el mateix fork, sincronitza’l periòdicament amb el repositori original abans de començar una contribució nova:\ngit remote add upstream URL-del-repositori-original\ngit fetch upstream\ngit merge upstream/main\nFer-ho evita conflictes innecessaris quan obris la Pull Request i redueix el risc que la teva contribució es basi en una versió ja desactualitzada dels materials.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#crea-una-branca-per-al-teu-canvi",
+    "href": "course-info/contributions/contribute.html#crea-una-branca-per-al-teu-canvi",
+    "title": "Contribuir als materials",
+    "section": "3. Crea una branca per al teu canvi",
+    "text": "3. Crea una branca per al teu canvi\nAbans de modificar els fitxers, crea una branca (branch) específica per a la teva contribució.\ngit checkout -b nom-de-la-branca\nPer exemple:\ngit checkout -b millora-exercici-processos\nLa branca permet mantenir el teu canvi separat de la resta del projecte.\n\nRepte — Una branca per a una contribució\nSempre que sigui possible, procura que una branca representi una contribució concreta.\nPer exemple:\ncorreccio-enllac-unitat-2\nés preferible a:\ncanvis\nUn nom descriptiu facilita la revisió i permet entendre ràpidament quin és l’objectiu de la branca.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#fes-els-canvis",
+    "href": "course-info/contributions/contribute.html#fes-els-canvis",
+    "title": "Contribuir als materials",
+    "section": "4. Fes els canvis",
+    "text": "4. Fes els canvis\nAra pots modificar els materials.\nPots:\n\ncrear nous continguts;\nmodificar explicacions;\nafegir exemples;\ncrear exercicis;\ncorregir errates;\nactualitzar informació;\nmillorar la documentació.\n\nSi treballes amb els materials Quarto, pots previsualitzar el resultat localment amb:\nquarto preview\nLa previsualització permet comprovar que els canvis es visualitzen correctament abans d’enviar-los.\nTambé pots editar els fitxers .qmd directament des de GitHub mitjançant l’editor web. Aquesta opció permet crear una branca amb els canvis i iniciar posteriorment el procés de Pull Request.\n\n\n\n\n\n\nWarningRevisa els canvis abans de proposar-los\n\n\n\nAbans d’enviar la contribució, comprova que:\n\nel contingut és correcte;\nels exemples funcionen;\nno has introduït errates;\nels enllaços funcionen;\nel format es visualitza correctament (fes quarto preview, no només una lectura del .qmd);\nsi has afegit un bloc de tipus ::: {.classe}, la classe existeix realment a la llista de components admesos — una classe inventada es renderitza sense estil, sense avisar-te de l’error;\nno has pujat fitxers generats en renderitzar (.aux, .log, carpetes _files/, PDFs o HTML exportats) que no formen part del codi font;\nel canvi no modifica accidentalment altres parts dels materials.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#fes-commit-dels-canvis",
+    "href": "course-info/contributions/contribute.html#fes-commit-dels-canvis",
+    "title": "Contribuir als materials",
+    "section": "5. Fes commit dels canvis",
+    "text": "5. Fes commit dels canvis\nQuan els canvis estiguin preparats, registra’ls amb un commit.\ngit add .\nI després:\ngit commit -m \"Descripció clara dels canvis\"\nPer exemple:\ngit commit -m \"Millora l'exemple de processos\"\nUn bon missatge de commit ha de permetre entendre què s’ha modificat.\nEvita missatges poc informatius com:\ncanvis\no:\ncoses",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#puja-la-branca-al-teu-github",
+    "href": "course-info/contributions/contribute.html#puja-la-branca-al-teu-github",
+    "title": "Contribuir als materials",
+    "section": "6. Puja la branca al teu GitHub",
+    "text": "6. Puja la branca al teu GitHub\nAra has de publicar la branca al teu fork:\ngit push origin nom-de-la-branca\nPer exemple:\ngit push origin millora-exercici-processos\nLa branca i els seus commits quedaran disponibles al teu repositori de GitHub.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#obre-un-pull-request",
+    "href": "course-info/contributions/contribute.html#obre-un-pull-request",
+    "title": "Contribuir als materials",
+    "section": "7. Obre un Pull Request",
+    "text": "7. Obre un Pull Request\nAquest és el pas més important del procés.\nUn Pull Request (PR) és una proposta perquè els canvis que has fet al teu fork siguin incorporats al repositori original.\nDes del teu repositori, selecciona la branca on has fet els canvis i inicia un nou Pull Request.\n\n\n\nSelecciona la branca i obre un Pull Request\n\n\nTambé pots seleccionar directament la branca amb els teus canvis i iniciar el Pull Request des de la interfície de GitHub.\n\n\n\nVia alternativa: iniciar el Pull Request des del banner de la branca",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#revisa-lorigen-i-el-destí-dels-canvis",
+    "href": "course-info/contributions/contribute.html#revisa-lorigen-i-el-destí-dels-canvis",
+    "title": "Contribuir als materials",
+    "section": "8. Revisa l’origen i el destí dels canvis",
+    "text": "8. Revisa l’origen i el destí dels canvis\nGitHub mostrarà una comparació entre:\n\nel repositori principal, on vols incorporar els canvis;\nel teu fork, on has desenvolupat la modificació;\nla branca que conté els teus canvis.\n\nComprova especialment que la direcció sigui correcta.\nEn aquest cas:\nRepositori principal\n    ↓\nBranca amb la teva contribució\nGitHub també et mostrarà si els canvis es poden integrar automàticament.\n\n\n\nPantalla de comparació de canvis\n\n\nSi tot és correcte, fes clic a Create pull request.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#explica-bé-la-teva-contribució",
+    "href": "course-info/contributions/contribute.html#explica-bé-la-teva-contribució",
+    "title": "Contribuir als materials",
+    "section": "9. Explica bé la teva contribució",
+    "text": "9. Explica bé la teva contribució\nUn Pull Request no hauria de limitar-se a dir:\n\n“He fet alguns canvis.”\n\nLa descripció ha d’ajudar el professorat a entendre què has fet, per què ho has fet i quin valor aporta.\nUna bona descripció pot seguir aquesta estructura:\nQuè he canviat? Explica breument quins fitxers o materials has modificat.\nPer què ho he canviat? Explica quin problema has detectat o quina necessitat resol el canvi.\nQuin valor aporta? Explica com millora el material per als estudiants.\nCom ho he comprovat? Si és aplicable, explica quines proves has fet o com has verificat que el canvi funciona.\n\nRepte — Exemple de bona descripció\nMillora de l’exemple de processos de la Unitat 2\nHe actualitzat l’exemple perquè utilitzava una comanda que ja no correspon amb la versió actual de Debian.\nHe substituït l’exemple per una alternativa compatible i he actualitzat l’explicació associada.\nHe comprovat el procediment en una màquina virtual amb Debian i he verificat que les comandes funcionen correctament.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#què-passa-després-del-pull-request",
+    "href": "course-info/contributions/contribute.html#què-passa-després-del-pull-request",
+    "title": "Contribuir als materials",
+    "section": "Què passa després del Pull Request?",
+    "text": "Què passa després del Pull Request?\nQuan envies una PR, el professorat revisarà la proposta.\nLa revisió pot incloure:\n\ncorrecció tècnica;\nqualitat del contingut;\nclaredat de l’explicació;\nutilitat pedagògica;\ncoherència amb la resta dels materials;\nqualitat de la documentació;\npossibles efectes sobre altres parts del projecte.\n\nEl professorat pot:\n\nacceptar la contribució;\ndemanar modificacions abans d’acceptar-la;\ncomentar o discutir alguns aspectes;\nrebutjar-la si no és adequada o no aporta prou valor.\n\nAixò forma part del funcionament normal d’un projecte open source.\n\n\n\n\n\n\nNoteUna PR oberta no significa que el canvi s’hagi acceptat\n\n\n\nEl Pull Request és el mecanisme de revisió i proposta.\nLa incorporació definitiva del canvi depèn de la revisió del projecte.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#com-savalua-la-contribució",
+    "href": "course-info/contributions/contribute.html#com-savalua-la-contribució",
+    "title": "Contribuir als materials",
+    "section": "Com s’avalua la contribució?",
+    "text": "Com s’avalua la contribució?\nPots obtenir fins a 0,5 punts addicionals sobre la nota final.\nLa puntuació no depèn simplement del nombre de Pull Requests que enviïs. Es valorarà principalment la qualitat i l’impacte de la contribució.\nEntre altres aspectes, es tindrà en compte:\n\n\n\nAspecte\nQuè es valora\n\n\n\n\nRellevància\nEl canvi resol un problema o necessitat real?\n\n\nQualitat\nEl contingut és correcte, clar i ben elaborat?\n\n\nImpacte\nLa millora pot ser útil per a altres estudiants?\n\n\nRigor\nLa informació i els exemples són tècnicament correctes?\n\n\nDocumentació\nEl canvi està prou explicat i justificat?\n\n\nIntegració\nÉs coherent amb l’estructura i l’estil dels materials?\n\n\n\n\nError Comú — No totes les contribucions puntuen\nEnviar un Pull Request no garanteix l’obtenció del bonus.\nNomés es valoraran les contribucions que siguin acceptades pel professorat i que aportin un valor suficient als materials.\nUna modificació purament cosmètica, arbitrària o innecessària pot no ser considerada una contribució avaluable.\n\n\n\nContribueix com si el projecte fos teu\nAbans d’obrir una PR, pregunta’t:\n\nSi un altre estudiant hagués de fer servir aquest material demà, aquesta modificació realment li seria útil?\n\nSi la resposta és sí, probablement tens una bona contribució.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#objectius-daprenentatge",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#objectius-daprenentatge",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Objectius d’aprenentatge",
+    "text": "Objectius d’aprenentatge\n\nResultat d'Aprenentatge — En acabar aquesta sessió seràs capaç de...\n\nDescriure què és l’Administració de Sistemes i quin és el rol de la persona que l’exerceix.\nIdentificar les tasques i responsabilitats típiques d’un administrador de sistemes, incloent-hi els perfils moderns (DevOps, SRE) en què pot evolucionar aquest rol.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-significa-que-un-sistema-funciona",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-significa-que-un-sistema-funciona",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què significa que un sistema «funciona»?",
+    "text": "Què significa que un sistema «funciona»?\n\nAquesta és la pregunta clau que ens acompanyarà durant tota la unitat i que ens ajudarà a entendre què és l’administració de sistemes.\n\n\nUn sistema funciona quan…\n\nestà disponible quan l’usuari el necessita\nté un rendiment adequat\nés segur davant d’accessos i atacs\nés fiable, sense fallar constantment\npot créixer (escalar) si cal\nes pot mantenir al llarg del temps\n\n\n\nComencem la unitat amb una pregunta senzilla però que ens servirà de fil conductor durant tot el curs: què significa que un sistema “funcioni”? A primera vista sembla una pregunta trivial, però darrere hi ha totes les dimensions que un administrador de sistemes ha de garantir: disponibilitat, rendiment, seguretat, fiabilitat, escalabilitat i mantenibilitat. Cadascuna d’aquestes paraules és, en realitat, un concepte tècnic que definirem amb precisió al llarg de la unitat. Al final tornarem a aquesta mateixa pregunta i veurem que la resposta s’ha tornat molt més rica.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-ladministració-de-sistemes",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-ladministració-de-sistemes",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és l’Administració de Sistemes?",
+    "text": "Què és l’Administració de Sistemes?\n\n\n\n\nL’administració de sistemes és la disciplina tècnica que implica la configuració, la gestió, la supervisió i el manteniment continu d’infraestructures informàtiques (servidors, xarxes, emmagatzematge de dades, programari, seguretat, etc.), per garantir la seva disponibilitat, rendiment, seguretat i funcionalitat, amb l’objectiu de satisfer les necessitats operacionals i estratègiques de l’organització.\n\n\n\n\n\n\n\nUn administrador és una persona que té cura, gestiona o dirigeix els béns o els interessos d’una altra persona o entitat. En aquest cas, configurar, gestionar, supervisar i mantenir sistemes informàtics.\n\n\n\nSi preguntem a ChatGPT que ens defineixi formalment què és l’Administració de Sistemes, ens dirà que és la disciplina tècnica que implica la configuració, la gestió, la supervisió i el manteniment continu d’infraestructures informàtiques (servidors, xarxes, emmagatzematge de dades, programari, seguretat, etc.), per garantir la seva disponibilitat, rendiment, seguretat i funcionalitat, amb l’objectiu de satisfer les necessitats operacionals i estratègiques de l’organització.\nSegons la RAE, un administrador és una persona que té cura, gestiona o dirigeix els béns o els interessos d’una altra persona o entitat. En aquest cas, configurar, gestionar, supervisar i mantenir sistemes informàtics. Això implica que la primera part de la definició de ChatGPT està en línia amb la definició de l’administrador.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-sistema",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-sistema",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és un sistema?",
+    "text": "Què és un sistema?\n\n\n\n\nUn sistema és un conjunt d’elements interconnectats que treballen junts per aconseguir un objectiu comú. El Sistema Informàtic està format per maquinari, programari, dades, xarxes, persones, etc., que treballen junts per processar informació.\n\n\nSegons la RAE, un sistema és un conjunt d’elements interconnectats que treballen junts per aconseguir un objectiu comú. El Sistema Informàtic està format per maquinari, programari, dades, xarxes, persones, etc., que treballen junts per processar informació. Això implica que la segona part de la definició de ChatGPT necessita ser més específica per reflectir la complexitat i diversitat dels sistemes informàtics i no únicament la infraestructura.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-hem-de-garantir-en-un-sistema",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-hem-de-garantir-en-un-sistema",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què hem de garantir en un sistema?",
+    "text": "Què hem de garantir en un sistema?\n\n\n\nDisponibilitat: proporció del temps en què el servei és operatiu i accessible.\n\nEs pot expressar com a percentatge o uptime.\n\nRendiment: com respon el sistema davant una càrrega concreta.\n\nLatència, throughput, IOPS, temps de resposta, utilització de CPU/memòria.\n\n\n\n\nSeguretat: protegir el sistema i la informació segons la tríada CIA:\n\nConfidencialitat: només hi accedeixen els autoritzats.\nIntegritat: la informació no és alterada indegudament.\nDisponibilitat: els recursos són accessibles quan es necessiten.\n\nFuncionalitat: el sistema fa allò que els requisits especifiquen.\n\nEs verifica amb requisits i proves d’acceptació, no amb una única mètrica.\n\n\n\n\nConcepte\nNo existeix una única mètrica de rendiment ni una única mètrica de seguretat: primer cal definir què volem observar i quin objectiu volem assolir.\n\n\nAquí és important corregir una simplificació habitual: disponibilitat, rendiment, seguretat i funcionalitat no són quatre mètriques equivalents.\nLa disponibilitat sí que es pot expressar directament com una proporció de temps operatiu. La veurem quantitativament més endavant amb MTBF i MTTR.\nEl rendiment és multidimensional. Depenent del sistema ens interessaran mètriques diferents: latència o temps de resposta, throughput o nombre d’operacions per unitat de temps, IOPS en sistemes d’emmagatzematge, amplada de banda en xarxes o utilització de CPU i memòria. Dir simplement “eficiència” no ens permetria mesurar ni comparar el sistema.\nLa seguretat es pot introduir amb la tríada CIA: confidencialitat, integritat i disponibilitat. La disponibilitat apareix també com a propietat general del servei perquè, en seguretat, la mateixa propietat forma part del model CIA. Més endavant podrem afegir autenticació, autorització, xifratge i auditoria com a mecanismes per assolir aquests objectius.\nLa funcionalitat tampoc és una mètrica. És el conjunt de comportaments que el sistema ha de proporcionar. Per això es concreta mitjançant requisits i es comprova amb proves d’acceptació o altres criteris verificables.\nLa idea important per als estudiants és: abans de mesurar, hem de definir què volem observar i quin nivell considerem acceptable.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#com-mesurem-el-rendiment",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#com-mesurem-el-rendiment",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Com mesurem el rendiment?",
+    "text": "Com mesurem el rendiment?\n\n\n\nLatència: temps que triga una operació a completar-se.\nThroughput: quantitat de treball processat per unitat de temps.\nIOPS: operacions d’entrada/sortida per segon.\n\n\n\nUtilització: percentatge de capacitat consumida d’un recurs.\nTemps de resposta: latència percebuda pel client.\nErrors / saturació: senyals que el sistema no pot assumir la càrrega.\n\n\n\nExemple\nUn servidor pot tenir baixa utilització de CPU i, alhora, una latència molt alta perquè el coll d’ampolla és la xarxa, el disc o una dependència externa.\n\n\n\n\nPercentils de latència\n\np50 — mediana; representa l’experiència típica.\np95 — el 5% de les peticions és més lent.\np99 — l’1% de les peticions és més lent.\np99.9 — el 0,1% de les peticions és més lent.\n\n\n\nExemple — De la mètrica a l'SLO\nSi definim: 99,9% de les peticions en menys de 200 ms, estem establint, un objectiu equivalent a p99.9 ≤ 200 ms, sempre que la finestra temporal i la població mesurada estiguin definides de la mateixa manera.\n\n\n\n\nEl rendiment no és una única xifra. Depèn del tipus de sistema i de la pregunta que vulguem respondre.\nLa latència ens diu quant triga una operació; el throughput, quantes operacions podem processar per unitat de temps; les IOPS són especialment útils per caracteritzar emmagatzematge; i la utilització ens indica quina part de la capacitat d’un recurs està ocupada.\nAquestes mètriques s’han d’interpretar juntes. Una CPU al 40% no implica necessàriament que el sistema tingui bon rendiment: pot existir un coll d’ampolla en el disc, la xarxa o una dependència externa.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#quines-són-les-necessitats-a-satisfer",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#quines-són-les-necessitats-a-satisfer",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Quines són les necessitats a satisfer?",
+    "text": "Quines són les necessitats a satisfer?\n\n\nOperacionals\nCondicions necessàries perquè el servei funcioni avui:\n\ndisponibilitat i SLO\nrendiment i capacitat\nseguretat i control d’accés\ncòpies de seguretat i recuperació\nmonitorització i resposta a incidents\n\n\nEstratègiques\nDecisions que permeten que el sistema continuï sent viable demà:\n\nescalabilitat i creixement\ncostos i eficiència\nmantenibilitat i automatització\nadaptació a nous requisits\ncontinuïtat del negoci i compliment normatiu\n\n\n\nLa distinció entre necessitats operacionals i estratègiques només és útil si la podem concretar.\nLes necessitats operacionals descriuen les condicions que hem de satisfer per mantenir el servei en funcionament: disponibilitat, rendiment, seguretat, backups, monitorització i resposta als incidents.\nLes necessitats estratègiques tenen un horitzó més llarg: poder créixer, controlar els costos, reduir el treball manual, adaptar-nos a nous requisits i mantenir la continuïtat del negoci.\nLa frontera no és absoluta. Per exemple, l’escalabilitat és una propietat tècnica però també una decisió estratègica quan sabem que la càrrega creixerà.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#una-definició-més-completa",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#una-definició-més-completa",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Una definició més completa",
+    "text": "Una definició més completa\nL’administració de sistemes no consisteix només a gestionar màquines.\n\nDefinició — ...basada en la meva experiència\nÉs la disciplina tècnica que implica la configuració, gestió, supervisió i manteniment continu d’infraestructures informàtiques (servidors, xarxes, emmagatzematge de dades, programari, seguretat, etc.) així com la coordinació de les persones usuàries, polítiques, procediments i dades associades, per garantir la disponibilitat, rendiment, seguretat i funcionalitat del sistema, amb l’objectiu de satisfer les necessitats operacionals i estratègiques de l’organització.\n\n\nConcepte — paraules clau\nInfraestructura + Persones + Processos + Dades + Polítiques\n\n\nLes definicions inicials (la “de manual” i la de la RAE) no són incorrectes, però són una mica limitades: un sistema no només està format per infraestructura (maquinari, programari, xarxes, etc.), sinó que també inclou altres elements com les persones usuàries, les polítiques, els procediments i les dades que hi estan relacionades. Aquesta definició més completa incorpora aquests elements per donar una visió més realista de l’administració de sistemes: no és només “tenir cura de les màquines”, és coordinar tot un ecosistema al voltant d’elles.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#analogia-amb-matrix",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#analogia-amb-matrix",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Analogia amb Matrix",
+    "text": "Analogia amb Matrix\n\nQuants de vosaltres heu vist la pel·lícula Matrix?\n\n\n\nQui controla el sistema?\nQui coneix el sistema per dins?\nQui és capaç de canviar-lo sense que la resta ho noti?\n\n\n\n\n\n\nIntroducció a System Administration - CBT Nuggets (0:32 fins a 2:16)\n\n\n\n\nAbans de mostrar el vídeo, llancem tres preguntes a la classe: Qui controla el sistema? Qui el coneix per dins? Qui pot canviar-lo sense que la resta se n’adoni? Aquestes preguntes són exactament les que defineixen el rol d’un administrador de sistemes, i per això Matrix és una bona metàfora: els personatges principals són capaços de controlar i manipular el món virtual de Matrix, canviant la realitat a voluntat, de la mateixa manera que un administrador de sistemes configura, supervisa i manté la infraestructura que la resta d’usuaris només veu “des de fora”. La pel·lícula ofereix la clàssica elecció entre la pastilla blava (seguir sent usuari, sense veure el sistema) i la vermella (veure’l tal com és, amb totes les responsabilitats que això comporta). És una manera amena d’introduir la diferència entre “usar” un sistema i “administrar-lo”.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#evolució",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#evolució",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Evolució",
+    "text": "Evolució\n\n\nFa una dècada, el món del programari i el maquinari era molt diferent del que coneixem avui en dia. Els servidors eren físics, les aplicacions s’executaven en un únic servidor i la infraestructura era estàtica i difícil de modificar. Els administradors de sistemes treballaven en un entorn dominat pel maquinari i els cables, dedicant moltes hores a configurar i mantenir els servidors. Al mateix temps, els desenvolupadors de programari operaven en un univers separat, on les aplicacions s’executaven en servidors físics i tenien poc control sobre la infraestructura. Aquesta separació va generar una divisió notable entre els dos grups, amb escassa comunicació i col·laboració.\nLa situació va canviar radicalment amb l’arribada de la virtualització. Aquesta tecnologia va permetre als administradors de sistemes crear màquines virtuals i clons de servidors, simplificant enormement la gestió i configuració de la infraestructura. La virtualització va marcar un punt d’inflexió, transformant la manera de gestionar els sistemes i permetent als desenvolupadors provar i desplegar aplicacions en entorns aïllats, millorant així la qualitat i fiabilitat del programari i apropant els dos grups.\nL’aparició dels contenidors va suposar un altre gran avanç en l’administració de sistemes. Aquesta tecnologia va permetre als desenvolupadors empaquetar aplicacions i les seves dependències en contenidors lleugers i portàtils, que podien ser executats en qualsevol entorn. Això va impulsar el concepte de DEVOPS, facilitant la col·laboració entre els equips de desenvolupament i operacions per automatitzar i millorar els processos de desplegament, monitorització i gestió de la infraestructura.\nDEVOPS va emergir com a resposta a aquest canvi, promovent la col·laboració, comunicació i integració entre els equips de desenvolupament i operacions, amb l’objectiu de millorar la qualitat del programari i accelerar el desplegament d’aplicacions. Aquesta metodologia va permetre als equips treballar conjuntament per automatitzar i perfeccionar els processos relacionats amb la infraestructura.\nLa pràctica de Infrastructure as Code (IaC) va completar aquest procés, permetent gestionar la infraestructura de manera programàtica mitjançant codi. Això va permetre als equips de desenvolupament i operacions tractar la infraestructura com a codi, aplicant les mateixes pràctiques de desenvolupament de programari en la seva gestió. Com a resultat, la col·laboració, integració i automatització dels processos van millorar, augmentant la fiabilitat i escalabilitat de la infraestructura.\nFinalment, amb l’aparició dels conceptes serverless i Function as a Service (FaaS), una part de la infraestructura queda amagada darrere d’abstraccions gestionades pel proveïdor. Això difumina la frontera entre desenvolupament i operacions, però no la fa desaparèixer: continuen existint decisions sobre arquitectura, identitat i permisos, observabilitat, costos, disponibilitat, capacitat i resposta davant incidents. Els administradors de sistemes han evolucionat de tècnics centrats exclusivament en infraestructura física a perfils d’enginyeria que poden treballar en diversos nivells d’abstracció.\nÉs important remarcar el missatge clau d’aquesta diapositiva: l’administrador de sistemes no ha desaparegut amb tota aquesta evolució, simplement ha pujat de nivell d’abstracció. Abans gestionava cables i màquines físiques; ara pot estar gestionant polítiques d’infraestructura com a codi o configuracions serverless. Però en cada un d’aquests nivells (maquinari, sistema operatiu, màquina virtual, contenidor, IaC, cloud, serverless) segueix havent-hi algú que ha de prendre decisions, configurar, supervisar i respondre quan alguna cosa falla. Aquesta pregunta —què continua havent de gestionar algú a cada nivell?— és la que ens acompanyarà a les properes unitats del curs.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#sortides-professionals",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#sortides-professionals",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Sortides Professionals",
+    "text": "Sortides Professionals\n\n\nL’administració de sistemes és una disciplina àmplia i diversa, que no segueix una única via d’aprenentatge. Aquesta professió inclou una gran varietat de rols i especialitzacions, però no compta amb un itinerari professional clarament establert, fet que dificulta l’ensenyament de tots els seus aspectes en una sola assignatura. Si observeu el pla d’estudis del Grau en Enginyeria Informàtica, veureu que inclou assignatures orientades a la programació, amb sortides professionals com a desenvolupadors de programari en diferents àmbits. Alhora, també ofereix formació en computació (xarxes, sistemes operatius, bases de dades), amb possibilitats laborals com a enginyer de xarxes o administrador de bases de dades.\nTradicionalment, l’administració de sistemes ha estat vinculada a les operacions, amb sortides professionals com a tècnic de suport o tècnic de centre de dades, sovint allunyades dels perfils d’un enginyer informàtic. No obstant això, avui en dia, l’administració de sistemes ha evolucionat significativament, donant lloc a perfils més avançats i tècnics com DevOps, SRE (Site Reliability Engineer), i Cloud Engineer, que ofereixen oportunitats laborals molt més atractives i alineades amb les necessitats del mercat actual.\nAquesta assignatura té com a objectiu introduir-vos al món de l’administració de sistemes i aplicacions, així com a la seva gestió i manteniment. Ho farem amb una visió actualitzada, orientada cap a les sortides professionals més demandades en el mercat laboral, preparant-vos per a perfils amb més responsabilitat i especialització dins del camp de les tecnologies de la informació.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#el-rol-de-ladministrador-de-sistemes---similituds-amb-un-bomber",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#el-rol-de-ladministrador-de-sistemes---similituds-amb-un-bomber",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "El rol de l’administrador de sistemes - Similituds amb un bomber",
+    "text": "El rol de l’administrador de sistemes - Similituds amb un bomber\n\nEls administradors de sistemes han de tenir coneixements tècnics profunds i una actitud proactiva per anticipar problemes i, si cal, resoldre’ls sota pressió, tal com ho faria un bomber en una emergència.\n\n\n\n\n\nEl rol tradicional de l’administrador de sistemes pot ser semblant al d’un bomber. Ha de treballar per prevenir incendis, però quan hi ha un incendi ha de córrer per apagar-lo i restaurar la situació el més ràpid. No importa l’hora, el lloc o el dia, l’administrador de sistemes ha de ser capaç de respondre a les emergències i solucionar els problemes de manera eficient i efectiva. Això requereix una gran habilitat tècnica, coneixements profunds dels sistemes i una actitud proactiva per anticipar-se als problemes i resoldre’ls ràpidament. Els administradors de sistemes han de ser tant proactius com reactius, prevenint problemes i responent ràpidament davant els imprevistos per garantir la continuïtat del servei. Poden utilitzar eines com Nagios, Zabbix, Prometheus per monitoritzar els sistemes i detectar problemes abans que es converteixin en emergències reals. Però, han d’intervenir i improvisar quan calgui per resoldre els problemes i restaurar la normalitat.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#el-rol-de-ladministrador-de-sistemes---similituds-amb-un-científic",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#el-rol-de-ladministrador-de-sistemes---similituds-amb-un-científic",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "El rol de l’administrador de sistemes - Similituds amb un científic",
+    "text": "El rol de l’administrador de sistemes - Similituds amb un científic\n\nEls administradors de sistemes han de ser capaços de resoldre problemes complexos i trobar solucions creatives.\nAixò pot ser semblant al treball d’un científic, que ha de plantejar hipòtesis, realitzar experiments i analitzar dades per arribar a conclusions.\n\n\nExemple — Touch a Banana to get WiFi Access\n\n\n\n\n\n\nPer exemple, una empresa pot necessitar donar codis d’accés temporals als usuaris per connectar-se a la xarxa Wifi. En lloc de gestionar-ho manualment, un administrador de sistemes va crear un sistema que generava codis d’accés temporals quan els usuaris tocaven un plàtan connectat a un Raspberry Pi.\n\n\n\nUna altra característica de l’administrador de sistemes és la seva capacitat per resoldre problemes complexos i trobar solucions creatives. Això pot ser semblant al treball d’un científic, que ha de plantejar hipòtesis, realitzar experiments i analitzar dades per arribar a conclusions.\nPer exemple, una empresa pot necessitar donar codis d’accés temporals als usuaris per connectar-se a la xarxa Wifi. En lloc de gestionar-ho manualment, un administrador de sistemes va crear un sistema que generava codis d’accés temporals quan els usuaris tocaven un plàtan connectat a un Raspberry Pi. Aquesta solució creativa i inesperada va permetre automatitzar una tasca manual i millorar l’experiència de l’usuari. Això demostra la capacitat de l’administrador de sistemes per trobar solucions innovadores i eficients als problemes que es presenten.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#salari-administrador-de-sistemes",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#salari-administrador-de-sistemes",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Salari Administrador de Sistemes",
+    "text": "Salari Administrador de Sistemes\n\n\n\nEl salari base segons el portal payscale a Espanya és de mitjana 30k amb un potencial de creixement a futur de 10k. Aquesta dada és orientativa i pot variar segons la ubicació, l’experiència, les habilitats i la formació del professional. Però, en comparativa amb altres sortides professionals, l’administrador de sistemes igual no és una opció interessant. Analitzem ara sortides professionals més especialitzades.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#especialitzacions-en-administració-de-sistemes",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#especialitzacions-en-administració-de-sistemes",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Especialitzacions en Administració de Sistemes",
+    "text": "Especialitzacions en Administració de Sistemes\n\n\n\nAdministradors de Xarxa, Emmagatzematge, Seguretat\nOperadors de Xarxa\nArquitectes de Sistemes\nTècnics de Suport\nTècnics de Centre de Dades\nEnginyers de Sistemes\nEnginyer DEVOPS\nEnginyer SRE (Site Reliability Engineer)\n\n\n\n\n\nHi ha una gran varietat d’especialitzacions dins l’àmbit de l’administració de sistemes, cada una amb responsabilitats úniques que poden influir en el salari i els rols. A continuació, detallem algunes d’aquestes especialitzacions:\n\nAdministradors de Xarxa: S’encarreguen de la configuració, gestió i manteniment de routers, switches, firewalls i altres dispositius de xarxa en entorns físics i virtuals. La seva tasca és garantir la connectivitat i seguretat de les xarxes de l’empresa.\nAdministradors de Emmagatzematge: Gestionen sistemes de fitxers, solucions de còpies de seguretat i tecnologies d’emmagatzematge de dades com NETAPP o EMC. Són responsables d’assegurar que les dades estiguin segures i accessibles.\nAdministradors de Seguretat: Protegeixen els sistemes informàtics contra amenaces i atacs cibernètics. Implementen polítiques de seguretat, gestionen certificats digitals i realitzen auditories de seguretat per protegir la informació sensible.\nOperadors de Xarxa: Supervisionen el funcionament diari de les xarxes, gestionant el trànsit de dades i resolent problemes de connexió o rendiment. S’asseguren que les xarxes funcionin sense interrupcions.\nArquitectes de Sistemes: Dissenyen i planifiquen la infraestructura tecnològica de l’empresa. Són responsables d’assegurar que els sistemes compleixin els requisits de rendiment, seguretat i escalabilitat.\nTècnics de Suport: Ofereixen assistència tècnica als usuaris, resolent problemes i incidents a través de sistemes de tickets. La seva tasca és garantir que els usuaris puguin utilitzar les tecnologies sense problemes.\nTècnics de Centre de Dades: Gestionen i mantenen els servidors, xarxes i altres equips físics en els centres de dades. S’asseguren que el centre de dades funcioni amb alta disponibilitat i rendiment.\nEnginyers de Sistemes: Són responsables de dissenyar, implementar i mantenir la infraestructura informàtica de l’empresa. La seva tasca és assegurar que els sistemes compleixin els requisits operatius i tècnics.\n\nAra veurem dues especialitzacions més avançades i amb més demanda en el mercat laboral actual: Enginyer DEVOPS i Enginyer SRE (Site Reliability Engineer) amb detall. També us deixo un enllaç a un llibre que parla de les diferents especialitzacions.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-site-reliability-engineer-sre",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-site-reliability-engineer-sre",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és un Site Reliability Engineer (SRE)?",
+    "text": "Què és un Site Reliability Engineer (SRE)?\nEls Site Reliability Engineers (SRE) són enginyers que apliquen principis de programari i d’enginyeria a l’operació de serveis, amb un focus explícit en fiabilitat, disponibilitat, latència, rendiment i capacitat. L’automatització i el programari són mitjans per reduir el treball manual i fer que l’operació escali amb el servei.\n\nFiabilitat del Sistema: Nagios, Zabbix, Prometheus.\nEscalabilitat: Kubernetes, Docker, Terraform.\nMonitorització i Alertes: Grafana, ELK Stack, PagerDuty.\nGestió d’Incidents: Jira, ServiceNow, Slack.\nOptimització de Rendiment: New Relic, Datadog, AppDynamics.\nAutomatització de Processos: Ansible, Puppet, Chef.\n\n\nLa formulació clàssica de Ben Treynor Sloss, creador del terme SRE a Google, és que SRE és el que passa quan demanes a un enginyer de programari que dissenyi una funció d’operacions. La idea important no és la frase en si, sinó el canvi de mentalitat: aplicar enginyeria i programari a problemes que tradicionalment es resolien manualment. A Google, les responsabilitats d’SRE inclouen disponibilitat, latència, rendiment, eficiència, gestió del canvi, monitorització, resposta a emergències i planificació de capacitat. Font: Ben Treynor Sloss, Google SRE — In Conversation. Això implica centrar-se en la millora de la fiabilitat i l’escalabilitat dels sistemes, així com en la implementació de pràctiques d’integració i lliurament continu (CI/CD), reforçar la seguretat i optimitzar els costos operatius.\nEls SREs aprofiten el programari com una eina per gestionar i automatitzar els sistemes, identificar i resoldre problemes, i automatitzar processos amb l’objectiu final de construir infraestructures escalables i fiables que responguin als objectius de negoci.\nLes funcions principals d’un SRE inclouen la monitorització constant dels sistemes, la gestió d’alertes i resposta a incidents, l’automatització de tasques rutinàries, i l’optimització de l’escala i adaptabilitat dels recursos tecnològics. A més, col·laboren estretament amb els equips de desenvolupament per assegurar la millora contínua de la fiabilitat i el rendiment dels sistemes.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#salari-dun-site-reliability-engineer",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#salari-dun-site-reliability-engineer",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Salari d’un Site Reliability Engineer",
+    "text": "Salari d’un Site Reliability Engineer\n\n\n\nEls Site Reliability Engineers (SREs) experimenten un increment salarial substancial en comparació amb els administradors de sistemes. Un SRE pot començar guanyant fins a 50.000 € durant el seu primer any, i amb l’experiència, arribar fins als 70.000 € o més en un termini de cinc anys. Aquest diferencial salarial reflecteix la creixent importància i demanda de professionals especialitzats en la fiabilitat i escalabilitat dels sistemes informàtics. A diferència dels administradors de sistemes, els SREs no només es dediquen a mantenir la infraestructura, sinó que també se centren en optimitzar la resiliència i eficiència dels serveis digitals, assegurant que compleixin els Acords de Nivell de Servei (SLA). Per tant, si t’interessa un rol amb responsabilitats més tècniques i un potencial de creixement major, el camí d’SRE pot ser una opció molt atractiva dins del mercat laboral actual. Les seves responsabilitats dins de l’empresa són molt importants i tenen un impacte directe amb els objectius de negoci.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#com-mesurem-la-fiabilitat",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#com-mesurem-la-fiabilitat",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Com mesurem la fiabilitat?",
+    "text": "Com mesurem la fiabilitat?\n\n\nSLI\nService Level Indicator\nQuè mesurem.\nLa mètrica concreta observada (p. ex. % de peticions correctes).\n\nSLO\nService Level Objective\nQuin nivell volem.\nL’objectiu intern de fiabilitat (p. ex. 99,9% de peticions correctes).\n\nSLA\nService Level Agreement\nQuè comprometem.\nL’acord (sovint contractual) amb el client; pot establir compensacions si no es compleix.\n\n\nExemple — Error de pressupost\nSi l’SLO és 99,9%, el marge que queda fins al 100% (0,1%) és el teu pressupost d’error (error budget): quant et pots permetre fallar abans d’incomplir l’objectiu.\n\n\nUn dels conceptes fonamentals de la pràctica SRE —i que sovint queda amagat darrere de la paraula “fiabilitat”— és la distinció entre SLI, SLO i SLA. No cal desenvolupar-ho amb profunditat avui, però sí que el reconegueu com a vocabulari bàsic del rol.\n\nSLI (Service Level Indicator): la mètrica que realment mesurem sobre el sistema, per exemple el percentatge de peticions que responen correctament, o la latència mitjana.\nSLO (Service Level Objective): l’objectiu intern que ens marquem per a aquell indicador, per exemple “el 99,9% de les peticions han de respondre en menys de 200ms”. És un objectiu de fiabilitat, normalment intern a l’equip.\nSLA (Service Level Agreement): el compromís, sovint contractual, que fem amb el client o usuari final, normalment amb penalitzacions econòmiques si no es compleix. Sol ser una mica menys exigent que l’SLO intern, per deixar marge de seguretat.\n\nUn concepte derivat molt important en la cultura SRE és l’error budget (pressupost d’error): si el nostre SLO és 99,9%, això vol dir que tenim un marge del 0,1% de “fallades permeses” abans d’incomplir l’objectiu. Aquest pressupost es pot “gastar” en desplegaments arriscats, experiments o canvis ràpids; quan s’esgota, l’equip prioritza estabilitat per sobre de noves funcionalitats. Aquesta idea connecta directament amb el que veurem més endavant a la unitat quan parlem de disponibilitat, MTBF i MTTR: SLI/SLO/SLA són, en el fons, la manera com les organitzacions professionalitzen i formalitzen aquells mateixos conceptes.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-devops-engineer",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-devops-engineer",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és un DevOps Engineer?",
+    "text": "Què és un DevOps Engineer?\nEls DevOps Engineers són professionals clau en la integració i col·laboració entre els equips de desenvolupament (Dev) i operacions (Ops), amb l’objectiu principal de millorar l’eficiència i agilitat dels processos de desenvolupament de programari. El seu treball se centra en accelerar el desplegament d’aplicacions, millorar la qualitat del programari i optimitzar els fluxos de treball, fent ús intensiu de l’automatització, la integració contínua (CI) i el lliurament continu (CD).\n\nAutomatització: Jenkins, GitLab CI, Bamboo.\nGestió d’infraestructura com a codi (IaC): Terraform, Ansible, CloudFormation.\nContenidors i orquestració: Docker, Kubernetes.\nMonitorització i registre: Prometheus, Grafana, ELK Stack.\nCol·laboració i comunicació: Slack, Jira, Confluence.\n\n\nMentre que els Sysadmins tradicionalment s’ocupen de la gestió i manteniment de la infraestructura, com ara servidors, xarxes i sistemes operatius, els DevOps Engineers van més enllà d’aquestes tasques. El seu rol inclou l’automatització de processos, la implementació de pipelines de CI/CD, la gestió de contenidors (com Docker) i la infraestructura com a codi (IaC), com Terraform o Ansible. En lloc d’enfocar-se només en el manteniment i la disponibilitat dels sistemes, els DevOps Engineers treballen per integrar millor el desenvolupament i les operacions, assegurant que els nous llançaments de programari siguin ràpids, segurs i consistents.\nTot i que hi ha solapaments entre DevOps i SRE, les diferències clau radiquen en l’enfocament i les prioritats. Mentre que els DevOps Engineers se centren en l’optimització dels processos de desenvolupament i operacions a través de la col·laboració i l’automatització, els SREs estan més orientats a la fiabilitat i escalabilitat dels sistemes en producció. El SRE té un enfocament més específic en mantenir els serveis en línia, gestionant incidents, optimitzant el rendiment i assegurant-se que es compleixen els SLA. Tot i que ambdós rols treballen amb eines similars, com CI/CD i contenidors, els SREs tenen més responsabilitats en la resolució d’incidents crítics i en la millora de la resiliència del sistema.\nCom podeu veure les eines tecnològiques que utilitzen els DevOps Engineers són molt similars a les dels SREs, però la seva aplicació i objectius són diferents. Per tant, apunteu-vos aquestes eines i tecnologies, ja que són essencials pel món laboral actual.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#salari-dun-devops-engineer",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#salari-dun-devops-engineer",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Salari d’un DevOps Engineer",
+    "text": "Salari d’un DevOps Engineer\n\n\n\nEls DevOps Engineers, igual que els SREs, gaudeixen d’un salari més alt i d’un major potencial de creixement professional en comparació amb els administradors de sistemes tradicionals. Si t’apassiona l’administració de sistemes enfocada a l’automatització del desplegament de programari, el disseny i la gestió de pipelines de CI/CD, l’ús de contenidors i la implementació d’infraestructura com a codi, el rol de DevOps Engineer pot oferir-te una carrera més atractiva i plena d’oportunitats. En l’actualitat, moltes empreses busquen professionals amb habilitats en DevOps.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#devops-vs-sre",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#devops-vs-sre",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "DevOps vs SRE",
+    "text": "DevOps vs SRE\n\n\nDevOps\nCom col·laborem i lliurem software?\n\nSRE\nCom aconseguim que els serveis siguin fiables a escala?\n\n\nConcepte\nLes fronteres entre aquests perfils i el sysadmin tradicional són cada vegada menys rígides.\n\n\nDesprés de veure les definicions detallades de DevOps i SRE, val la pena quedar-nos amb una síntesi molt simple i memorable: un DevOps Engineer es pregunta principalment com col·laborem i lliurem software més ràpid i millor; un SRE es pregunta principalment com aconseguim que els serveis siguin fiables a gran escala. En la pràctica, ambdós rols comparteixen moltes eines (CI/CD, contenidors, IaC) i, cada vegada més, també comparteixen responsabilitats amb el sysadmin tradicional. No busqueu fronteres estrictes entre aquests perfils: al mercat laboral real, sovint es barregen.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#arquitectura-client-servidor",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#arquitectura-client-servidor",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Arquitectura Client-Servidor",
+    "text": "Arquitectura Client-Servidor\nUna arquitectura client-servidor involucra uns sistemes que necessiten serveis i uns servidors que processen i responen a aquestes peticions.\n\n\nClient\nUn ordinador o dispositiu capaç de rebre informació o utilitzar un servei o proveïdor.\nServidor\nUn ordinador o dispositiu remot capaç de proveir accés a un servei o a informació.\n\n\n\n\nReflexió\nClient i servidor descriuen rols dins d’una comunicació, no tipus de màquina. Un mateix sistema pot actuar com a client i com a servidor simultàniament.\n\n\nUn dels conceptes més importants en l’administració de sistemes és l’arquitectura client-servidor. Aquesta arquitectura implica la interacció entre dos tipus de sistemes: els clients, que sol·liciten serveis o informació, i els servidors, que processen i responen a aquestes peticions. Aquesta arquitectura és àmpliament utilitzada en entorns informàtics, com ara la web, les xarxes d’ordinadors i les aplicacions empresarials.\nPer exemple, quan un usuari accedeix a una pàgina web, el seu navegador actua com a client i sol·licita la pàgina al servidor web. El servidor de DNS consulta la URL i retorna l’adreça IP del servidor web. El navegador envia una petició HTTP o HTTPS al servidor web, que respon amb els fitxers necessaris per mostrar la pàgina al navegador. Aquest procés implica la comunicació entre el client i el servidor per proporcionar la informació sol·licitada a l’usuari.\nÉs important remarcar davant la classe una idea que sovint es perd en la primera presa de contacte: “client” i “servidor” no són tipus de màquina, sinó rols que un sistema exerceix dins d’una comunicació concreta. Un mateix ordinador pot ser servidor en una comunicació i client en una altra, fins i tot alhora. Per exemple, el servidor web que respon les peticions dels navegadors és, alhora, client del servidor de base de dades quan li demana informació per construir la pàgina; i també pot ser client d’un servidor DNS, d’un servidor d’autenticació, etc. Aquesta idea de “rol” és la mateixa que reprendrem més endavant quan parlem dels diferents tipus de servidor: no és el maquinari el que determina si una màquina és client o servidor, sinó la funció que exerceix en una comunicació concreta.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#característiques-client-servidor",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#característiques-client-servidor",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Característiques Client-Servidor",
+    "text": "Característiques Client-Servidor\n\n\nAvantatges\n\nSistema centralitzat → Totes les dades en un lloc.\nPolítiques de recuperació de dades.\nSeparació de la lògica.\n\n\n\n\nLimitacions del disseny centralitzat\n\nPunt únic de fallada (single point of failure): si el servidor cau, tots els clients perden el servei alhora.\nColl d’ampolla d’escalabilitat: el servidor ha de créixer (o replicar-se) per atendre més clients; el rendiment del sistema depèn de la seva capacitat.\nConcentració de recursos: tota la lògica i les dades depenen d’un mateix punt.\n\n\n\nExemple — Consideracions de seguretat\nLa concentració de dades i lògica en un punt també fa del servidor un objectiu atractiu per a atacs: denegació de servei (DoS), man-in-the-middle, phishing o usurpació d’identitat (spoofing). Cal autenticació, autorització i xifratge per mitigar-ho —qüestions que no són exclusives d’aquesta arquitectura, però que hi són especialment rellevants.\n\n\nAquesta arquitectura té avantatges i inconvenients. Entre els avantatges es troba la centralització de les dades, ja que tota la informació es troba en un únic lloc, el que facilita la gestió i la recuperació de les dades. A més, permet establir polítiques de recuperació de dades i separar la lògica de negoci de la interfície d’usuari, el que facilita la gestió i el manteniment del sistema. D’aquesta manera, els desenvolupadors poden centrar-se en la lògica de negoci sense preocupar-se de la interfície d’usuari. Per exemple, en una aplicació web, la lògica de negoci es pot gestionar al servidor, mentre que la interfície d’usuari es pot gestionar al client.\nÉs important distingir dos nivells diferents en els inconvenients d’aquesta arquitectura. D’una banda, hi ha limitacions pròpies del disseny: com que les dades i la lògica es concentren en el servidor, aquest es converteix en un punt únic de fallada (single point of failure) — si cau, tots els clients perden el servei simultàniament, a diferència, per exemple, d’una arquitectura P2P on la caiguda d’un node no atura la resta. També apareix un coll d’ampolla d’escalabilitat: per atendre més clients cal fer créixer o replicar el servidor, i el rendiment global del sistema queda limitat per la seva capacitat.\nD’altra banda, hi ha consideracions de seguretat que, tot i no ser exclusives d’aquesta arquitectura, hi són especialment rellevants perquè la centralització la fa un objectiu atractiu per a atacs: un atac de denegació de servei (DoS) envia moltes peticions al servidor per saturar-lo i fer-lo caure; un atac de l’home al mig (man-in-the-middle) intercepta les comunicacions entre el client i el servidor per obtenir informació sensible; el phishing enganya els usuaris amb correus falsos per obtenir informació confidencial; i la usurpació d’identitat (spoofing) consisteix a fer-se passar per una altra persona o sistema per obtenir accés no autoritzat. Aquestes amenaces no són exclusives del client-servidor — qualsevol sistema connectat a una xarxa n’és susceptible —, però la centralització de dades i lògica en un únic punt en fa un objectiu especialment rendible per a un atacant. Per tant, cal implementar mesures com l’autenticació, l’autorització i el xifratge per protegir el sistema i les dades dels usuaris.\nA la figura s’observa com múltiples clients es comuniquen amb un servidor central per obtenir informació o serveis. I com múltiples servidors poden comunicar-se amb altres servidors per obtenir informació o serveis. També 1 client pot comunicar-se amb múltiples servidors. Per exemple, un client pot accedir a un servidor web per obtenir informació i a un servidor de correu per enviar correus electrònics. El servidor web pot comunicar-se amb el servidor de correu per enviar notificacions als usuaris.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#un-servidor-és-un-rol",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#un-servidor-és-un-rol",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Un servidor és un rol",
+    "text": "Un servidor és un rol\n\nReflexió\nClient i servidor són rols, no tipus de màquina.\n\n\n\nofereix un servei\nrep peticions\nconsumeix o proporciona recursos\n\n\n\nUn mateix ordinador pot exercir diversos rols alhora.\n\n\nAbans d’enumerar tipus de servidors, val la pena fixar-nos en el que tenen tots en comú: un servidor no és un tipus de màquina, és un rol que exerceix una màquina (física o virtual) —exactament la mateixa idea que hem introduït a la diapositiva de client-servidor. Aquest rol consisteix a oferir un servei concret, rebre peticions relacionades amb aquest servei, i consumir o proporcionar els recursos necessaris per atendre-les. És important entendre que “servidor” no és sinònim de “màquina dedicada”: un mateix ordinador pot exercir simultàniament el rol de servidor web i de servidor de base de dades, per exemple, encara que en entorns de producció sovint se separen per motius de rendiment i seguretat.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#servidors-més-comuns",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#servidors-més-comuns",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Servidors més comuns",
+    "text": "Servidors més comuns\n\n\n\nServidor d’autenticació.\nServidor de fitxers.\nServidor d’emmagatzematge (storage server).\nServidor de correu.\nServidor de base de dades.\n\n\n\nServidor SSH.\nServidor Web.\nServidor d’aplicacions.\nServidor de backups.\nServidor de còmput.\n\n\n\nHi ha molts tipus de servidors en funció de l’objectiu que tenen. Alguns dels servidors més comuns són els servidors d’autenticació, que s’encarreguen de gestionar l’accés dels usuaris als sistemes; els servidors de fitxers, que emmagatzemen i gestionen els fitxers i documents de l’empresa; els servidors d’emmagatzematge, que proporcionen recursos d’emmagatzematge a altres sistemes; segons l’arquitectura, poden exposar fitxers (NAS) o blocs (SAN); els servidors de correu, que gestionen el correu electrònic de l’empresa; els servidors de base de dades, que emmagatzemen i gestionen les dades de l’empresa; els servidors SSH, que permeten l’accés remot als servidors; els servidors web, que allotgen les pàgines web de l’empresa; els servidors d’aplicacions, que executen les aplicacions de l’empresa; els servidors de backups, que realitzen còpies de seguretat de les dades de l’empresa; i els servidors de còmput, que realitzen càlculs i processos computacionals entre altres. Recordeu la diapositiva anterior: cadascun d’aquests noms és només una etiqueta per a un rol concret (oferir un servei, rebre peticions, consumir/proporcionar recursos), no pas un tipus diferent de maquinari.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#exemple-darquitectura-escalable",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#exemple-darquitectura-escalable",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Exemple d’arquitectura escalable",
+    "text": "Exemple d’arquitectura escalable\n\n\nA la figura proporcionada es mostra una arquitectura típicament utilitzada per al desplegament d’una web escalable i fiable. En aquesta arquitectura, el punt d’entrada és un balancejador de càrrega, que distribueix les peticions entre els diversos servidors web. Els servidors web, que poden ser rèpliques, allotgen les pàgines web i gestionen les peticions dels usuaris. Aquestes pàgines web necessiten accedir a un servidor de base de dades per emmagatzemar i gestionar les dades associades. Cada base de dades està protegida per un servidor de backups, que realitza còpies de seguretat per garantir la recuperació en cas de fallades. A més, per millorar la velocitat de càrrega de les pàgines web, es fa servir un dispositiu CDN (Content Delivery Network) que redirigeix les peticions als servidors més propers a l’usuari.\nAquesta arquitectura és àmpliament utilitzada per allotjar llocs webs, ja que ofereix una combinació d’escalabilitat i fiabilitat, assegurant un rendiment òptim i una alta disponibilitat per als usuaris finals.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#les-preguntes-que-ha-de-respondre-un-administrador",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#les-preguntes-que-ha-de-respondre-un-administrador",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Les preguntes que ha de respondre un administrador",
+    "text": "Les preguntes que ha de respondre un administrador\n\nAquestes són les preguntes que intentareu respondre durant tota l’assignatura.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#problemes-més-comuns-servidors-i",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#problemes-més-comuns-servidors-i",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Problemes més comuns servidors (I)",
+    "text": "Problemes més comuns servidors (I)\n\nQui i com accedeix a la informació?\n\nDeterminar qui (usuari, procés o servei) pot accedir a quins fitxers i directoris i com ho pot fer (lectura, escriptura, execució).\nPermisos, ACLs, polítiques de seguretat.\n\nCom protegeixo la informació?\n\nDeterminar com protegir la informació sensible i confidencial.\nXifratge, contrasenyes, autenticació, autorització, auditoria, backups.\n\nCom asseguro el sistema?\n\nProtegir el sistema contra atacs i amenaces.\nFirewall, IDS/IPS, antivirus, actualitzacions, patches, hardening.\n\n\n\nUn dels problemes més comuns en els servidors és determinar qui i com accedeix a la informació. Això implica definir qui (usuari, procés, servei) pot accedir a quins fitxers i directoris i com ho pot fer (lectura, escriptura, execució). Per fer-ho, es poden utilitzar permisos, llistes de control d’accés (ACLs) i polítiques de seguretat per garantir que només els usuaris autoritzats puguin accedir a la informació.\nUn altre problema comú és com protegir la informació sensible i confidencial. Això implica determinar com protegir la informació per evitar l’accés no autoritzat. Per fer-ho, es poden utilitzar tècniques com el xifratge, les contrasenyes, l’autenticació, l’autorització, l’auditoria i els backups per garantir la seguretat i la privacitat de la informació.\nUn altre problema és com assegurar el sistema contra atacs i amenaces. Això implica protegir el sistema contra atacs externs i interns que puguin comprometre la seguretat i la integritat del sistema. Per fer-ho, es poden utilitzar eines com el firewall, els sistemes de detecció i prevenció d’intrusions (IDS/IPS), l’antivirus, les actualitzacions, els patches i el hardening per garantir la seguretat del sistema.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#problemes-més-comuns-servidors-ii",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#problemes-més-comuns-servidors-ii",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Problemes més comuns servidors (II)",
+    "text": "Problemes més comuns servidors (II)\n\nCom puc saber si el client és qui diu ser?\n\nAutenticar els usuaris i els dispositius.\nContrasenyes, certificats digitals, autenticació multifactorial.\n\nQuins avantatges/inconvenients té un disseny respecte a un altre?\n\nDeterminar quin disseny és més adequat per a les necessitats de l’empresa.\nEscalabilitat, rendiment, seguretat, disponibilitat, fiabilitat.\n\nCom asseguro el bon funcionament?\n\nGarantir que el sistema funcioni correctament i sense problemes.\nMonitorització, alertes, backups, redundància, tolerància a fallades.\n\n\n\nUn altre problema és com autenticar els usuaris i els dispositius per garantir que siguin qui diuen ser. Això implica autenticar els usuaris i els dispositius per garantir que només els usuaris autoritzats puguin accedir a la informació. Per fer-ho, es poden utilitzar tècniques com les contrasenyes, els certificats digitals i l’autenticació multifactorial per garantir la seguretat i la privacitat de la informació.\nUn altre problema comú és determinar quins avantatges i inconvenients té un disseny respecte a un altre. Això implica determinar quin disseny és més adequat per a les necessitats de l’empresa en termes d’escalabilitat, rendiment, seguretat, disponibilitat i fiabilitat. Per fer-ho, es poden avaluar els avantatges i inconvenients de cada disseny per garantir que s’adeqüi a les necessitats de l’empresa.\nUn altre problema és com assegurar el bon funcionament del sistema. Això implica garantir que el sistema funcioni correctament i sense problemes. Per fer-ho, es poden utilitzar tècniques com la monitorització, les alertes, els backups, la redundància i la tolerància a fallades per garantir que el sistema funcioni correctament i sense problemes.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#problemes-més-comuns-servidors-iii",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#problemes-més-comuns-servidors-iii",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Problemes més comuns servidors (III)",
+    "text": "Problemes més comuns servidors (III)\n\nCom dissenyo polítiques i plans d’emergència si tot falla?\n\nPreparar-se per a situacions d’emergència i desastres.\nPlans de contingència, plans de recuperació, plans de resposta a incidents.\n\nCom analitzo post-mortem les causes d’un atac?\n\nIdentificar les causes d’un atac i prendre mesures correctives.\nAnàlisi forense, auditoria, millora contínua.\n\n\n\nUn altre problema és com dissenyar polítiques i plans d’emergència si tot falla. Això implica preparar-se per a situacions d’emergència i desastres per garantir la continuïtat del negoci. Per fer-ho, es poden utilitzar plans de contingència, plans de recuperació i plans de resposta a incidents per garantir que l’empresa pugui respondre de manera eficaç a situacions d’emergència i desastres.\nFinalment, un altre problema és com analitzar post-mortem les causes d’un atac per identificar les causes i prendre mesures correctives. Això implica realitzar una anàlisi forense, una auditoria i una millora contínua per identificar les causes d’un atac i prendre mesures correctives per evitar que es repeteixin en el futur.\nAquestes dues diapositives (I i II) són, probablement, les més importants de tota la unitat: no us demano que us les memoritzeu, sinó que reconegueu que són exactament les preguntes que anireu responent, unitat rere unitat, al llarg de tota l’assignatura. Quan parlem de permisos, xifratge, monitorització o plans de contingència, ho fem perquè donen resposta a alguna d’aquestes preguntes.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#del-concepte-a-la-infraestructura-real",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#del-concepte-a-la-infraestructura-real",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Del concepte a la infraestructura real",
+    "text": "Del concepte a la infraestructura real\nSistema → Servei → Servidor → Rack → CPD\n\nFins ara hem parlat de sistemes, serveis i servidors en abstracte. Però tot això s’acaba materialitzant en maquinari real, en un espai físic concret: un servidor s’instal·la en un rack, i els racks s’agrupen en un centre de dades (CPD). Les properes diapositives mostren exactament això amb fotografies reals, incloent el propi CPD de la UdL, per connectar els conceptes que hem après amb la infraestructura que hi ha darrere del Campus Virtual i dels serveis que useu cada dia.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-centre-de-dades",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-centre-de-dades",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és un centre de dades?",
+    "text": "Què és un centre de dades?\nÉs una instal·lació que allotja un conjunt de servidors i equipament de xarxa (recursos heterogenis) per proporcionar recursos informàtics a diverses aplicacions i serveis (càrregues de treball diverses).\n\n\n\n\nEsquema d’un centre dades\n\n\n\n\nUn centre de dades o data center és un espai físic on s’allotgen els servidors, els dispositius de xarxa i altres equips informàtics necessaris per emmagatzemar, processar i distribuir la informació. Aquests centres de dades poden ser propis de l’empresa o externs, i poden ser gestionats per l’empresa o per un proveïdor de serveis. Els centres de dades són essencials per a les empreses que necessiten emmagatzemar i processar grans quantitats de dades, ja que proporcionen l’espai, la infraestructura i els recursos necessaris per garantir el funcionament dels sistemes informàtics.\nUn exemple notable de reutilització d’estructures per a centres de dades és l’ús d’edificis històrics com esglésies i mines abandonades. Aquests espais, amb les seves condicions úniques i sovint amb una infraestructura sòlida, són adaptats per allotjar servidors i equips. Per exemple, l’antiga església de Saint-Ouen a França ha estat convertida en un centre de dades, aprofitant la seva estructura i espai per complir amb els requisits tecnològics moderns. D’altra banda, la mina de carboni de Pionen a Suècia ha estat transformada en un centre de dades subterrani, oferint una protecció física addicional contra desastres naturals i atacs.\nMicrosoft, amb el seu Project Natick, ha submergit centres de dades sencers al fons del mar (a la costa d’Escòcia), aprofitant la temperatura freda i estable de l’aigua per refredar-los passivament i reduir el consum energètic; a més, l’atmosfera de nitrogen segellada dins la càpsula va reduir la taxa de fallades respecte als servidors equivalents en terra. Google segueix una estratègia diferent, però també basada en l’aigua de mar: al seu centre de dades de Hamina (Finlàndia), utilitza aigua freda del mar Bàltic per refrigerar els servidors sense submergir-los. Aquestes iniciatives mostren la diversitat de solucions i enfoques per a la gestió de centres de dades, adaptant-se a les necessitats i condicions específiques de cada empresa.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-rack",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-rack",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és un rack?",
+    "text": "Què és un rack?\nUn rack és una estructura metàl·lica que allotja servidors, switches, routers i altres equips informàtics en un centre de dades.\n\n\n\n\nRacks del CPD de la UdL\n\n\n\n\nUn rack és una estructura metàl·lica que allotja servidors, switches, routers i altres equips informàtics en un centre de dades. Aquests racks permeten organitzar i protegir els equips informàtics, així com facilitar la gestió dels cables i la refrigeració dels equips. Cada rack pot contenir diversos servidors, switches i altres equips, i es pot apilar verticalment per aprofitar l’espai disponible al centre de dades. A més, els racks disposen de panells laterals i portes per protegir els equips i garantir la seguretat dels servidors i altres equips informàtics.\nPer exemple, a la imatge us mostro els racks d’un passadís del centre de dades de la Universitat de Lleida, on es poden aquests armaris, penseu que cada rack pot contenir diversos servidors, switches i altres equips informàtics, i únicament es veu un dels múltiples passadissos del centre de dades. En aquest centre de dades és on tenim el Campus Virtual, les eines i dades dels estudiants i professors, així com els servidors de recerca dels grups de recerca de la UdL, entre d’altres.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#exemple-de-racks",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#exemple-de-racks",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Exemple de racks",
+    "text": "Exemple de racks\n\n\n\n\n\n\nRack 1 - GCD - Davant\n\n\n\n\n\n\n\n\n\n\nRack 1 - GCD - Darrera\n\n\n\n\n\nAra us mostro un rack, en concret els servidors són del grup de recerca en computació distribuïda. A la part de dalt es pot veure un switch, i la resta són servidors. A la part de davant es poden veure els servidors i a la part de darrera els cables de xarxa i alimentació. En aquest cas, hi ha diferents colors de cables per identificar la xarxa a la qual pertanyen i la seva funció.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#exemple-de-servidor",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#exemple-de-servidor",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Exemple de servidor",
+    "text": "Exemple de servidor\n\n\n\n\n\n\nExterior d’un servidor\n\n\n\n\n\n\n\n\n\n\nInterior d’un servidor\n\n\n\n\n\nEn aquestes imatges podem fer zoom i veure els components exteriors i interiors d’un servidor. A la imatge 8 es pot veure com cada disc té un indicador de color per identificar el disc en cas de fallada. A la imatge 9 es pot veure la placa base, els discos durs, la font d’alimentació, la memòria RAM i el processador.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-switch",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-un-switch",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és un switch?",
+    "text": "Què és un switch?\nUn switch és un dispositiu de xarxa que connecta diversos equips informàtics per permetre la comunicació entre ells.\n\n\n\n\nSwitch\n\n\n\n\nUn switch Ethernet tradicional treballa principalment a capa 2: rep trames Ethernet i utilitza la seva taula de commutació per decidir per quin port les ha de reenviar segons l’adreça MAC de destinació.\nUn router treballa principalment a capa 3: rep paquets IP i utilitza una taula de rutes per decidir cap a quina xarxa s’han d’encaminar. Aquesta distinció conceptual és més útil que memoritzar simplement “switch = xarxa local” i “router = Internet”, perquè explica què està fent realment cada dispositiu.\nEls switches gestionats també poden incorporar funcionalitats de capa 3; per tant, “L2 vs L3” és el model conceptual de base, no una frontera absoluta de tots els dispositius comercials. Les VLAN introdueixen segmentació lògica a capa 2 i permeten crear dominis de broadcast separats.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#característiques-dun-sistema",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#característiques-dun-sistema",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Característiques d’un sistema",
+    "text": "Característiques d’un sistema\n\nSimplicitat\nMantenibilitat\nEscalabilitat\nSeguretat\nFiabilitat\nDisponibilitat\nRendiment\nFacilitat d’ús\n\n\n(Més endavant treballarem també l’observabilitat: la capacitat de saber què està passant dins d’un sistema.)\n\n\nEn el disseny de sistemes informàtics, és important tenir en compte diverses característiques per garantir que el sistema sigui eficient, segur i fiable. Algunes de les característiques més importants d’un sistema són la simplicitat, la mantenibilitat, l’escalabilitat, la seguretat, la fiabilitat, la disponibilitat, el rendiment i la facilitat d’ús. En una assignatura que porta per nom “Administració i Manteniment”, val la pena remarcar explícitament la mantenibilitat: la facilitat amb què un sistema es pot corregir, actualitzar o adaptar al llarg del temps. Més endavant al curs també parlarem d’observabilitat, és a dir, la capacitat de saber en tot moment què està passant dins d’un sistema mitjançant mètriques, logs i traces. Ara bé, sovint intentem dotar sistemes amb característiques que no es poden afegir després de la seva construcció. Per exemple, intentar aplicar “seguretat” després que les interfícies del sistema hagin estat definides produeix restriccions i limitacions; intentar fer un sistema amb limitacions intrínseques funcionar en circumstàncies per les quals no va ser dissenyat produeix “hacks” i “workarounds” i el resultat final sovint sembla més una casa de cartes fràgil que una estructura sòlida i fiable.\nPer tant, quan discutim sobre el disseny de sistemes informàtics, és important tenir en compte aquestes característiques i assegurar-nos que el sistema compleixi els objectius de l’empresa i sigui capaç de respondre a les necessitats dels usuaris",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-lescalabilitat",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-lescalabilitat",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és l’escalabilitat?",
+    "text": "Què és l’escalabilitat?\n\n\nL’escalabilitat és la capacitat d’un sistema per gestionar un augment de la càrrega de treball sense afectar el rendiment.\n\nVertical: augmentar la capacitat d’un servidor afegint més recursos (CPU, memòria, disc).\nHoritzontal: augmentar la capacitat d’un sistema afegint més servidors.\n\n\n\n\n\n\nEscalabilitat\n\n\n\n\n\n\n\nExemple — Costos d'escalabilitat\nEl cloud computing permet adaptar la capacitat disponible a la càrrega de treball real, pagant només pels recursos que s’utilitzen en cada moment.\n\n\nEscalabilitat es refereix a la capacitat d’un sistema per gestionar un augment en la càrrega de treball sense que el seu rendiment es vegi afectat. És un concepte clau en el disseny de sistemes informàtics, especialment en entorns amb variacions en la demanda. Aquesta capacitat s’aconsegueix mitjançant dues estratègies principals:\n\nEscalabilitat Vertical: Consisteix en millorar la capacitat d’un servidor afegint més recursos com CPU, memòria o disc. Això permet que un servidor maneje una càrrega de treball més gran sense necessitat de maquinari addicional.\nEscalabilitat Horitzontal: Consisteix en augmentar la capacitat del sistema afegint més servidors. Això distribueix la càrrega de treball entre diversos servidors, millorant la capacitat global del sistema.\n\nEn l’entorn de cloud computing, aquest concepte es relaciona sovint amb elasticitat, que és la capacitat d’un sistema per adaptar-se de manera dinàmica a les fluctuacions de la càrrega de treball. Per exemple, una botiga en línia podria experimentar un augment significatiu de trànsit durant el Black Friday. Un sistema escalable i elàstic podria gestionar aquest augment de demanda sense perdre rendiment, i després reduir la capacitat quan la demanda torna a nivells normals.\nL’objectiu és garantir que el sistema pugui mantenir un rendiment òptim i evitar problemes com temps d’espera llargs, errors o caigudes, que podrien afectar negativament l’experiència de l’usuari i els resultats comercials.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-la-fiabilitat",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-la-fiabilitat",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és la fiabilitat?",
+    "text": "Què és la fiabilitat?\nLa fiabilitat és la capacitat d’un sistema de complir la seva funció durant un període determinat sense fallar, sota unes condicions de funcionament especificades.\nEl MTBF (Mean Time Between Failures) és una mesura habitual per caracteritzar el comportament de sistemes reparables.\n\nConcepte\nDefinició estadística: el MTBF és el temps mitjà entre fallades del procés de fallades considerat.\nEstimació a partir de dades observades:\n\\[\n\\widehat{MTBF} =\n\\frac{\\text{temps total de funcionament}}\n{\\text{nombre de fallades}}\n\\]\nAquesta fórmula és un estimador empíric, no la definició formal del MTBF.\n\n\nExemple — Un model simplificat\nSi durant 10.000 hores de funcionament observem 10 fallades:\n\\[\n\\widehat{MTBF} = \\frac{10.000}{10}=1.000\\ h\n\\]\nAixò descriu el comportament mitjà observat; no significa que la propera fallada es produirà d’aquí a 1.000 hores.\n\n\nLa distinció entre magnitud estadística i estimador és important.\nEn un model exponencial amb taxa de fallada constant \\(\\lambda\\), el temps entre fallades segueix una distribució exponencial i:\n\\[\nMTBF = \\frac{1}{\\lambda}\n\\]\nAquesta hipòtesi és útil per modelar la fase de vida útil d’un sistema, però no és universal.\nLa corba de banyera (bathtub curve) descriu qualitativament tres règims habituals de taxa de fallada:\n\nMortalitat infantil: taxa inicial elevada, sovint associada a defectes de fabricació, configuració o desplegament.\nVida útil: taxa aproximadament constant; és el règim on el model exponencial resulta especialment útil.\nDesgast: la taxa de fallada augmenta amb l’envelliment o el deteriorament.\n\nPer tant, el MTBF observat és una mitjana condicionada al règim i a la població estudiats. Sense conèixer el model de fallades, l’edat del sistema i les seves condicions d’operació, el MTBF per si sol no permet predir la propera fallada.\nUna forma de millorar la fiabilitat és introduir redundància, però això no elimina necessàriament les fallades: pot permetre que el servei continuï o reduir el temps de recuperació.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#redundància-i-tolerància-a-fallades",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#redundància-i-tolerància-a-fallades",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Redundància i tolerància a fallades",
+    "text": "Redundància i tolerància a fallades\n\nAlgunes estratègies habituals són:\n\nCold standby: la reserva no està activa; cal iniciar-la o preparar-la després de la fallada.\nWarm standby: la reserva està parcialment preparada.\nHot standby / active-passive: la reserva està preparada per assumir ràpidament el servei.\nActive-active: diverses instàncies donen servei simultàniament.\n\n\n\nLa classificació cold/warm/hot és una simplificació útil per introduir el compromís entre cost, temps de recuperació i grau de preparació.\nNo hi ha una configuració universalment millor. La decisió depèn del SLO, del cost assumible, de la capacitat de detectar la fallada i de les dependències del servei.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#ha-dr-i-fault-tolerance",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#ha-dr-i-fault-tolerance",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "HA, DR i Fault Tolerance",
+    "text": "HA, DR i Fault Tolerance\n\nRedundància és un mecanisme de disseny\nHA, DR i FT són conceptes més específics sobre com volem respondre a les fallades.\n\n\n\n\n\n\n\n\n\nConcepte\nObjectiu\nExemple\n\n\n\n\nHA — Alta Disponibilitat\nMinimitzar la interrupció del servei\nFailover entre instàncies dins d’un entorn\n\n\nDR — Disaster Recovery\nRecuperar el servei després d’un desastre\nRecuperació des d’una altra ubicació\n\n\nFT — Fault Tolerance\nContinuar funcionant davant d’una fallada\nComponents redundants amb continuïtat perceptiblement ininterrompuda\n\n\n\n\nHA i FT no són sinònims. Una arquitectura HA acostuma a acceptar una petita finestra d’interrupció durant el failover; fault tolerance busca que la fallada d’un component no sigui perceptible per al servei.\nDR tracta especialment els escenaris en què una ubicació o un entorn complet deixa d’estar disponible. Per això sovint implica una estratègia geogràficament separada.\nEls termes tenen matisos diferents segons el marc o fabricant, però aquesta distinció és una bona base operativa per al curs.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#redundància-i-mttr",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#redundància-i-mttr",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Redundància i MTTR",
+    "text": "Redundància i MTTR\nLa redundància pot reduir el MTTR efectiu percebut pel servei o, en una arquitectura tolerant a fallades, evitar que una fallada provoqui indisponibilitat.\n\n\n\n\n\n\n\n\nEstratègia\nOrdre de magnitud de la interrupció 1\nEfecte sobre el servei\n\n\n\n\nCold standby\nminuts → hores\nCal preparar/iniciar la reserva\n\n\nWarm standby\nsegons → minuts\nReserva parcialment preparada\n\n\nHot standby / active-passive\nsegons → minuts\nFailover ràpid\n\n\nActive-active\nsegons → gairebé zero\nEl servei pot continuar mentre es redistribueix la càrrega\n\n\n\n\nAra podem connectar quantitativament redundància i disponibilitat:\n\\[\nA = \\frac{MTBF}{MTBF+MTTR}\n\\]\nSi mantenim constant el MTBF, reduir el MTTR augmenta directament la disponibilitat.\nPer exemple, amb MTBF = 1.000 h: - MTTR = 1 h → \\(A \\approx 99,90\\%\\) - MTTR = 0,1 h → \\(A \\approx 99,99\\%\\)\nAixò converteix la redundància en una decisió quantitativa: no es tracta simplement de «tenir una còpia», sinó de decidir quant temps d’interrupció podem permetre’ns i quin cost té reduir-lo.\nEls valors de la taula són orientatius. Un active-active mal dissenyat pot tenir una recuperació pitjor que un hot standby ben automatitzat.\n\nOrdres de magnitud orientatives, no valors universals: depenen de detecció, automatització, dependències i arquitectura.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-la-disponibilitat-i",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-la-disponibilitat-i",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és la disponibilitat? (I)",
+    "text": "Què és la disponibilitat? (I)\nLa disponibilitat d’un sistema es refereix a la seva capacitat per estar operatiu i accessible per als usuaris durant un període de temps determinat.\n\nConcepte\nAtenció al terme «disponibilitat»: aquí parlem de la disponibilitat del servei com a proporció de temps operatiu. En el model CIA, Availability és una propietat de seguretat: la informació i els serveis han d’estar accessibles quan són necessaris.\n\n\nLa disponibilitat depèn de dues magnituds: el MTBF (com de sovint falla el sistema) i el MTTR (Mean Time To Repair, com de ràpid es repara). Un sistema pot fallar sovint però ser molt disponible si es repara gairebé instantàniament, i viceversa. Per exemple, si un sistema té un MTTR de 2 hores, això vol dir que, de mitjana, es triga 2 hores a reparar-lo després d’una fallada.\n\n\n\\[ Disponibilitat = \\frac{Temps\\ de\\ funcionament}{Temps\\ de\\ funcionament + Temps\\ de\\ reparar} \\]",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-la-disponibilitat-ii",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-és-la-disponibilitat-ii",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què és la disponibilitat? (II)",
+    "text": "Què és la disponibilitat? (II)\n\n\n\nExemple — Exemple numèric\nAmb MTBF = 999 h i MTTR = 1 h:\n\\[ A = \\frac{999}{999+1} = 99,9\\% \\]\n99,9% ≠ 99,99%. Quants minuts d’indisponibilitat anual implica cadascun?\n\n\n\nExemple — SLA i acords de servei\nAlguns serveis cloud ofereixen SLA del 99,99% o superior, segons el servei contractat i les condicions concretes. Si el proveïdor no compleix el SLA acordat, el contracte pot establir compensacions, sovint en forma de crèdits de servei.\n\n\n\nLa disponibilitat d’un sistema es refereix a la seva capacitat per estar operatiu i accessible per als usuaris durant un període de temps determinat. Depèn conjuntament del MTBF (amb quina freqüència falla) i del MTTR (Mean Time To Repair, com de ràpid es repara): Disponibilitat = MTBF / (MTBF + MTTR). Per exemple, si un sistema té un MTTR de 2 hores, això vol dir que, de mitjana, es triga 2 hores a reparar el sistema després d’una fallada. No confondre amb fiabilitat, que es refereix a la capacitat d’un sistema per operar sense interrupcions durant un període determinat.\nPer exemple, un sistema pot tenir una alta fiabilitat, però una baixa disponibilitat si el temps de reparació després d’una fallada és llarg. D’altra banda, un sistema pot tenir una baixa fiabilitat, però una alta disponibilitat si es pot reparar ràpidament després d’una fallada.\nVal la pena treballar un exemple numèric a classe: amb un MTBF de 999 hores i un MTTR d’1 hora, la disponibilitat és del 99,9%. Aquí és on convé aturar-se i preguntar als alumnes: 99,9% i 99,99% semblen números molt semblants, però a quants minuts d’indisponibilitat anual equival cadascun? (99,9% equival a uns 8,76 hores d’inactivitat l’any; 99,99% equival a poc més de 52 minuts). Aquesta diferència d’un sol “nou” té un impacte enorme en termes pràctics, i és un bon exercici per fer reflexionar sobre per què les empreses inverteixen tants recursos en pujar d’un “nou” al següent.\nPel que fa als SLA (Service Level Agreement), cal evitar presentar-los com una propietat fixa d’un proveïdor concret: els nivells de disponibilitat garantits depenen del servei específic contractat i de les condicions del contracte, i poden variar amb el temps. El que sí és consistent és el principi: si el proveïdor no compleix el SLA acordat, sol haver-hi compensacions en forma de crèdits de servei.\nAquest és un bon moment per tancar el cercle amb la diapositiva de SLI/SLO/SLA que vam veure a la secció d’SRE: la disponibilitat que acabem de calcular és exactament un SLI (la mètrica que mesurem), el percentatge que ens fixem com a objectiu (99,9%, 99,99%…) és el SLO, i el que finalment es compromet contractualment amb el client és el SLA. Val la pena que els alumnes vegin que aquests conceptes “moderns” de la cultura SRE no són res més que una formalització i professionalització d’idees que ja hem introduït amb MTBF i MTTR.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#principi-de-disseny-keep-it-simple-kiss",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#principi-de-disseny-keep-it-simple-kiss",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Principi de disseny: Keep It Simple (KISS)",
+    "text": "Principi de disseny: Keep It Simple (KISS)\n\nConcepte\nLa complexitat és un cost operatiu: cada component, dependència i excepció afegeix configuració, punts de fallada i càrrega de manteniment.\n\nCom es tradueix en sistemes?\n\nPrefereix mecanismes estàndard abans que solucions pròpies si resolen el mateix problema.\nRedueix components i dependències que no aporten valor.\nFes explícita la configuració i evita passos manuals ocults.\nAutomatitza allò repetitiu, però sense introduir una plataforma més complexa que el problema.\nDocumenta les decisions i els casos excepcionals.\n\n\nExemple — Exemple: desplegar un servei web\nPer a dos servidors, pot ser més mantenible una configuració estàndard + una eina d’automatització que introduir una plataforma d’orquestració completa sense necessitat real.\nKISS no vol dir fer-ho simple a qualsevol preu : vol dir evitar complexitat que no està justificada pels requisits.\n\n\nKISS no és simplement “fer coses senzilles”. En administració de sistemes, la complexitat té un cost operatiu concret: més components que actualitzar, més dependències que monitoritzar, més configuracions que entendre i més possibles modes de fallada.\nPer això és útil preguntar-se: quants components necessitem?, quantes dependències tenim?, quants passos manuals cal executar?, què passa si un component falla?, qui serà capaç de mantenir-ho d’aquí a dos anys?\nL’exemple no pretén afirmar que una tecnologia concreta sigui “dolenta”. Si necessitem orquestració, alta disponibilitat o una escala determinada, la complexitat addicional pot estar perfectament justificada. El principi KISS ens obliga a justificar-la.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#del-problema-a-leina",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#del-problema-a-leina",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Del problema a l’eina",
+    "text": "Del problema a l’eina\n\n\n\n\n\n\n\n\nProblema\nCategoria\nExemples\n\n\n\n\nAïllar recursos\nVirtualització / Hypervisor\nVMs, Contenidors\n\n\nConsum sota demanda\nCloud Computing\nIaaS, PaaS, SaaS\n\n\nConfigurar molts servidors\nConfiguration management\nAnsible, Puppet, Chef\n\n\nDefinir infraestructura amb codi\nInfrastructure as Code\nTerraform, CloudFormation\n\n\nSaber què passa al sistema\nMonitoring / Logging\nNagios, Zabbix, Prometheus\n\n\nConstruir i desplegar codi\nDelivery pipeline (CI/CD)\nJenkins, GitLab CI\n\n\nProtegir la xarxa\nSecurity tooling\nPfSense, Suricata, Snort\n\n\nEscalar contenidors\nContainer orchestration\nKubernetes, Docker Swarm\n\n\n\n\nEn el món de l’administració de sistemes, hi ha una gran varietat d’eines i tecnologies que es poden utilitzar per gestionar i mantenir els sistemes informàtics. Els noms concrets de les eines canvien amb el temps —una eina de moda avui pot quedar obsoleta d’aquí a pocs anys—, però les categories de problemes que resolen són molt més estables. Per això aquesta taula està organitzada de problema a categoria, i només després a exemples concrets: el que val la pena retenir és la categoria (què resol) més que la marca concreta (amb què ho resol). No cal memoritzar-les totes avui: l’objectiu d’aquesta diapositiva és únicament que reconegueu els noms quan els tornem a trobar més endavant al curs.\n\nVirtualització: crear màquines virtuals i contenidors per aïllar i gestionar els recursos del sistema. Ho tractarem en detall a la Unitat 5.\nCloud Computing: lliurament sota demanda de recursos informàtics a través d’internet. Ho tractarem en detall a la Unitat 6.\nConfiguration management: Ansible, Puppet i Chef permeten gestionar la configuració de molts servidors de manera eficient i reproduïble, sense executar les mateixes ordres manualment a cadascun.\nInfrastructure as Code: eines com Terraform i CloudFormation permeten definir i desplegar infraestructura mitjançant fitxers de codi versionables, en lloc de configurar-la manualment.\nMonitoring/Logging: Nagios, Zabbix i Prometheus permeten supervisar l’estat dels sistemes en temps real i detectar problemes abans que afectin el servei.\nDelivery pipeline (CI/CD): la integració contínua (CI) i el desplegament continu (CD) automatitzen la construcció, les proves i el desplegament de codi. Eines com Jenkins i GitLab CI implementen aquestes pràctiques.\nSecurity tooling: PfSense, Suricata i Snort protegeixen els sistemes contra atacs i amenaces a nivell de xarxa.\nContainer orchestration: Kubernetes i Docker Swarm gestionen i escalen automàticament conjunts de contenidors. Ho tractarem en detall a la Unitat 5.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/theory/01-fonaments.html#què-significa-administrar-un-sistema",
+    "href": "modules/unit-01-fonaments/theory/01-fonaments.html#què-significa-administrar-un-sistema",
+    "title": "Unitat 1 · Fonaments de l’Administració de Sistemes",
+    "section": "Què significa administrar un sistema?",
+    "text": "Què significa administrar un sistema?\n\n\nGarantir que el servei fa el que ha de fer\n\nFuncionalitat → requisits i proves\nRendiment → latència, throughput, capacitat\nDisponibilitat → uptime i SLO\nSeguretat → confidencialitat, integritat i disponibilitat\n\n\nFer-ho sostenible en el temps\n\nFiabilitat → reduir i tolerar fallades\nMantenibilitat → corregir i evolucionar\nObservabilitat → saber què està passant\nAutomatització → reduir treball manual i errors\n\n\n\nResum — Tot això convergeix en...\nDissenyar → Mesurar → Operar → Aprendre → Millorar\n\n\nReflexió\nUn sistema ben administrat no és aquell que mai falla.\nÉs aquell del qual sabem detectar, gestionar i aprendre de les fallades.\n\n\nTanquem la unitat recuperant la pregunta inicial: què significa que un sistema “funcioni”?\nAra tenim una resposta més precisa. No n’hi ha prou que el sistema faci la funció correcta: hem de poder mesurar el rendiment, garantir nivells de disponibilitat, protegir la informació segons els objectius de seguretat, tolerar fallades, mantenir i evolucionar el sistema i saber què està passant quan alguna cosa no funciona.\nAquest és el model mental que volem conservar per a la resta de l’assignatura: dissenyar, mesurar, operar, aprendre i millorar. Cada eina o tècnica que veurem més endavant ha de poder relacionar-se amb algun d’aquests objectius.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Teoria",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/activities/01-qemu.html",
+    "href": "modules/unit-01-fonaments/activities/01-qemu.html",
+    "title": "Activitats pràctiques — Unitat 1",
+    "section": "",
+    "text": "Aqueste activitat és no avaluables i tenen com a objectiu complementar la sessió del laboratori. El principal objectiu és que pugueu reproduir l’entorn del laboratori al vostre ordinador i practicar amb QEMU, sense necessitat de tenir accés a un laboratori físic.\n\n\n\n\n\n\n\nNoteTransformació de l’Administrador de Sistemes a SRE\n\n\n\nVisualitza la xerrada de Damon Edwards, cofundador de Rundeck, presentada a DevOpsCon 2019:\nDamon Edwards — From SysAdmin to SRE\n\n\nLa xerrada presenta l’evolució del paper tradicional de l’administrador de sistemes cap a un perfil Site Reliability Engineer (SRE), i relaciona aquesta evolució amb la fiabilitat dels sistemes i la productivitat dels equips de desenvolupament.\n\n\n\n\n\n\nImportant\n\n\n\nEdwards és cofundador de Rundeck, una eina comercial d’automatització d’operacions. Teniu-ho present com a possible biaix en com presenta les solucions: la xerrada no deixa de ser, en part, una argumentació a favor del tipus de producte que ell mateix ven.\n\n\n\n\nNo intenteu retenir una llista de tecnologies.\nFixeu-vos en com canvia la manera de treballar:\n\nQuines tasques es poden automatitzar?\nQuines tasques deixen de ser operacions manuals?\nQuina relació apareix entre desenvolupament i operacions?\nQuin paper tenen els SLO?\nQuè significa prendre decisions utilitzant un error budget?\nQuè passa quan la fiabilitat es tracta com un problema d’enginyeria?\n\n\n\n\n\n\n\nTipUna pregunta per quedar-vos\n\n\n\n\nQuina diferència hi ha entre «mantenir un sistema funcionant» i «dissenyar l’operació perquè el sistema sigui fiable»?\n\n\n\n\n\n\n\n\n\n\n\n\n\nNote\n\n\n\nAquesta activitat és una extensió del laboratori que hem fet a classe. L’objectiu és que pugueu practicar amb QEMU al vostre propi ordinador, sense necessitat de tenir accés a un laboratori físic. No hi ha suport garantit del professorat per a problemes específics de la vostra màquina personal (controladors, virtualització imbricada, antivirus, particularitats del fabricant…).\n\n\nComproveu que la virtualització està activada a la BIOS/UEFI del vostre ordinador (sol anomenar-se “Intel VT-x”, “AMD-V” o “SVM Mode”). Sense això, cap dels mecanismes d’acceleració següents (KVM, HVF, WHPX) funcionarà, i QEMU cauria en emulació per programari (TCG) — molt més lent, tal com vam explicar al laboratori.\nSi el vostre ordinador executa ja una màquina virtual (per exemple, un portàtil corporatiu gestionat per VDI), és possible que la virtualització imbricada no estigui disponible i que cap d’aquests passos funcioni, independentment de la configuració de la BIOS.\n\n\nsudo apt install qemu-system qemu-utils cloud-image-utils\nPer fer servir KVM sense sudo cada vegada, el vostre usuari ha de pertànyer al grup kvm:\ngroups\nsudo usermod -aG kvm $USER\n(cal tancar sessió i tornar a entrar perquè el canvi tingui efecte). Comproveu l’accés amb:\nls -l /dev/kvm\nLa resta del procés (descàrrega de la imatge, cloud-init, cloud-localds, arrencada) és exactament el mateix que heu fet al laboratori.\n\n\n\nbrew install qemu cloud-image-utils\nAquí l’accelerador és HVF (Hypervisor.framework), no KVM. Com que Apple Silicon és ARM64, no x86-64, heu d’executar qemu-system-aarch64 (no qemu-system-x86_64) i descarregar la imatge cloud de Debian per a arm64:\nwget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-arm64.qcow2\nComanda d’arrencada:\nqemu-system-aarch64 -accel hvf -cpu host -m 2048 -smp 2 \\\n  -M virt -bios /opt/homebrew/share/qemu/edk2-aarch64-code.fd \\\n  -drive file=debian-treball.qcow2,if=virtio \\\n  -drive file=seed.img,format=raw,readonly=on \\\n  -netdev user,id=net0,hostfwd=tcp::2222-:22 \\\n  -device virtio-net-pci,netdev=net0 \\\n  -nographic\nFixeu-vos que aquí sí que guest i host tenen la mateixa arquitectura, a diferència del cas d’un Mac Intel: en un Mac Apple Silicon, guest ARM64 sobre host ARM64 és el cas homogeni (com al laboratori, host i guest coincideixen), i és precisament el que permet fer servir HVF en lloc de TCG.\n\n\n\nCal activar la característica “Windows Hypervisor Platform” (Panell de control → Programes → Activar o desactivar característiques de Windows), que requereix Windows 10/11 Pro, Enterprise o Education, permisos d’administrador, i un reinici.\nInstal·leu QEMU des de l’instal·lador oficial de qemu.org. Si preferiu WSL2, tingueu en compte que WSL2 ja fa servir el seu propi hipervisor i KVM no hi és directament disponible sense passos addicionals; la via més senzilla a Windows és l’accelerador WHPX natiu, no KVM dins de WSL2.\nComanda d’arrencada (PowerShell):\nqemu-system-x86_64.exe -accel whpx -cpu host -m 2048 -smp 2 `\n  -drive file=debian-treball.qcow2,if=virtio `\n  -drive file=seed.img,format=raw,readonly=on `\n  -netdev user,id=net0,hostfwd=tcp::2222-:22 `\n  -device virtio-net-pci,netdev=net0 `\n  -nographic\nUn cop tingueu l’entorn funcionant a casa, dues idees per practicar sense guió:\n\nRepetiu l’exercici de nano (install/remove/purge, dpkg -l, /etc/nanorc) però amb neovim.\nCompareu el resultat amb el que vau obtenir amb nano al laboratori: per què és diferent? (omproveu quins fitxers instal·la el paquet neovim amb dpkg -L neovim, i on espera trobar la seva configuració un cop instal·lat.)\nRepetiu l’exercici de temps de restauració (loadvm vs. arrencada completa) al vostre propi maquinari, i compareu els vostres temps amb els que vau mesurar a l’aula. Si els resultats són molt diferents, penseu quins factors del vostre maquinari (SSD vs. disc mecànic, quantitat de RAM assignada, accelerador disponible) podrien explicar-ho.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Activitats",
+      "Activitats pràctiques — Unitat 1"
+    ]
+  },
+  {
+    "objectID": "modules/unit-01-fonaments/activities/01-qemu.html#activitat-1-configurar-qemu-al-vostre-ordinador",
+    "href": "modules/unit-01-fonaments/activities/01-qemu.html#activitat-1-configurar-qemu-al-vostre-ordinador",
+    "title": "Activitats pràctiques — Unitat 1",
+    "section": "",
+    "text": "Note\n\n\n\nAquesta activitat és una extensió del laboratori que hem fet a classe. L’objectiu és que pugueu practicar amb QEMU al vostre propi ordinador, sense necessitat de tenir accés a un laboratori físic. No hi ha suport garantit del professorat per a problemes específics de la vostra màquina personal (controladors, virtualització imbricada, antivirus, particularitats del fabricant…).\n\n\nComproveu que la virtualització està activada a la BIOS/UEFI del vostre ordinador (sol anomenar-se “Intel VT-x”, “AMD-V” o “SVM Mode”). Sense això, cap dels mecanismes d’acceleració següents (KVM, HVF, WHPX) funcionarà, i QEMU cauria en emulació per programari (TCG) — molt més lent, tal com vam explicar al laboratori.\nSi el vostre ordinador executa ja una màquina virtual (per exemple, un portàtil corporatiu gestionat per VDI), és possible que la virtualització imbricada no estigui disponible i que cap d’aquests passos funcioni, independentment de la configuració de la BIOS.\n\n\nsudo apt install qemu-system qemu-utils cloud-image-utils\nPer fer servir KVM sense sudo cada vegada, el vostre usuari ha de pertànyer al grup kvm:\ngroups\nsudo usermod -aG kvm $USER\n(cal tancar sessió i tornar a entrar perquè el canvi tingui efecte). Comproveu l’accés amb:\nls -l /dev/kvm\nLa resta del procés (descàrrega de la imatge, cloud-init, cloud-localds, arrencada) és exactament el mateix que heu fet al laboratori.\n\n\n\nbrew install qemu cloud-image-utils\nAquí l’accelerador és HVF (Hypervisor.framework), no KVM. Com que Apple Silicon és ARM64, no x86-64, heu d’executar qemu-system-aarch64 (no qemu-system-x86_64) i descarregar la imatge cloud de Debian per a arm64:\nwget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-arm64.qcow2\nComanda d’arrencada:\nqemu-system-aarch64 -accel hvf -cpu host -m 2048 -smp 2 \\\n  -M virt -bios /opt/homebrew/share/qemu/edk2-aarch64-code.fd \\\n  -drive file=debian-treball.qcow2,if=virtio \\\n  -drive file=seed.img,format=raw,readonly=on \\\n  -netdev user,id=net0,hostfwd=tcp::2222-:22 \\\n  -device virtio-net-pci,netdev=net0 \\\n  -nographic\nFixeu-vos que aquí sí que guest i host tenen la mateixa arquitectura, a diferència del cas d’un Mac Intel: en un Mac Apple Silicon, guest ARM64 sobre host ARM64 és el cas homogeni (com al laboratori, host i guest coincideixen), i és precisament el que permet fer servir HVF en lloc de TCG.\n\n\n\nCal activar la característica “Windows Hypervisor Platform” (Panell de control → Programes → Activar o desactivar característiques de Windows), que requereix Windows 10/11 Pro, Enterprise o Education, permisos d’administrador, i un reinici.\nInstal·leu QEMU des de l’instal·lador oficial de qemu.org. Si preferiu WSL2, tingueu en compte que WSL2 ja fa servir el seu propi hipervisor i KVM no hi és directament disponible sense passos addicionals; la via més senzilla a Windows és l’accelerador WHPX natiu, no KVM dins de WSL2.\nComanda d’arrencada (PowerShell):\nqemu-system-x86_64.exe -accel whpx -cpu host -m 2048 -smp 2 `\n  -drive file=debian-treball.qcow2,if=virtio `\n  -drive file=seed.img,format=raw,readonly=on `\n  -netdev user,id=net0,hostfwd=tcp::2222-:22 `\n  -device virtio-net-pci,netdev=net0 `\n  -nographic\nUn cop tingueu l’entorn funcionant a casa, dues idees per practicar sense guió:\n\nRepetiu l’exercici de nano (install/remove/purge, dpkg -l, /etc/nanorc) però amb neovim.\nCompareu el resultat amb el que vau obtenir amb nano al laboratori: per què és diferent? (omproveu quins fitxers instal·la el paquet neovim amb dpkg -L neovim, i on espera trobar la seva configuració un cop instal·lat.)\nRepetiu l’exercici de temps de restauració (loadvm vs. arrencada completa) al vostre propi maquinari, i compareu els vostres temps amb els que vau mesurar a l’aula. Si els resultats són molt diferents, penseu quins factors del vostre maquinari (SSD vs. disc mecànic, quantitat de RAM assignada, accelerador disponible) podrien explicar-ho.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 1 · Fonaments de l'Administració de Sistemes",
+      "Activitats",
+      "Activitats pràctiques — Unitat 1"
+    ]
+  }
+]

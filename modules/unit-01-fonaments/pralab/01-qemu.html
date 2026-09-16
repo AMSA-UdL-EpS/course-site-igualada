@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Laboratori 1 — QEMU i gestió de paquets – Administració i Manteniment de Sistemes i Aplicacions</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../modules/unit-01-fonaments/activities/01-fonaments.html" rel="next">
+<link href="../../../modules/unit-01-fonaments/theory/01-fonaments.html" rel="prev">
+<link href="../../../assets/logo.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-b9e697b59370f47497522b7983a7c1dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-81cc67d4ae614c4e3e0031abe30b645a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-b9e697b59370f47497522b7983a7c1dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">AMSA</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html"> 
+<span class="menu-text">Inici</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-temari" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Temari</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-temari">    
+        <li>
+    <a class="dropdown-item" href="../../../modules/unit-01-fonaments/index.html">
+ <span class="dropdown-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="https://guiadocent.udl.cat/html/2026-27_105013"> 
+<span class="menu-text">Guia docent</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/amsa-gei-udl-2526-105013"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item"><a href="../../../modules/unit-01-fonaments/index.html">Unitat 1 · Fonaments de l’Administració de Sistemes</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-01-fonaments/pralab/01-qemu.html">Pralab</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-01-fonaments/pralab/01-qemu.html">Laboratori 1 — QEMU i gestió de paquets</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="../../../index.html" class="sidebar-logo-link">
+      <img src="../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../course-info/presentation-slides.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentació del curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../course-info/contributions/contribute.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contribueix al curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Temari</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fitxa de la unitat</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/theory/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Pralab</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/pralab/01-qemu.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Laboratori 1 — QEMU i gestió de paquets</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/activities/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activitats tèoriques · Unitat 1</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/activities/01-qemu.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activitats pràctiques — Unitat 1</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item"><a href="../../../modules/unit-01-fonaments/index.html">Unitat 1 · Fonaments de l’Administració de Sistemes</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-01-fonaments/pralab/01-qemu.html">Pralab</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-01-fonaments/pralab/01-qemu.html">Laboratori 1 — QEMU i gestió de paquets</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Laboratori 1 — QEMU i gestió de paquets</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="objectius" class="level2">
+<h2 class="anchored" data-anchor-id="objectius">Objectius</h2>
+<p>En acabar el laboratori hauríeu de poder:</p>
+<ol type="1">
+<li>Identificar l’arquitectura del vostre host i distingir <strong>virtualització</strong> d’<strong>emulació</strong>.</li>
+<li>Crear i arrencar una màquina virtual Debian amb QEMU.</li>
+<li>Entendre el paper de <strong>cloud-init</strong> en la configuració inicial d’una màquina.</li>
+<li>Connectar-vos a la màquina virtual mitjançant SSH.</li>
+<li>Observar com un <em>snapshot</em> modifica la gestió de l’estat d’una màquina virtual.</li>
+<li>Instal·lar, eliminar i purgar paquets amb <code>apt</code>.</li>
+<li>Interpretar l’estat d’un paquet amb <code>dpkg</code>.</li>
+<li>Justificar tècnicament el comportament observat, no només descriure’l.</li>
+</ol>
+<hr>
+</section>
+<section id="abans-de-començar" class="level1">
+<h1>Abans de començar</h1>
+<p>Als <strong>PCs del laboratori ja trobareu QEMU i les eines necessàries</strong> per realitzar aquesta pràctica.</p>
+<p>Cada estudiant necessitarà, però, una clau SSH pròpia. Comproveu si ja en teniu una:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> ~/.ssh/<span class="pp">*</span>.pub</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Si no en teniu cap, genereu-ne una:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> ed25519</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Podeu acceptar els valors per defecte prement <code>Enter</code>.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Checkpoint 0">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Checkpoint 0
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Abans de continuar, comproveu que:</p>
+<ul>
+<li>QEMU està disponible;</li>
+<li>teniu una clau pública SSH;</li>
+<li>podeu consultar-la amb:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.ssh/id_ed25519.pub</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>No compartiu mai la clau privada (<code>id_ed25519</code>).</strong></p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Preparació del professor">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Preparació del professor
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Abans de la sessió</strong>, és recomanable comprovar als PCs del laboratori:</p>
+<ul>
+<li>que <code>qemu-system-x86_64</code> està disponible;</li>
+<li>que l’usuari de l’alumne pot utilitzar <strong>KVM</strong> (<code>/dev/kvm</code>);</li>
+<li>que la imatge Debian 12 <em>cloud</em> està disponible o es pot descarregar sense bloquejos de xarxa;</li>
+<li>que el port local <code>2222</code> és lliure.</li>
+</ul>
+<p>Si la imatge es pot deixar <strong>pre-descarregada</strong> als PCs, és preferible: la sessió hauria de dedicar el temps a experimentar amb el sistema, no a esperar una descàrrega.</p>
+</div>
+</div>
+</section>
+<section id="bloc-a-construïm-una-màquina-virtual" class="level1">
+<h1>Bloc A — Construïm una màquina virtual</h1>
+<section id="quina-màquina-tenim" class="level2">
+<h2 class="anchored" data-anchor-id="quina-màquina-tenim">1. Quina màquina tenim?</h2>
+<p>Abans de crear una màquina virtual, hem de saber <strong>sobre quin maquinari estem treballant</strong>.</p>
+<p>Executeu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">uname</span> <span class="at">-m</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Observeu el resultat.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Resultat habitual</th>
+<th>Arquitectura</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>x86_64</code></td>
+<td>x86-64</td>
+</tr>
+<tr class="even">
+<td><code>aarch64</code> / <code>arm64</code></td>
+<td>ARM64</td>
+</tr>
+</tbody>
+</table>
+<p>Als PCs del laboratori, el resultat esperat és <strong><code>x86_64</code></strong>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Quina arquitectura té el vostre host?</strong></p>
+<p>I una pregunta més important:</p>
+<blockquote class="blockquote">
+<p>Per què és rellevant que l’arquitectura del guest coincideixi amb la del host?</p>
+</blockquote>
+<p>No busqueu encara la resposta. Feu primer una hipòtesi.</p>
+</div>
+</div>
+<p>La idea fonamental és:</p>
+<blockquote class="blockquote">
+<p><strong>Virtualitzar no és el mateix que emular.</strong></p>
+</blockquote>
+<p><strong>Emular</strong> vol dir traduir, instrucció per instrucció, el codi màquina d’una arquitectura (per exemple, ARM64) a una seqüència d’instruccions equivalents d’una arquitectura diferent (per exemple, x86-64). QEMU ho fa amb el seu <strong>TCG</strong> (<em>Tiny Code Generator</em>): interpreta o recompila dinàmicament el codi del guest, i aquesta traducció té un cost real, perquè cada instrucció del guest sol requerir diverses instruccions natives del host per reproduir-ne l’efecte.</p>
+<p><strong>Virtualitzar</strong>, en canvi, vol dir executar el codi del guest <strong>directament</strong> sobre el processador físic, sense traduir-lo, sempre que guest i host comparteixin arquitectura. <strong>KVM</strong> (<em>Kernel-based Virtual Machine</em>) és el mecanisme del nucli de Linux que ho fa possible: converteix el mateix nucli que esteu utilitzant al host en un hipervisor, i QEMU l’aprofita per executar les instruccions del guest amb un cost pràcticament nul respecte a executar-les nadiament.</p>
+<p>Això explica per què el requeriment inicial del laboratori insistia que l’arquitectura del guest coincidís amb la del host: sense aquesta coincidència, KVM no es pot fer servir, i QEMU ha de recórrer necessàriament a TCG — amb un cost de rendiment típicament d’un ordre de magnitud respecte a l’execució accelerada.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Checkpoint 1">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Checkpoint 1
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Als PCs del laboratori treballem amb <strong>x86-64 + KVM</strong>.</p>
+<p>Heu identificat:</p>
+<ul>
+<li>l’arquitectura del host;</li>
+<li>el mecanisme d’acceleració;</li>
+<li>la diferència conceptual entre virtualització i emulació.</li>
+</ul>
+<p><strong>Ara sí: continuem.</strong></p>
+</div>
+</div>
+<hr>
+</section>
+<section id="una-imatge-de-màquina-no-és-una-màquina" class="level2">
+<h2 class="anchored" data-anchor-id="una-imatge-de-màquina-no-és-una-màquina">2. Una imatge de màquina no és una màquina</h2>
+<p>Descarregarem una imatge <em>cloud</em> de Debian 12 (Bookworm).</p>
+<p>Als PCs del laboratori treballarem amb <strong>x86-64</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Aquesta imatge és una <strong>imatge base</strong>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Quina diferència hi ha entre:</p>
+<ul>
+<li>una <strong>imatge base</strong>;</li>
+<li>el <strong>disc de la màquina virtual</strong>;</li>
+<li>la <strong>màquina virtual en execució</strong>?</li>
+</ul>
+<p>No són tres noms per al mateix objecte.</p>
+</div>
+</div>
+<p>Val la pena fixar aquests tres nivells abans de continuar, perquè els tornarem a fer servir constantment:</p>
+<pre class="text"><code>imatge base                  → el fitxer .qcow2 immutable que heu descarregat
+disc de treball               → una còpia pròpia d'aquesta plantilla, la que modificareu
+màquina virtual en execució   → el procés QEMU que interpreta aquest disc i hi executa un SO</code></pre>
+<p>Cadascun té un cicle de vida diferent. La <strong>imatge base</strong> no hauria de canviar mai: és el punt de partida reproduïble al qual sempre podeu tornar. El <strong>disc de treball</strong> és on viu l’estat persistent — tot allò que sobreviu a apagar i tornar a arrencar la MV: fitxers, paquets instal·lats, configuració. La <strong>màquina virtual en execució</strong> hi afegeix, a més, l’estat volàtil: el contingut de la memòria RAM, els processos en marxa, les connexions obertes — tot allò que normalment es perd en apagar la màquina.</p>
+<p>Aquesta distinció és exactament la que fa possible un <em>snapshot</em>: quan feu <code>savevm</code>, QEMU no toca la imatge base, sinó que captura conjuntament l’estat del disc de treball <strong>i</strong> l’estat volàtil de la màquina en execució, dins del mateix <code>debian-treball.qcow2</code>.</p>
+<hr>
+</section>
+<section id="com-configurem-una-màquina-sense-installar-la-manualment" class="level2">
+<h2 class="anchored" data-anchor-id="com-configurem-una-màquina-sense-installar-la-manualment">3. Com configurem una màquina sense instal·lar-la manualment?</h2>
+<p>Les imatges <em>cloud</em> utilitzen <strong>cloud-init</strong> per a la configuració inicial.</p>
+<p>Crearem un fitxer <code>user-data</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#cloud-config</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">users</span><span class="kw">:</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> estudiant</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">sudo</span><span class="kw">:</span><span class="at"> ALL=(ALL) NOPASSWD:ALL</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">shell</span><span class="kw">:</span><span class="at"> /bin/bash</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">ssh_authorized_keys</span><span class="kw">:</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> PEGUEU_AQUI_LA_VOSTRA_CLAU_PUBLICA</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Substituïu la darrera línia per la vostra clau pública.</p>
+<p>Podeu consultar-la amb:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.ssh/id_ed25519.pub</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ara generarem el dispositiu que conté aquesta configuració:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cloud-localds</span> seed.img user-data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La màquina encara no ha arrencat.</p>
+<p><strong>Com pot ser que ja li hàgim proporcionat un usuari i una clau SSH?</strong></p>
+<p>Quin paper té <code>seed.img</code>?</p>
+</div>
+</div>
+<p><code>seed.img</code> conté la resposta a la pregunta anterior: és un petit disc (una imatge ISO9660 amb l’etiqueta <code>cidata</code>) que <strong>cloud-init</strong> — un servei ja preinstal·lat a les imatges <em>cloud</em> de Debian — llegeix durant els primers segons d’arrencada, abans que cap usuari hi pugui interactuar.</p>
+<p>Aquest mecanisme s’anomena <strong><em>image-based provisioning</em></strong>: en lloc d’instal·lar un sistema operatiu pas a pas de manera interactiva (com faríeu amb un instal·lador clàssic), partiu d’una imatge ja construïda i li injecteu, de manera <strong>declarativa</strong>, l’estat inicial que voleu que tingui (usuaris, claus SSH, xarxa). Declarativa vol dir que vosaltres descriviu <em>quin estat final voleu</em> (el <code>user-data</code>), no <em>els passos per arribar-hi</em> — és cloud-init qui decideix com aplicar-ho.</p>
+<p>Aquesta mateixa idea —descriure l’estat desitjat en lloc dels passos per aconseguir-lo— reapareixerà quan parlem d’infraestructura com a codi més endavant al curs.</p>
+<hr>
+</section>
+<section id="creem-el-disc-de-treball" class="level2">
+<h2 class="anchored" data-anchor-id="creem-el-disc-de-treball">4. Creem el disc de treball</h2>
+<p>No modificarem la imatge base directament.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> debian-12-genericcloud-amd64.qcow2 debian-treball.qcow2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ara tenim:</p>
+<pre class="text"><code>debian-12-genericcloud-*.qcow2   ← plantilla
+                 │
+                 └── cp
+                      ↓
+             debian-treball.qcow2 ← disc de treball</code></pre>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Per què pot ser una mala pràctica modificar directament la imatge base?</p>
+<p>Penseu en què passaria si demà volguéssim crear una segona màquina amb la mateixa configuració inicial.</p>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="arrenquem-qemu" class="level1">
+<h1>5. Arrenquem QEMU</h1>
+<p>Ara apareix la primera comanda llarga de la pràctica.</p>
+<section id="pcs-del-laboratori-x86-64-amb-kvm" class="level3">
+<h3 class="anchored" data-anchor-id="pcs-del-laboratori-x86-64-amb-kvm">PCs del laboratori — x86-64 amb KVM</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-x86_64</span> <span class="at">-enable-kvm</span> <span class="at">-m</span> 2048 <span class="at">-smp</span> 2 <span class="dt">\</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-drive</span> file=debian-treball.qcow2,if=virtio <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-drive</span> file=seed.img,format=raw,readonly=on <span class="dt">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-netdev</span> user,id=net0,hostfwd=tcp::2222-:22 <span class="dt">\</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-device</span> virtio-net-pci,netdev=net0 <span class="dt">\</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-nographic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="No memoritzeu aquesta comanda">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>No memoritzeu aquesta comanda
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>No és necessari memoritzar-la.</p>
+<p>Durant el curs aprendrem a llegir els paràmetres importants. Per ara, identifiqueu:</p>
+<ul>
+<li>memòria: <code>-m 2048</code>;</li>
+<li>CPU virtuals: <code>-smp 2</code>;</li>
+<li>disc: <code>-drive</code>;</li>
+<li>xarxa: <code>-netdev</code> i <code>-device</code>;</li>
+<li>redirecció de ports: <code>hostfwd</code>;</li>
+<li>consola: <code>-nographic</code>.</li>
+</ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Checkpoint 2">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Checkpoint 2
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La màquina ha començat a arrencar.</p>
+<p><strong>No continueu fins que tots els membres del grup tinguin la seva MV en funcionament.</strong></p>
+<p>Si no arrenca, no canvieu aleatòriament paràmetres de la comanda: observeu el missatge d’error i discutiu amb el professor quina part de la configuració pot explicar-lo.</p>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="entrem-a-la-màquina" class="level1">
+<h1>6. Entrem a la màquina</h1>
+<p>Obriu un segon terminal i executeu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-p</span> 2222 estudiant@localhost</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-important callout-titled" title="Si SSH refusa connectar-se amb un avís sobre la clau del servidor">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Si SSH refusa connectar-se amb un avís sobre la clau del servidor
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si en algun moment SSH mostra un avís del tipus <em>“REMOTE HOST IDENTIFICATION HAS CHANGED”</em> i es nega a connectar, <strong>no apliqueu la solució directament</strong>. Primer, diagnostiqueu-ho:</p>
+<ul>
+<li>Llegiu el missatge d’error sencer. Quin fitxer i quina línia concreta assenyala com a origen del conflicte?</li>
+<li>Per què SSH reacciona així en lloc de connectar-se directament? Quina amenaça de seguretat intenta evitar aquest comportament?</li>
+<li>Quin esdeveniment concret del laboratori pot haver causat que la clau del servidor “hagi canviat” des del punt de vista de SSH?</li>
+</ul>
+<p>Un cop hàgiu raonat la resposta, la solució consisteix a eliminar <strong>només l’entrada corresponent a aquest host/port</strong> de <code>~/.ssh/known_hosts</code>, no tot el fitxer:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-R</span> <span class="st">'[localhost]:2222'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>No elimineu mai tot <code>known_hosts</code> sense haver entès abans exactament què estava passant: aquest avís existeix precisament per detectar si algú diferent de la vostra MV està responent en aquest port.</p>
+</div>
+</div>
+<p>Ara esteu dins del guest.</p>
+<p>Comproveu on sou:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hostname</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">uname</span> <span class="at">-m</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I observeu els recursos disponibles:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">free</span> <span class="at">-h</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">nproc</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">df</span> <span class="at">-h</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Ara teniu dos sistemes operatius executant-se:</p>
+<pre class="text"><code>HOST
+ └── QEMU
+      └── GUEST Debian</code></pre>
+<p>Quan executeu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">uname</span> <span class="at">-m</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>al guest, <strong>quin sistema esteu preguntant?</strong></p>
+<p>I quan l’executeu al terminal original, quin?</p>
+</div>
+</div>
+<p>Aquesta és una primera oportunitat per distingir clarament <strong>host</strong> i <strong>guest</strong>.</p>
+<hr>
+</section>
+<section id="bloc-a.2-lestat-de-la-màquina" class="level1">
+<h1>Bloc A.2 — L’estat de la màquina</h1>
+<section id="fem-un-canvi" class="level2">
+<h2 class="anchored" data-anchor-id="fem-un-canvi">7. Fem un canvi</h2>
+<p>Des de la sessió SSH:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> ~/abans_del_snapshot.txt</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> ~</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ara tornarem al terminal on s’està executant QEMU.</p>
+<p>Per accedir al monitor de QEMU, premeu:</p>
+<pre class="text"><code>Ctrl+A
+C</code></pre>
+<p>Al monitor veureu:</p>
+<pre class="text"><code>(qemu)</code></pre>
+<p>Creeu un snapshot:</p>
+<pre class="text"><code>savevm punt_inicial</code></pre>
+<div class="callout callout-style-default callout-note callout-titled" title="Un snapshot no és un backup">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Un snapshot no és un backup
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>savevm</code> reverteix l’estat <strong>dins del mateix fitxer de disc</strong> (<code>debian-treball.qcow2</code>); no crea cap còpia independent en un altre suport.</p>
+<p>Si perdeu o corrompeu <code>debian-treball.qcow2</code>, perdeu <strong>també</strong> tots els snapshots que conté. Un backup real implica una còpia en un mitjà independent, precisament per sobreviure a la pèrdua del disc original.</p>
+</div>
+</div>
+<p>Torneu a la consola amb:</p>
+<pre class="text"><code>Ctrl+A
+C</code></pre>
+<p>Torneu a la sessió SSH i feu un segon canvi:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> ~/despres_del_snapshot.txt</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> ~</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ara tornarem al monitor i restaurarem l’estat:</p>
+<pre class="text"><code>(qemu) loadvm punt_inicial</code></pre>
+<p>Torneu a connectar-vos per SSH si és necessari.</p>
+<p>Comproveu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> ~</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Quin dels dos fitxers hauria de continuar existint?</p>
+<p>Abans de respondre, feu una hipòtesi sobre <strong>quin estat ha restaurat realment <code>loadvm</code></strong>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem — temps de restauració">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem — temps de restauració
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Mesureu, amb un <strong>cronòmetre extern</strong> (el del mòbil, per exemple — no cap comanda dins de la MV), el temps transcorregut des que executeu <code>loadvm punt_inicial</code> fins que podeu tornar a connectar-vos correctament per SSH.</p>
+<p>I, per separat, el temps transcorregut des que inicieu QEMU des de zero (arrencada completa de Debian) fins que podeu connectar-vos per SSH per primer cop.</p>
+<p><strong>Per què un cronòmetre extern i no una comanda dins la MV?</strong> Perquè el rellotge que voleu mesurar és precisament el de l’estat que esteu restaurant: mesurar el temps de <code>loadvm</code> amb una marca de temps presa <em>dins</em> de la sessió SSH que esteu a punt de perdre (i que <code>loadvm</code> restaurarà a un instant anterior) no dona una mesura fiable. Mesurar des de fora evita aquest problema, i a més mesura exactament el que interessa des del punt de vista d’un servei: <strong>el temps fins que torna a ser accessible</strong>, no un detall intern d’implementació.</p>
+<p>Compareu els dos temps de restauració.</p>
+<p>Relacionant-ho amb els conceptes de <strong>MTTR</strong> i <strong>redundància</strong> vistos a la teoria:</p>
+<ul>
+<li>quin mecanisme restaura l’estat més ràpidament?</li>
+<li>com afecta un temps de restauració curt al temps d’indisponibilitat?</li>
+<li>amb quin tipus de recuperació s’assembla més conceptualment cada cas: <em>cold</em>, <em>warm</em> o <em>hot</em>?</li>
+</ul>
+<p><strong>Important:</strong> <code>loadvm</code> no és tècnicament un mecanisme de <em>standby</em>: és una funcionalitat de QEMU per restaurar l’estat d’una única màquina virtual, no una arquitectura de redundància amb una rèplica independent. Utilitzeu la classificació cold/warm/hot com una <strong>analogia</strong> per raonar sobre el temps de restauració, no com una equivalència estricta.</p>
+<p><strong>Precisió de vocabulari:</strong> el que acabeu de mesurar és un <strong>temps de restauració</strong> (una magnitud concreta, d’aquest experiment). El <strong>MTTR</strong> és un concepte més ampli — el temps mitjà de reparació d’un incident real — del qual la restauració tècnica és només un component. No useu els dos termes com a sinònims.</p>
+<p>Guardeu els dos temps mesurats: els necessitareu a la <strong>Pregunta 5</strong>, a la secció final de preguntes de raonament.</p>
+</div>
+</div>
+<p>El que acabeu d’observar té una explicació precisa: <code>savevm</code> no ha “desat un fitxer”, ha capturat <strong>tot l’estat de la màquina virtual en aquell instant</strong> —el contingut complet de la memòria RAM i l’estat del disc de treball— dins del mateix <code>debian-treball.qcow2</code>. <code>loadvm</code> no desinstal·la res ni desfà accions una a una: substitueix tot aquest estat pel que hi havia capturat, com si féssiu un salt en el temps.</p>
+<p>Això és fonamentalment diferent de com funciona, per exemple, <code>apt purge</code>, que sí que desfà una acció concreta (eliminar un paquet i la seva configuració) sense tocar la resta de l’estat de la màquina. Un snapshot revoca <strong>tot</strong> l’estat global de cop; una operació com <code>apt purge</code> modifica <strong>una part</strong> concreta d’aquest estat de manera selectiva. Aquesta diferència de granularitat és exactament la que explorarem a la pregunta següent.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>És equivalent restaurar un snapshot a executar <code>apt purge paquet</code>?</p>
+<p>Penseu-hi en termes de <strong>model d’estat</strong>: què pot revertir un snapshot, què modifica explícitament <code>apt purge</code>, i si cadascuna d’aquestes operacions és local a un paquet o afecta l’estat global de la màquina virtual.</p>
+<p>Desenvoluparem la resposta completa a la <strong>Pregunta 2</strong> de la secció final.</p>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="bloc-b-gestionem-programari" class="level1">
+<h1>Bloc B — Gestionem programari</h1>
+<p>Ara deixarem QEMU en funcionament i treballarem sobre la Debian que acabem de crear.</p>
+<section id="actualitzem-la-informació-dels-paquets" class="level2">
+<h2 class="anchored" data-anchor-id="actualitzem-la-informació-dels-paquets">8. Actualitzem la informació dels paquets</h2>
+<p>Executeu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>apt update</code> ha instal·lat actualitzacions?</p>
+<p>Abans de continuar, expliqueu al vostre company què creieu que ha canviat en el sistema.</p>
+</div>
+</div>
+<p><code>apt update</code> <strong>no instal·la ni actualitza cap paquet</strong>: només sincronitza el catàleg local amb les metadades que publica cada repositori configurat (quines versions existeixen, quines dependències tenen, on descarregar-les). Confondre “actualitzar la informació disponible” amb “actualitzar el sistema” és, probablement, l’error de comprensió més habitual amb <code>apt</code>.</p>
+<pre class="text"><code>repositori → metadades publicades → apt update → catàleg local de paquets</code></pre>
+<p><code>apt install</code>, en canvi, sí que descarrega i instal·la realment el contingut d’un paquet — però ho fa consultant el catàleg local que <code>apt update</code> acaba de deixar preparat, no el repositori remot directament:</p>
+<pre class="text"><code>apt install → consulta el catàleg local → descarrega paquets → instal·la paquets</code></pre>
+<p>Per això, si el catàleg local està desactualitzat, <code>apt install</code> pot intentar instal·lar una versió que ja no existeix al repositori, o no trobar un paquet que sí que hi és disponible.</p>
+<hr>
+</section>
+</section>
+<section id="installem-un-paquet" class="level1">
+<h1>9. Instal·lem un paquet</h1>
+<p><code>build-essential</code> és un metapaquet: no té gairebé fitxers propis, així que no és un bon exemple per veure què passa amb els <strong>fitxers de configuració</strong>. Farem servir un paquet petit que sí que en té un de debò: <code>nano</code>.</p>
+<p>Instal·leu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install nano</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Comproveu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> nano</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">nano</span> <span class="at">--version</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I consulteu l’estat amb <code>dpkg</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dpkg</span> <span class="at">-l</span> nano</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>dpkg -l</code> sempre imprimeix una capçalera abans de la llista de paquets (<strong>Desired</strong> / <strong>Status</strong> / <strong>Err?</strong>). Els dos primers caràcters de cada línia (per exemple <code>ii</code>) <strong>no són “una columna d’estat”</strong>: són dues columnes diferents concatenades — l’<strong>acció desitjada</strong> (i = install, r = remove, p = purge…) i l’<strong>estat actual</strong> (i = installed, c = config-files-remain, n = not-installed…). Llegiu la capçalera real que imprimeix <code>dpkg -l</code> (no la resumim aquí a propòsit) i identifiqueu quina lletra correspon a quin significat.</p>
+<p>Podeu comprovar el mateix directament a la font que <code>dpkg -l</code> resumeix:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-A5</span> <span class="st">'^Package: nano$'</span> /var/lib/dpkg/status</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>dpkg -l</code> és només una vista còmoda d’aquest fitxer de text pla.</p>
+<p>Finalment, comproveu que el fitxer de configuració existeix:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /etc/nanorc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Checkpoint 3">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Checkpoint 3
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hauríeu de poder demostrar que <code>nano</code> està instal·lat, identificar quines lletres del <code>dpkg -l</code> corresponen a acció desitjada i a estat actual, i confirmar que <code>/etc/nanorc</code> existeix.</p>
+<p>No continueu fins que pugueu explicar què demostra cadascuna de les comandes anteriors.</p>
+</div>
+</div>
+<hr>
+</section>
+<section id="apt-remove" class="level1">
+<h1>10. <code>apt remove</code></h1>
+<p>Ara eliminarem el paquet:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt remove nano</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I tornarem a consultar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dpkg</span> <span class="at">-l</span> nano</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si <code>apt remove</code> ha eliminat el paquet, per què <code>dpkg -l</code> encara pot mostrar una entrada relacionada?</p>
+<p>Amb el que heu après al pas 9 sobre les dues columnes (acció desitjada / estat actual): quina combinació de lletres esperàveu veure ara, i quina hi veieu realment?</p>
+</div>
+</div>
+<p>Comproveu ara el fitxer de configuració:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /etc/nanorc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>/etc/nanorc</code>, encara hi és després de l’<code>apt remove</code>? Relacioneu-ho amb el que acabeu d’observar a <code>dpkg -l</code>.</p>
+</div>
+</div>
+<p>Comprovem si <code>apt</code> detecta dependències que ja no són necessàries:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt autoremove <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>No s’eliminarà res: <code>--dry-run</code> només mostra què faria <code>apt</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>nano</code> té molt poques dependències pròpies, així que és probable que <code>autoremove --dry-run</code> no trobi gairebé res a eliminar.</p>
+<p>Guardeu-vos aquest resultat: el compararem a la secció 13 amb un paquet que sí que arrossega moltes dependències.</p>
+<p>Mentrestant: quina informació necessita <code>apt</code> per decidir si un paquet es pot considerar <strong>prescindible</strong>?</p>
+</div>
+</div>
+<hr>
+</section>
+<section id="apt-purge" class="level1">
+<h1>11. <code>apt purge</code></h1>
+<p>Ara executarem:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt purge nano</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I tornarem a consultar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="ex">dpkg</span> <span class="at">-l</span> nano</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I, sobretot, el fitxer de configuració:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /etc/nanorc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compareu els tres estats (<code>install</code> → <code>remove</code> → <code>purge</code>), tant a <code>dpkg -l</code> com a l’existència de <code>/etc/nanorc</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Ara sí que <code>/etc/nanorc</code> hauria d’haver desaparegut.</p>
+<p>Per què conservar fitxers de configuració després d’un <code>remove</code> pot ser <strong>desitjable</strong> en una administració de sistemes real? Penseu en un exemple concret. I quan podria ser, al contrari, inconvenient o problemàtic conservar-la?</p>
+<p>Desenvoluparem la resposta tècnica completa a la <strong>Pregunta 3</strong> de la secció final — en aquella pregunta us demanarem que citeu la font (<code>man apt-get</code>, secció de <code>remove</code>/<code>purge</code>, o la Debian Policy sobre fitxers de configuració) que sustenta la vostra explicació.</p>
+</div>
+</div>
+<hr>
+</section>
+<section id="installar-de-nou-què-queda-al-sistema" class="level1">
+<h1>12. Instal·lar de nou: què queda al sistema?</h1>
+<p>Torneu a instal·lar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install nano</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Observeu especialment:</p>
+<ul>
+<li>si cal descarregar el paquet;</li>
+<li>els missatges que mostra <code>apt</code>.</li>
+</ul>
+<p>I comproveu la memòria cau d’APT <strong>abans</strong> de tocar el snapshot:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> /var/cache/apt/archives/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ara torneu al snapshot:</p>
+<pre class="text"><code>(qemu) loadvm punt_inicial</code></pre>
+<p>Reconnecteu-vos si és necessari i, <strong>abans</strong> de tornar a instal·lar res, comproveu de nou la memòria cau:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> /var/cache/apt/archives/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Compareu aquest resultat amb el que acabeu d’anotar just abans del <code>loadvm</code>.</p>
+<p>Ha canviat el contingut de <code>/var/cache/apt/archives/</code>? Recordeu que <code>punt_inicial</code> es va crear <strong>abans</strong> que comencéssiu el Bloc B sencer.</p>
+</div>
+</div>
+<p>Ara torneu a instal·lar i, un cop més, comproveu la memòria cau:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install nano</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> /var/cache/apt/archives/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La segona instal·lació és exactament igual que la primera?</p>
+<p>Raoneu la resposta distingint entre l’estat del sistema de fitxers, la memòria cau de paquets d’APT, l’estat capturat pel snapshot, i l’estat del host.</p>
+<p>Desenvoluparem la resposta completa a la <strong>Pregunta 4</strong> de la secció final.</p>
+</div>
+</div>
+<hr>
+</section>
+<section id="metapaquets-i-dependències" class="level1">
+<h1>13. Metapaquets i dependències</h1>
+<p>Fins ara heu treballat amb <code>nano</code>, un paquet petit i quasi sense dependències pròpies. Ara farem el mateix exercici amb un paquet de característiques molt diferents: <code>build-essential</code>.</p>
+<p>Consulteu, sense instal·lar-lo encara:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> show build-essential</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> depends build-essential</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Observeu que <code>build-essential</code> no representa simplement un únic executable: és un <strong>metapaquet</strong> que depèn d’altres paquets necessaris per proporcionar un entorn bàsic de compilació (gcc, g++, make, dpkg-dev, entre altres).</p>
+<p>Instal·leu-lo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install build-essential</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I elimineu-lo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt remove build-essential</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ara torneu a comprovar què faria <code>autoremove</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt autoremove <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>No espereu necessàriament que desapareguin <strong>totes</strong> les dependències que heu vist amb <code>apt depends</code>: <code>autoremove</code> no pregunta només «qui depenia d’aquest paquet?», sinó també si aquestes dependències <strong>continuen sent necessàries per a algun altre paquet</strong> o si estan <strong>marcades com a instal·lades manualment</strong> (i, per tant, <code>apt</code> no les toca).</p>
+<p>Si el professor ho indica i voleu observar el canvi real:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt autoremove</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled" title="Parem i pensem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Parem i pensem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Compareu aquest resultat amb el que vau obtenir al pas 10 amb <code>nano</code>.</p>
+<p><strong>Per què la diferència és tan gran?</strong> Penseu en quants paquets va arrossegar cadascun com a dependència “automàtica”, i què fa <code>apt</code> amb els paquets automàtics que ja ningú necessita.</p>
+<p>Ara compareu la llista que <code>apt depends build-essential</code> us va mostrar a l’inici d’aquesta secció amb la llista que <code>autoremove --dry-run</code> proposa eliminar ara. <strong>Són exactament la mateixa llista?</strong> Si no ho són, quina explicació hi ha per a la diferència?</p>
+<p>A partir d’aquí, com decideix <code>apt</code> quins paquets pot eliminar amb <code>autoremove</code>? Investigueu el paper de les dependències marcades com a <strong>automàtiques</strong> i de les dependències que encara són <strong>necessàries per a altres paquets</strong>.</p>
+<p>La pregunta important no és només «què elimina?», sinó:</p>
+<blockquote class="blockquote">
+<p><strong>Com sap <code>apt</code> que un paquet ja no té cap motiu per continuar instal·lat?</strong></p>
+</blockquote>
+</div>
+</div>
+<p>Aquesta darrera secció tanca el fil del Bloc B: heu vist que un paquet pot ser una eina senzilla amb un fitxer de configuració propi (<code>nano</code>) o un metapaquet que només existeix per arrossegar-ne d’altres (<code>build-essential</code>), i que <code>apt</code> manté, per a cadascun, un registre de quines dependències són <strong>automàtiques</strong> i quines han estat demanades explícitament per vosaltres.</p>
+<p>Aquesta distinció és, en el fons, la diferència entre <strong>instal·lar una aplicació</strong> (una acció puntual, centrada en un paquet) i <strong>gestionar un sistema de paquets</strong> (una responsabilitat contínua, centrada en l’estat global: quins paquets hi ha, per què hi són, i què passaria si els traguéssiu). És exactament aquesta segona mirada —la de l’estat global del sistema, no la d’una acció aïllada— la que distingeix administrar un sistema de simplement fer-lo servir.</p>
+<hr>
+</section>
+<section id="preguntes-de-raonament" class="level1">
+<h1>Preguntes de raonament</h1>
+<p>Aquestes preguntes resumeixen els conceptes que hem treballat durant el laboratori.</p>
+<section id="pregunta-1-virtualització-i-emulació" class="level2">
+<h2 class="anchored" data-anchor-id="pregunta-1-virtualització-i-emulació">Pregunta 1 — Virtualització i emulació</h2>
+<p>Durant el laboratori heu treballat amb un host <strong>x86-64</strong> i un guest <strong>x86-64</strong>, aprofitant KVM.</p>
+<p>Ara feu una transferència del concepte:</p>
+<blockquote class="blockquote">
+<p><strong>Què canviaria si intentéssim executar una imatge x86-64 sobre un host ARM64?</strong></p>
+</blockquote>
+<p>La resposta ha de distingir:</p>
+<ul>
+<li>arquitectura del host;</li>
+<li>arquitectura del guest;</li>
+<li>virtualització;</li>
+<li>emulació;</li>
+<li>TCG;</li>
+<li>acceleració per maquinari.</li>
+</ul>
+<p>No cal haver-ho experimentat durant el laboratori: és una <strong>pregunta teòrica de transferència</strong> basada en el concepte introduït al Checkpoint 1.</p>
+</section>
+<section id="pregunta-2-snapshots-i-apt-purge" class="level2">
+<h2 class="anchored" data-anchor-id="pregunta-2-snapshots-i-apt-purge">Pregunta 2 — Snapshots i <code>apt purge</code></h2>
+<p>Compareu conceptualment:</p>
+<pre class="text"><code>loadvm punt_inicial</code></pre>
+<p>amb:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> purge paquet</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>No expliqueu només «un restaura i l’altre desinstal·la».</p>
+<p>Expliqueu <strong>quin model d’estat modifica cadascuna de les operacions</strong>.</p>
+</section>
+<section id="pregunta-3-remove-i-purge" class="level2">
+<h2 class="anchored" data-anchor-id="pregunta-3-remove-i-purge">Pregunta 3 — <code>remove</code> i <code>purge</code></h2>
+<p>Expliqueu què diferencia:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> remove</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>de:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> purge</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Incloeu:</p>
+<ul>
+<li>estat del paquet;</li>
+<li>fitxers de configuració (recolzeu-vos en el que heu observat amb <code>/etc/nanorc</code>);</li>
+<li>utilitat de conservar configuració;</li>
+<li>situació en què conservar-la pot ser un problema.</li>
+</ul>
+<p><strong>Citeu la font</strong> que sustenta la vostra explicació tècnica: <code>man apt-get</code> (secció de <code>remove</code>/<code>purge</code>) o la Debian Policy sobre fitxers de configuració. No n’hi ha prou amb l’explicació oral del professor.</p>
+</section>
+<section id="pregunta-4-snapshots-i-memòria-cau" class="level2">
+<h2 class="anchored" data-anchor-id="pregunta-4-snapshots-i-memòria-cau">Pregunta 4 — Snapshots i memòria cau</h2>
+<p>Expliqueu per què una instal·lació de <code>nano</code> després d’un <code>loadvm</code> es va comportar diferent de la primera instal·lació.</p>
+<p>La resposta ha d’identificar <strong>on es troben les diferents parts de l’estat</strong> i quines queden afectades pel snapshot. Feu servir els resultats reals de <code>ls -lh /var/cache/apt/archives/</code> que vau anotar als tres moments del pas 12.</p>
+</section>
+<section id="pregunta-5-restauració-i-mttr" class="level2">
+<h2 class="anchored" data-anchor-id="pregunta-5-restauració-i-mttr">Pregunta 5 — Restauració i MTTR</h2>
+<p>Durant l’experiment heu mesurat el <strong>temps de restauració</strong> amb <code>loadvm</code> i el temps d’una arrencada completa de la màquina virtual.</p>
+<p>Suposeu que un servei té com a objectiu recuperar-se en menys de <strong>60 segons</strong>.</p>
+<p>Ompliu amb les vostres dades mesurades:</p>
+<ul>
+<li>arrencada completa: <strong>______ segons</strong>;</li>
+<li>restauració amb <code>loadvm</code>: <strong>______ segons</strong>.</li>
+</ul>
+<p>Indiqueu quin mecanisme compleix l’objectiu i justifiqueu-ho relacionant el temps de restauració amb el <strong>MTTR</strong> i la disponibilitat.</p>
+<p><strong>Important:</strong> el temps de restauració que heu mesurat és només una part del MTTR d’un incident real. El MTTR complet pot incloure detecció, diagnosi, intervenció i validació del servei, no només l’operació tècnica de restauració — no useu els dos termes com a sinònims.</p>
+<hr>
+</section>
+</section>
+<section id="què-heu-de-conservar" class="level1">
+<h1>Què heu de conservar</h1>
+<p>Aquest laboratori és principalment <strong>de treball i discussió a classe</strong>.</p>
+<p>Al final de la sessió heu de poder conservar:</p>
+<ul>
+<li>les respostes a les <strong>cinc preguntes de raonament</strong>, amb la citació de font demanada a la Pregunta 3;</li>
+<li>els temps mesurats (no estimats) de restauració amb <code>loadvm</code> i d’arrencada completa;</li>
+<li>els tres resultats de <code>ls -lh /var/cache/apt/archives/</code> del pas 12 (abans del <code>loadvm</code>, després del <code>loadvm</code>, i després de reinstal·lar);</li>
+<li>el resultat de <code>sudo apt autoremove --dry-run</code> amb <code>nano</code> <strong>i</strong> amb <code>build-essential</code>, per poder comparar-los;</li>
+<li>una captura o transcripció del resultat de <code>dpkg -l nano</code> i de <code>ls -l /etc/nanorc</code> després de <code>remove</code> i després de <code>purge</code>.</li>
+</ul>
+<p>No busquem respostes llargues. Busquem <strong>explicacions tècnicament justificades</strong>.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Idea final">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Idea final
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Durant el laboratori heu fet molt més que executar QEMU i <code>apt</code>.</p>
+<p>Heu treballat amb una mateixa idea des de dues perspectives:</p>
+<blockquote class="blockquote">
+<p><strong>Administrar un sistema és entendre el seu estat i ser capaç de canviar-lo de manera controlada.</strong></p>
+</blockquote>
+<p>QEMU us ha permès experimentar amb l’estat d’una màquina sencera.</p>
+<p><code>apt</code> us ha permès experimentar amb l’estat del programari dins d’aquesta màquina.</p>
+<p>Aquesta manera de pensar —<strong>estat → canvi → observació → verificació</strong>— serà recurrent durant tot el curs.</p>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/igualada\.amsa\.udl\.cat");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../modules/unit-01-fonaments/theory/01-fonaments.html" class="pagination-link" aria-label="Unitat 1 · Fonaments de l'Administració de Sistemes">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../modules/unit-01-fonaments/activities/01-fonaments.html" class="pagination-link" aria-label="Activitats tèoriques · Unitat 1">
+        <span class="nav-page-text">Activitats tèoriques · Unitat 1</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

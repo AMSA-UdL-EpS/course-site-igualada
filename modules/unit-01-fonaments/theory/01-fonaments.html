@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<link href="../../../assets/logo.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-html/tabby.min.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
+
+  <meta name="author" content="Jordi Mateo Fornés">
+  <title>Administració i Manteniment de Sistemes i Aplicacions – Unitat 1 · Fonaments de l’Administració de Sistemes</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/reveal.css">
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/theme/quarto-f5dc026c75e330951b2ebe3764ecdfcd.css">
+  <link href="../../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Unitat 1 · Fonaments de l’Administració de Sistemes</h1>
+  <p class="subtitle">Administració i Manteniment de Sistemes i Aplicacions (AMSA)</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Jordi Mateo Fornés
+</div>
+</div>
+</div>
+
+</section>
+<section id="objectius-daprenentatge" class="slide level2">
+<h2>Objectius d’aprenentatge</h2>
+<div class="resultat udl-component udl-resultat" title="En acabar aquesta sessió seràs capaç de...">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-resultat"></use></svg><span>Resultat d'Aprenentatge — En acabar aquesta sessió seràs capaç de...</span></div>
+<ul>
+<li class="fragment">Descriure què és l’Administració de Sistemes i quin és el rol de la persona que l’exerceix.</li>
+<li class="fragment">Identificar les tasques i responsabilitats típiques d’un administrador de sistemes, incloent-hi els perfils moderns (DevOps, SRE) en què pot evolucionar aquest rol.</li>
+</ul>
+</div>
+</section>
+<section id="què-significa-que-un-sistema-funciona" class="slide level2">
+<h2>Què significa que un sistema «funciona»?</h2>
+<div class="center">
+<p>Aquesta és la pregunta clau que ens acompanyarà durant tota la unitat i que ens ajudarà a entendre què és l’administració de sistemes.</p>
+</div>
+<div class="fragment">
+<p>Un sistema funciona quan…</p>
+<ul>
+<li class="fragment">està <strong>disponible</strong> quan l’usuari el necessita</li>
+<li class="fragment">té un <strong>rendiment</strong> adequat</li>
+<li class="fragment">és <strong>segur</strong> davant d’accessos i atacs</li>
+<li class="fragment">és <strong>fiable</strong>, sense fallar constantment</li>
+<li class="fragment">pot <strong>créixer</strong> (escalar) si cal</li>
+<li class="fragment">es pot <strong>mantenir</strong> al llarg del temps</li>
+</ul>
+</div>
+<aside class="notes">
+<p>Comencem la unitat amb una pregunta senzilla però que ens servirà de fil conductor durant tot el curs: què significa que un sistema “funcioni”? A primera vista sembla una pregunta trivial, però darrere hi ha totes les dimensions que un administrador de sistemes ha de garantir: disponibilitat, rendiment, seguretat, fiabilitat, escalabilitat i mantenibilitat. Cadascuna d’aquestes paraules és, en realitat, un concepte tècnic que definirem amb precisió al llarg de la unitat. Al final tornarem a aquesta mateixa pregunta i veurem que la resposta s’ha tornat molt més rica.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-ladministració-de-sistemes" class="slide level2">
+<h2>Què és l’Administració de Sistemes?</h2>
+<div class="columns">
+<div class="column" style="width:20%;">
+<p><img data-src="figures/chatgpt.png"></p>
+</div><div class="column" style="width:80%;">
+<p>L’administració de sistemes és la <em>disciplina tècnica</em> que implica la <strong>configuració, la gestió, la supervisió i el manteniment</strong> <strong>continu</strong> <strong>d’infraestructures informàtiques (servidors, xarxes, emmagatzematge de dades, programari, seguretat, etc.)</strong>, per garantir la seva <strong>disponibilitat, rendiment, seguretat i funcionalitat</strong>, amb l’objectiu de <strong>satisfer</strong> les necessitats <em>operacionals</em> i <em>estratègiques</em> de l’organització.</p>
+</div></div>
+<div class="fragment">
+<hr>
+<div class="columns">
+<div class="column" style="width:20%;">
+<p><img data-src="figures/rae.jpeg"></p>
+</div><div class="column" style="width:80%;">
+<p>Un <strong>administrador</strong> és una persona que té cura, gestiona o dirigeix els béns o els interessos d’una altra persona o entitat. En aquest cas, configurar, gestionar, supervisar i mantenir <strong>sistemes</strong> informàtics.</p>
+</div></div>
+</div>
+<aside class="notes">
+<p>Si preguntem a ChatGPT que ens defineixi formalment què és l’Administració de Sistemes, ens dirà que és la disciplina tècnica que implica la configuració, la gestió, la supervisió i el manteniment continu d’infraestructures informàtiques (servidors, xarxes, emmagatzematge de dades, programari, seguretat, etc.), per garantir la seva disponibilitat, rendiment, seguretat i funcionalitat, amb l’objectiu de satisfer les necessitats operacionals i estratègiques de l’organització.</p>
+<p>Segons la RAE, un <strong>administrador</strong> és una persona que té cura, gestiona o dirigeix els béns o els interessos d’una altra persona o entitat. En aquest cas, configurar, gestionar, supervisar i mantenir sistemes informàtics. Això implica que la primera part de la definició de ChatGPT està en línia amb la definició de l’administrador.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-un-sistema" class="slide level2">
+<h2>Què és un sistema?</h2>
+<div class="columns">
+<div class="column" style="width:20%;">
+<p><img data-src="figures/rae.jpeg"></p>
+</div><div class="column" style="width:80%;">
+<p>Un <strong>sistema</strong> és un conjunt d’elements interconnectats que treballen junts per aconseguir un objectiu comú. El <strong>Sistema Informàtic</strong> està format per maquinari, programari, dades, xarxes, persones, etc., que treballen junts per processar informació.</p>
+</div></div>
+<aside class="notes">
+<p>Segons la RAE, un <strong>sistema</strong> és un conjunt d’elements interconnectats que treballen junts per aconseguir un objectiu comú. El <strong>Sistema Informàtic</strong> està format per maquinari, programari, dades, xarxes, persones, etc., que treballen junts per processar informació. Això implica que la segona part de la definició de ChatGPT necessita ser més específica per reflectir la complexitat i diversitat dels sistemes informàtics i no únicament la infraestructura.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-hem-de-garantir-en-un-sistema" class="slide level2">
+<h2>Què hem de garantir en un sistema?</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<ul>
+<li class="fragment"><strong>Disponibilitat</strong>: proporció del temps en què el servei és operatiu i accessible.
+<ul>
+<li class="fragment">Es pot expressar com a percentatge o <em>uptime</em>.</li>
+</ul></li>
+<li class="fragment"><strong>Rendiment</strong>: com respon el sistema davant una càrrega concreta.
+<ul>
+<li class="fragment"><strong>Latència</strong>, <strong>throughput</strong>, <strong>IOPS</strong>, temps de resposta, utilització de CPU/memòria.</li>
+</ul></li>
+</ul>
+</div><div class="column" style="width:50%;">
+<ul>
+<li class="fragment"><strong>Seguretat</strong>: protegir el sistema i la informació segons la tríada <strong>CIA</strong>:
+<ul>
+<li class="fragment"><strong>Confidencialitat</strong>: només hi accedeixen els autoritzats.</li>
+<li class="fragment"><strong>Integritat</strong>: la informació no és alterada indegudament.</li>
+<li class="fragment"><strong>Disponibilitat</strong>: els recursos són accessibles quan es necessiten.</li>
+</ul></li>
+<li class="fragment"><strong>Funcionalitat</strong>: el sistema fa allò que els requisits especifiquen.
+<ul>
+<li class="fragment">Es verifica amb <strong>requisits i proves d’acceptació</strong>, no amb una única mètrica.</li>
+</ul></li>
+</ul>
+</div></div>
+<div class="concepte fragment udl-component udl-concepte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
+<p>No existeix una única <em>mètrica de rendiment</em> ni una única <em>mètrica de seguretat</em>: primer cal definir <strong>què volem observar i quin objectiu volem assolir</strong>.</p>
+</div>
+<aside class="notes">
+<p>Aquí és important corregir una simplificació habitual: disponibilitat, rendiment, seguretat i funcionalitat no són quatre mètriques equivalents.</p>
+<p>La <strong>disponibilitat</strong> sí que es pot expressar directament com una proporció de temps operatiu. La veurem quantitativament més endavant amb MTBF i MTTR.</p>
+<p>El <strong>rendiment</strong> és multidimensional. Depenent del sistema ens interessaran mètriques diferents: latència o temps de resposta, throughput o nombre d’operacions per unitat de temps, IOPS en sistemes d’emmagatzematge, amplada de banda en xarxes o utilització de CPU i memòria. Dir simplement “eficiència” no ens permetria mesurar ni comparar el sistema.</p>
+<p>La <strong>seguretat</strong> es pot introduir amb la tríada CIA: confidencialitat, integritat i disponibilitat. La disponibilitat apareix també com a propietat general del servei perquè, en seguretat, la mateixa propietat forma part del model CIA. Més endavant podrem afegir autenticació, autorització, xifratge i auditoria com a mecanismes per assolir aquests objectius.</p>
+<p>La <strong>funcionalitat</strong> tampoc és una mètrica. És el conjunt de comportaments que el sistema ha de proporcionar. Per això es concreta mitjançant requisits i es comprova amb proves d’acceptació o altres criteris verificables.</p>
+<p>La idea important per als estudiants és: <strong>abans de mesurar, hem de definir què volem observar i quin nivell considerem acceptable.</strong></p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="com-mesurem-el-rendiment" class="slide level2">
+<h2>Com mesurem el rendiment?</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<ul>
+<li class="fragment"><strong>Latència</strong>: temps que triga una operació a completar-se.</li>
+<li class="fragment"><strong>Throughput</strong>: quantitat de treball processat per unitat de temps.</li>
+<li class="fragment"><strong>IOPS</strong>: operacions d’entrada/sortida per segon.</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<ul>
+<li class="fragment"><strong>Utilització</strong>: percentatge de capacitat consumida d’un recurs.</li>
+<li class="fragment"><strong>Temps de resposta</strong>: latència percebuda pel client.</li>
+<li class="fragment"><strong>Errors / saturació</strong>: senyals que el sistema no pot assumir la càrrega.</li>
+</ul>
+</div></div>
+<div class="exemple fragment udl-component udl-exemple">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple</span></div>
+<p>Un servidor pot tenir <strong>baixa utilització de CPU</strong> i, alhora, una <strong>latència molt alta</strong> perquè el coll d’ampolla és la xarxa, el disc o una dependència externa.</p>
+</div>
+<div class="fragment">
+<div class="columns">
+<div class="column" style="width:50%;">
+<h3 id="percentils-de-latència">Percentils de latència</h3>
+<ul>
+<li class="fragment"><strong>p50</strong> — mediana; representa l’experiència típica.</li>
+<li class="fragment"><strong>p95</strong> — el 5% de les peticions és més lent.</li>
+<li class="fragment"><strong>p99</strong> — l’1% de les peticions és més lent.</li>
+<li class="fragment"><strong>p99.9</strong> — el 0,1% de les peticions és més lent.</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<div class="exemple fragment udl-component udl-exemple" title="De la mètrica a l'SLO">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — De la mètrica a l'SLO</span></div>
+<p>Si definim: <strong>99,9% de les peticions en menys de 200 ms</strong>, estem establint, un objectiu equivalent a <strong>p99.9 ≤ 200 ms</strong>, sempre que la finestra temporal i la població mesurada estiguin definides de la mateixa manera.</p>
+</div>
+</div></div>
+</div>
+<aside class="notes">
+<p>El rendiment no és una única xifra. Depèn del tipus de sistema i de la pregunta que vulguem respondre.</p>
+<p>La <strong>latència</strong> ens diu quant triga una operació; el <strong>throughput</strong>, quantes operacions podem processar per unitat de temps; les <strong>IOPS</strong> són especialment útils per caracteritzar emmagatzematge; i la <strong>utilització</strong> ens indica quina part de la capacitat d’un recurs està ocupada.</p>
+<p>Aquestes mètriques s’han d’interpretar juntes. Una CPU al 40% no implica necessàriament que el sistema tingui bon rendiment: pot existir un coll d’ampolla en el disc, la xarxa o una dependència externa.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="quines-són-les-necessitats-a-satisfer" class="slide level2">
+<h2>Quines són les necessitats a satisfer?</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<h3 id="operacionals">Operacionals</h3>
+<p>Condicions necessàries perquè el servei funcioni <strong>avui</strong>:</p>
+<ul>
+<li class="fragment">disponibilitat i SLO</li>
+<li class="fragment">rendiment i capacitat</li>
+<li class="fragment">seguretat i control d’accés</li>
+<li class="fragment">còpies de seguretat i recuperació</li>
+<li class="fragment">monitorització i resposta a incidents</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<h3 id="estratègiques">Estratègiques</h3>
+<p>Decisions que permeten que el sistema continuï sent viable <strong>demà</strong>:</p>
+<ul>
+<li class="fragment">escalabilitat i creixement</li>
+<li class="fragment">costos i eficiència</li>
+<li class="fragment">mantenibilitat i automatització</li>
+<li class="fragment">adaptació a nous requisits</li>
+<li class="fragment">continuïtat del negoci i compliment normatiu</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>La distinció entre necessitats operacionals i estratègiques només és útil si la podem concretar.</p>
+<p>Les <strong>necessitats operacionals</strong> descriuen les condicions que hem de satisfer per mantenir el servei en funcionament: disponibilitat, rendiment, seguretat, backups, monitorització i resposta als incidents.</p>
+<p>Les <strong>necessitats estratègiques</strong> tenen un horitzó més llarg: poder créixer, controlar els costos, reduir el treball manual, adaptar-nos a nous requisits i mantenir la continuïtat del negoci.</p>
+<p>La frontera no és absoluta. Per exemple, l’escalabilitat és una propietat tècnica però també una decisió estratègica quan sabem que la càrrega creixerà.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="una-definició-més-completa" class="slide level2">
+<h2>Una definició més completa</h2>
+<p>L’administració de sistemes no consisteix només a gestionar màquines.</p>
+<div class="definicio fragment udl-component udl-definicio" title="...basada en la meva experiència">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-definicio"></use></svg><span>Definició — ...basada en la meva experiència</span></div>
+<p>És la disciplina tècnica que implica la configuració, gestió, supervisió i manteniment continu d’infraestructures informàtiques (servidors, xarxes, emmagatzematge de dades, programari, seguretat, etc.) <strong>així com la coordinació de les persones usuàries, polítiques, procediments i dades associades</strong>, per garantir la disponibilitat, rendiment, seguretat i funcionalitat del sistema, amb l’objectiu de satisfer les necessitats operacionals i estratègiques de l’organització.</p>
+</div>
+<div class="concepte fragment udl-component udl-concepte" title="paraules clau">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte — paraules clau</span></div>
+<p>Infraestructura + Persones + Processos + Dades + Polítiques</p>
+</div>
+<aside class="notes">
+<p>Les definicions inicials (la “de manual” i la de la RAE) no són incorrectes, però són una mica limitades: un sistema no només està format per infraestructura (maquinari, programari, xarxes, etc.), sinó que també inclou altres elements com les persones usuàries, les polítiques, els procediments i les dades que hi estan relacionades. Aquesta definició més completa incorpora aquests elements per donar una visió més realista de l’administració de sistemes: no és només “tenir cura de les màquines”, és coordinar tot un ecosistema al voltant d’elles.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="analogia-amb-matrix" class="slide level2">
+<h2>Analogia amb Matrix</h2>
+<div class="center">
+<p>Quants de vosaltres heu vist la pel·lícula <strong>Matrix</strong>?</p>
+</div>
+<div class="fragment">
+<ul>
+<li class="fragment"><strong>Qui controla el sistema?</strong></li>
+<li class="fragment"><strong>Qui coneix el sistema per dins?</strong></li>
+<li class="fragment"><strong>Qui és capaç de canviar-lo sense que la resta ho noti?</strong></li>
+</ul>
+</div>
+<div class="fragment" style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><a href="https://www.youtube.com/watch?v=H7_1L5eoytA"><img data-src="https://img.youtube.com/vi/H7_1L5eoytA/0.jpg"></a></p>
+<figcaption>Introducció a System Administration - CBT Nuggets (0:32 fins a 2:16)</figcaption>
+</figure>
+</div>
+</div>
+<aside class="notes">
+<p>Abans de mostrar el vídeo, llancem tres preguntes a la classe: Qui controla el sistema? Qui el coneix per dins? Qui pot canviar-lo sense que la resta se n’adoni? Aquestes preguntes són exactament les que defineixen el rol d’un administrador de sistemes, i per això Matrix és una bona metàfora: els personatges principals són capaços de controlar i manipular el món virtual de Matrix, canviant la realitat a voluntat, de la mateixa manera que un administrador de sistemes configura, supervisa i manté la infraestructura que la resta d’usuaris només veu “des de fora”. La pel·lícula ofereix la clàssica elecció entre la pastilla blava (seguir sent usuari, sense veure el sistema) i la vermella (veure’l tal com és, amb totes les responsabilitats que això comporta). És una manera amena d’introduir la diferència entre “usar” un sistema i “administrar-lo”.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="evolució" class="slide level2">
+<h2>Evolució</h2>
+
+<img data-src="figures/evolucio.png" class="r-stretch"><aside class="notes">
+<p>Fa una dècada, el món del programari i el maquinari era molt diferent del que coneixem avui en dia. Els servidors eren físics, les aplicacions s’executaven en un únic servidor i la infraestructura era estàtica i difícil de modificar. Els administradors de sistemes treballaven en un entorn dominat pel maquinari i els cables, dedicant moltes hores a configurar i mantenir els servidors. Al mateix temps, els desenvolupadors de programari operaven en un univers separat, on les aplicacions s’executaven en servidors físics i tenien poc control sobre la infraestructura. Aquesta separació va generar una divisió notable entre els dos grups, amb escassa comunicació i col·laboració.</p>
+<p>La situació va canviar radicalment amb l’arribada de la virtualització. Aquesta tecnologia va permetre als administradors de sistemes crear màquines virtuals i clons de servidors, simplificant enormement la gestió i configuració de la infraestructura. La virtualització va marcar un punt d’inflexió, transformant la manera de gestionar els sistemes i permetent als desenvolupadors provar i desplegar aplicacions en entorns aïllats, millorant així la qualitat i fiabilitat del programari i apropant els dos grups.</p>
+<p>L’aparició dels contenidors va suposar un altre gran avanç en l’administració de sistemes. Aquesta tecnologia va permetre als desenvolupadors empaquetar aplicacions i les seves dependències en contenidors lleugers i portàtils, que podien ser executats en qualsevol entorn. Això va impulsar el concepte de DEVOPS, facilitant la col·laboració entre els equips de desenvolupament i operacions per automatitzar i millorar els processos de desplegament, monitorització i gestió de la infraestructura.</p>
+<p>DEVOPS va emergir com a resposta a aquest canvi, promovent la col·laboració, comunicació i integració entre els equips de desenvolupament i operacions, amb l’objectiu de millorar la qualitat del programari i accelerar el desplegament d’aplicacions. Aquesta metodologia va permetre als equips treballar conjuntament per automatitzar i perfeccionar els processos relacionats amb la infraestructura.</p>
+<p>La pràctica de Infrastructure as Code (IaC) va completar aquest procés, permetent gestionar la infraestructura de manera programàtica mitjançant codi. Això va permetre als equips de desenvolupament i operacions tractar la infraestructura com a codi, aplicant les mateixes pràctiques de desenvolupament de programari en la seva gestió. Com a resultat, la col·laboració, integració i automatització dels processos van millorar, augmentant la fiabilitat i escalabilitat de la infraestructura.</p>
+<p>Finalment, amb l’aparició dels conceptes <em>serverless</em> i <em>Function as a Service (FaaS)</em>, una part de la infraestructura queda amagada darrere d’abstraccions gestionades pel proveïdor. Això <strong>difumina</strong> la frontera entre desenvolupament i operacions, però no la fa desaparèixer: continuen existint decisions sobre arquitectura, identitat i permisos, observabilitat, costos, disponibilitat, capacitat i resposta davant incidents. Els administradors de sistemes han evolucionat de tècnics centrats exclusivament en infraestructura física a perfils d’enginyeria que poden treballar en diversos nivells d’abstracció.</p>
+<p>És important remarcar el missatge clau d’aquesta diapositiva: l’administrador de sistemes no ha desaparegut amb tota aquesta evolució, simplement ha pujat de nivell d’abstracció. Abans gestionava cables i màquines físiques; ara pot estar gestionant polítiques d’infraestructura com a codi o configuracions serverless. Però en cada un d’aquests nivells (maquinari, sistema operatiu, màquina virtual, contenidor, IaC, cloud, serverless) segueix havent-hi algú que ha de prendre decisions, configurar, supervisar i respondre quan alguna cosa falla. Aquesta pregunta —què continua havent de gestionar algú a cada nivell?— és la que ens acompanyarà a les properes unitats del curs.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="sortides-professionals" class="slide level2">
+<h2>Sortides Professionals</h2>
+
+<img data-src="figures/sortides_professionals.png" class="r-stretch"><aside class="notes">
+<p>L’administració de sistemes és una disciplina àmplia i diversa, que no segueix una única via d’aprenentatge. Aquesta professió inclou una gran varietat de rols i especialitzacions, però no compta amb un itinerari professional clarament establert, fet que dificulta l’ensenyament de tots els seus aspectes en una sola assignatura. Si observeu el pla d’estudis del Grau en Enginyeria Informàtica, veureu que inclou assignatures orientades a la programació, amb sortides professionals com a desenvolupadors de programari en diferents àmbits. Alhora, també ofereix formació en computació (xarxes, sistemes operatius, bases de dades), amb possibilitats laborals com a enginyer de xarxes o administrador de bases de dades.</p>
+<p>Tradicionalment, l’administració de sistemes ha estat vinculada a les operacions, amb sortides professionals com a tècnic de suport o tècnic de centre de dades, sovint allunyades dels perfils d’un enginyer informàtic. No obstant això, avui en dia, l’administració de sistemes ha evolucionat significativament, donant lloc a perfils més avançats i tècnics com DevOps, SRE (Site Reliability Engineer), i Cloud Engineer, que ofereixen oportunitats laborals molt més atractives i alineades amb les necessitats del mercat actual.</p>
+<p>Aquesta assignatura té com a objectiu introduir-vos al món de l’administració de sistemes i aplicacions, així com a la seva gestió i manteniment. Ho farem amb una visió actualitzada, orientada cap a les sortides professionals més demandades en el mercat laboral, preparant-vos per a perfils amb més responsabilitat i especialització dins del camp de les tecnologies de la informació.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section>
+<section id="la-feina-de-ladministrador-de-sistemes" class="title-slide slide level1 smaller center">
+<h1>La feina de l’administrador de sistemes</h1>
+
+</section>
+<section id="el-rol-de-ladministrador-de-sistemes---similituds-amb-un-bomber" class="slide level2">
+<h2>El rol de l’administrador de sistemes - <em>Similituds amb un bomber</em></h2>
+<blockquote>
+<p>Els administradors de sistemes han de tenir coneixements tècnics profunds i una actitud proactiva per anticipar problemes i, si cal, resoldre’ls sota pressió, tal com ho faria un bomber en una emergència.</p>
+</blockquote>
+<div class="center-container">
+<p><img data-src="figures/bomber.png"></p>
+</div>
+<aside class="notes">
+<p>El rol tradicional de l’administrador de sistemes pot ser semblant al d’un bomber. Ha de treballar per prevenir incendis, però quan hi ha un incendi ha de córrer per apagar-lo i restaurar la situació el més ràpid. No importa l’hora, el lloc o el dia, l’administrador de sistemes ha de ser capaç de respondre a les emergències i solucionar els problemes de manera eficient i efectiva. Això requereix una gran habilitat tècnica, coneixements profunds dels sistemes i una actitud proactiva per anticipar-se als problemes i resoldre’ls ràpidament. Els administradors de sistemes han de ser tant proactius com reactius, prevenint problemes i responent ràpidament davant els imprevistos per garantir la continuïtat del servei. Poden utilitzar eines com Nagios, Zabbix, Prometheus per monitoritzar els sistemes i detectar problemes abans que es converteixin en emergències reals. Però, han d’intervenir i improvisar quan calgui per resoldre els problemes i restaurar la normalitat.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="el-rol-de-ladministrador-de-sistemes---similituds-amb-un-científic" class="slide level2">
+<h2>El rol de l’administrador de sistemes - <em>Similituds amb un científic</em></h2>
+<ul>
+<li class="fragment">Els administradors de sistemes han de ser capaços de resoldre problemes complexos i trobar solucions creatives.</li>
+<li class="fragment">Això pot ser semblant al treball d’un científic, que ha de plantejar hipòtesis, realitzar experiments i analitzar dades per arribar a conclusions.</li>
+</ul>
+<div class="exemple fragment udl-component udl-exemple" title="Touch a Banana to get WiFi Access">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — Touch a Banana to get WiFi Access</span></div>
+<div class="columns">
+<div class="column" style="width:30%;">
+<div class="center-container">
+<p><img data-src="figures/cientific.png"></p>
+</div>
+</div><div class="column" style="width:70%;">
+<p>Per exemple, una empresa pot necessitar donar codis d’accés temporals als usuaris per connectar-se a la xarxa Wifi. En lloc de gestionar-ho manualment, un administrador de sistemes va crear un sistema que generava codis d’accés temporals quan els usuaris tocaven un plàtan connectat a un Raspberry Pi.</p>
+</div></div>
+</div>
+<aside class="notes">
+<p>Una altra característica de l’administrador de sistemes és la seva capacitat per resoldre problemes complexos i trobar solucions creatives. Això pot ser semblant al treball d’un científic, que ha de plantejar hipòtesis, realitzar experiments i analitzar dades per arribar a conclusions.</p>
+<p>Per exemple, una empresa pot necessitar donar codis d’accés temporals als usuaris per connectar-se a la xarxa Wifi. En lloc de gestionar-ho manualment, un administrador de sistemes va crear un sistema que generava codis d’accés temporals quan els usuaris tocaven un plàtan connectat a un Raspberry Pi. Aquesta solució creativa i inesperada va permetre automatitzar una tasca manual i millorar l’experiència de l’usuari. Això demostra la capacitat de l’administrador de sistemes per trobar solucions innovadores i eficients als problemes que es presenten.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="salari-administrador-de-sistemes" class="slide level2 center">
+<h2>Salari <em>Administrador de Sistemes</em></h2>
+<p><img data-src="figures//salaris/sysadmin-evol.png" style="align:center;;width:70.0%"></p>
+<p><img data-src="figures//salaris/sysadmin.png" style="text-align:center;;width:80.0%"></p>
+<aside class="notes">
+<p>El salari base segons el portal payscale a Espanya és de mitjana 30k amb un potencial de creixement a futur de 10k. Aquesta dada és orientativa i pot variar segons la ubicació, l’experiència, les habilitats i la formació del professional. Però, en comparativa amb altres sortides professionals, l’administrador de sistemes igual no és una opció interessant. Analitzem ara sortides professionals més especialitzades.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="especialitzacions-en-administració-de-sistemes" class="slide level2">
+<h2>Especialitzacions en Administració de Sistemes</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<ul>
+<li class="fragment">Administradors de Xarxa, Emmagatzematge, Seguretat</li>
+<li class="fragment">Operadors de Xarxa</li>
+<li class="fragment">Arquitectes de Sistemes</li>
+<li class="fragment">Tècnics de Suport</li>
+<li class="fragment">Tècnics de Centre de Dades</li>
+<li class="fragment">Enginyers de Sistemes</li>
+<li class="fragment">Enginyer DEVOPS</li>
+<li class="fragment">Enginyer SRE (Site Reliability Engineer)</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<p><a href="https://2459d6dc103cb5933875-c0245c5c937c5dedcca3f1764ecc9b2f.ssl.cf2.rackcdn.com/books/22_jobs3rd_complete.pdf"><img data-src="figures/jobs.png"></a></p>
+</div></div>
+<aside class="notes">
+<p>Hi ha una gran varietat d’especialitzacions dins l’àmbit de l’administració de sistemes, cada una amb responsabilitats úniques que poden influir en el salari i els rols. A continuació, detallem algunes d’aquestes especialitzacions:</p>
+<ul>
+<li><p>Administradors de Xarxa: S’encarreguen de la configuració, gestió i manteniment de routers, switches, firewalls i altres dispositius de xarxa en entorns físics i virtuals. La seva tasca és garantir la connectivitat i seguretat de les xarxes de l’empresa.</p></li>
+<li><p>Administradors de Emmagatzematge: Gestionen sistemes de fitxers, solucions de còpies de seguretat i tecnologies d’emmagatzematge de dades com NETAPP o EMC. Són responsables d’assegurar que les dades estiguin segures i accessibles.</p></li>
+<li><p>Administradors de Seguretat: Protegeixen els sistemes informàtics contra amenaces i atacs cibernètics. Implementen polítiques de seguretat, gestionen certificats digitals i realitzen auditories de seguretat per protegir la informació sensible.</p></li>
+<li><p>Operadors de Xarxa: Supervisionen el funcionament diari de les xarxes, gestionant el trànsit de dades i resolent problemes de connexió o rendiment. S’asseguren que les xarxes funcionin sense interrupcions.</p></li>
+<li><p>Arquitectes de Sistemes: Dissenyen i planifiquen la infraestructura tecnològica de l’empresa. Són responsables d’assegurar que els sistemes compleixin els requisits de rendiment, seguretat i escalabilitat.</p></li>
+<li><p>Tècnics de Suport: Ofereixen assistència tècnica als usuaris, resolent problemes i incidents a través de sistemes de tickets. La seva tasca és garantir que els usuaris puguin utilitzar les tecnologies sense problemes.</p></li>
+<li><p>Tècnics de Centre de Dades: Gestionen i mantenen els servidors, xarxes i altres equips físics en els centres de dades. S’asseguren que el centre de dades funcioni amb alta disponibilitat i rendiment.</p></li>
+<li><p>Enginyers de Sistemes: Són responsables de dissenyar, implementar i mantenir la infraestructura informàtica de l’empresa. La seva tasca és assegurar que els sistemes compleixin els requisits operatius i tècnics.</p></li>
+</ul>
+<p>Ara veurem dues especialitzacions més avançades i amb més demanda en el mercat laboral actual: Enginyer DEVOPS i Enginyer SRE (Site Reliability Engineer) amb detall. També us deixo un enllaç a un llibre que parla de les diferents especialitzacions.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-un-site-reliability-engineer-sre" class="slide level2">
+<h2>Què és un Site Reliability Engineer (SRE)?</h2>
+<p>Els <strong>Site Reliability Engineers (SRE)</strong> són enginyers que apliquen principis de programari i d’enginyeria a l’operació de serveis, amb un focus explícit en <strong>fiabilitat, disponibilitat, latència, rendiment i capacitat</strong>. L’automatització i el programari són mitjans per reduir el treball manual i fer que l’operació escali amb el servei.</p>
+<ul>
+<li class="fragment"><strong>Fiabilitat del Sistema</strong>: Nagios, Zabbix, Prometheus.</li>
+<li class="fragment"><strong>Escalabilitat</strong>: Kubernetes, Docker, Terraform.</li>
+<li class="fragment"><strong>Monitorització i Alertes</strong>: Grafana, ELK Stack, PagerDuty.</li>
+<li class="fragment"><strong>Gestió d’Incidents</strong>: Jira, ServiceNow, Slack.</li>
+<li class="fragment"><strong>Optimització de Rendiment</strong>: New Relic, Datadog, AppDynamics.</li>
+<li class="fragment"><strong>Automatització de Processos</strong>: Ansible, Puppet, Chef.</li>
+</ul>
+<aside class="notes">
+<p>La formulació clàssica de Ben Treynor Sloss, creador del terme SRE a Google, és que SRE és el que passa quan demanes a un enginyer de programari que dissenyi una funció d’operacions. La idea important no és la frase en si, sinó el canvi de mentalitat: aplicar enginyeria i programari a problemes que tradicionalment es resolien manualment. A Google, les responsabilitats d’SRE inclouen disponibilitat, latència, rendiment, eficiència, gestió del canvi, monitorització, resposta a emergències i planificació de capacitat. <a href="https://sre.google/in-conversation/">Font: Ben Treynor Sloss, Google SRE — In Conversation</a>. Això implica centrar-se en la millora de la fiabilitat i l’escalabilitat dels sistemes, així com en la implementació de pràctiques d’integració i lliurament continu (CI/CD), reforçar la seguretat i optimitzar els costos operatius.</p>
+<p>Els SREs aprofiten el programari com una eina per gestionar i automatitzar els sistemes, identificar i resoldre problemes, i automatitzar processos amb l’objectiu final de construir infraestructures escalables i fiables que responguin als objectius de negoci.</p>
+<p>Les funcions principals d’un SRE inclouen la monitorització constant dels sistemes, la gestió d’alertes i resposta a incidents, l’automatització de tasques rutinàries, i l’optimització de l’escala i adaptabilitat dels recursos tecnològics. A més, col·laboren estretament amb els equips de desenvolupament per assegurar la millora contínua de la fiabilitat i el rendiment dels sistemes.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="salari-dun-site-reliability-engineer" class="slide level2 center">
+<h2>Salari d’un Site Reliability Engineer</h2>
+<p><img data-src="figures/salaris/sre-evol.png" style="width:70.0%"></p>
+<p><img data-src="figures/salaris/sre.png" style="width:80.0%"></p>
+<aside class="notes">
+<p>Els Site Reliability Engineers (SREs) experimenten un increment salarial substancial en comparació amb els administradors de sistemes. Un SRE pot començar guanyant fins a 50.000 € durant el seu primer any, i amb l’experiència, arribar fins als 70.000 € o més en un termini de cinc anys. Aquest diferencial salarial reflecteix la creixent importància i demanda de professionals especialitzats en la fiabilitat i escalabilitat dels sistemes informàtics. A diferència dels administradors de sistemes, els SREs no només es dediquen a mantenir la infraestructura, sinó que també se centren en optimitzar la resiliència i eficiència dels serveis digitals, assegurant que compleixin els Acords de Nivell de Servei (SLA). Per tant, si t’interessa un rol amb responsabilitats més tècniques i un potencial de creixement major, el camí d’SRE pot ser una opció molt atractiva dins del mercat laboral actual. Les seves responsabilitats dins de l’empresa són molt importants i tenen un impacte directe amb els objectius de negoci.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="com-mesurem-la-fiabilitat" class="slide level2">
+<h2>Com mesurem la fiabilitat?</h2>
+<div class="columns">
+<div class="column" style="width:33%;">
+<h3 id="sli">SLI</h3>
+<p><em>Service Level Indicator</em></p>
+<p><strong>Què mesurem.</strong></p>
+<p>La mètrica concreta observada (p.&nbsp;ex. % de peticions correctes).</p>
+</div><div class="column" style="width:33%;">
+<h3 id="slo">SLO</h3>
+<p><em>Service Level Objective</em></p>
+<p><strong>Quin nivell volem.</strong></p>
+<p>L’objectiu intern de fiabilitat (p.&nbsp;ex. 99,9% de peticions correctes).</p>
+</div><div class="column" style="width:33%;">
+<h3 id="sla">SLA</h3>
+<p><em>Service Level Agreement</em></p>
+<p><strong>Què comprometem.</strong></p>
+<p>L’acord (sovint contractual) amb el client; pot establir compensacions si no es compleix.</p>
+</div></div>
+<div class="exemple fragment udl-component udl-exemple" title="Error de pressupost">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — Error de pressupost</span></div>
+<p>Si l’SLO és 99,9%, el marge que queda fins al 100% (0,1%) és el teu <strong>pressupost d’error</strong> (<em>error budget</em>): quant <em>et pots permetre fallar</em> abans d’incomplir l’objectiu.</p>
+</div>
+<aside class="notes">
+<p>Un dels conceptes fonamentals de la pràctica SRE —i que sovint queda amagat darrere de la paraula “fiabilitat”— és la distinció entre SLI, SLO i SLA. No cal desenvolupar-ho amb profunditat avui, però sí que el reconegueu com a vocabulari bàsic del rol.</p>
+<ul>
+<li><strong>SLI (Service Level Indicator)</strong>: la mètrica que realment mesurem sobre el sistema, per exemple el percentatge de peticions que responen correctament, o la latència mitjana.</li>
+<li><strong>SLO (Service Level Objective)</strong>: l’objectiu intern que ens marquem per a aquell indicador, per exemple “el 99,9% de les peticions han de respondre en menys de 200ms”. És un objectiu de fiabilitat, normalment intern a l’equip.</li>
+<li><strong>SLA (Service Level Agreement)</strong>: el compromís, sovint contractual, que fem amb el client o usuari final, normalment amb penalitzacions econòmiques si no es compleix. Sol ser una mica menys exigent que l’SLO intern, per deixar marge de seguretat.</li>
+</ul>
+<p>Un concepte derivat molt important en la cultura SRE és l’<strong>error budget</strong> (pressupost d’error): si el nostre SLO és 99,9%, això vol dir que tenim un marge del 0,1% de “fallades permeses” abans d’incomplir l’objectiu. Aquest pressupost es pot “gastar” en desplegaments arriscats, experiments o canvis ràpids; quan s’esgota, l’equip prioritza estabilitat per sobre de noves funcionalitats. Aquesta idea connecta directament amb el que veurem més endavant a la unitat quan parlem de disponibilitat, MTBF i MTTR: SLI/SLO/SLA són, en el fons, la manera com les organitzacions professionalitzen i formalitzen aquells mateixos conceptes.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-un-devops-engineer" class="slide level2">
+<h2>Què és un DevOps Engineer?</h2>
+<p>Els DevOps Engineers són professionals clau en la integració i col·laboració entre els equips de desenvolupament (Dev) i operacions (Ops), amb l’objectiu principal de millorar l’eficiència i agilitat dels processos de desenvolupament de programari. El seu treball se centra en accelerar el desplegament d’aplicacions, millorar la qualitat del programari i optimitzar els fluxos de treball, fent ús intensiu de l’automatització, la integració contínua (CI) i el lliurament continu (CD).</p>
+<ul>
+<li class="fragment"><strong>Automatització</strong>: Jenkins, GitLab CI, Bamboo.</li>
+<li class="fragment"><strong>Gestió d’infraestructura com a codi (IaC)</strong>: Terraform, Ansible, CloudFormation.</li>
+<li class="fragment"><strong>Contenidors i orquestració</strong>: Docker, Kubernetes.</li>
+<li class="fragment"><strong>Monitorització i registre</strong>: Prometheus, Grafana, ELK Stack.</li>
+<li class="fragment"><strong>Col·laboració i comunicació</strong>: Slack, Jira, Confluence.</li>
+</ul>
+<aside class="notes">
+<p>Mentre que els Sysadmins tradicionalment s’ocupen de la gestió i manteniment de la infraestructura, com ara servidors, xarxes i sistemes operatius, els DevOps Engineers van més enllà d’aquestes tasques. El seu rol inclou l’automatització de processos, la implementació de pipelines de CI/CD, la gestió de contenidors (com Docker) i la infraestructura com a codi (IaC), com Terraform o Ansible. En lloc d’enfocar-se només en el manteniment i la disponibilitat dels sistemes, els DevOps Engineers treballen per integrar millor el desenvolupament i les operacions, assegurant que els nous llançaments de programari siguin ràpids, segurs i consistents.</p>
+<p>Tot i que hi ha solapaments entre DevOps i SRE, les diferències clau radiquen en l’enfocament i les prioritats. Mentre que els DevOps Engineers se centren en l’optimització dels processos de desenvolupament i operacions a través de la col·laboració i l’automatització, els SREs estan més orientats a la fiabilitat i escalabilitat dels sistemes en producció. El SRE té un enfocament més específic en mantenir els serveis en línia, gestionant incidents, optimitzant el rendiment i assegurant-se que es compleixen els SLA. Tot i que ambdós rols treballen amb eines similars, com CI/CD i contenidors, els SREs tenen més responsabilitats en la resolució d’incidents crítics i en la millora de la resiliència del sistema.</p>
+<p>Com podeu veure les eines tecnològiques que utilitzen els DevOps Engineers són molt similars a les dels SREs, però la seva aplicació i objectius són diferents. Per tant, apunteu-vos aquestes eines i tecnologies, ja que són essencials pel món laboral actual.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="salari-dun-devops-engineer" class="slide level2 center">
+<h2>Salari d’un DevOps Engineer</h2>
+<p><img data-src="figures/salaris/devops-evol.png" style="width:70.0%"></p>
+<p><img data-src="figures/salaris/devops.png" style="width:80.0%"></p>
+<aside class="notes">
+<p>Els DevOps Engineers, igual que els SREs, gaudeixen d’un salari més alt i d’un major potencial de creixement professional en comparació amb els administradors de sistemes tradicionals. Si t’apassiona l’administració de sistemes enfocada a l’automatització del desplegament de programari, el disseny i la gestió de pipelines de CI/CD, l’ús de contenidors i la implementació d’infraestructura com a codi, el rol de DevOps Engineer pot oferir-te una carrera més atractiva i plena d’oportunitats. En l’actualitat, moltes empreses busquen professionals amb habilitats en DevOps.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="devops-vs-sre" class="slide level2">
+<h2>DevOps vs SRE</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<h3 id="devops">DevOps</h3>
+<p><strong>Com col·laborem i lliurem software?</strong></p>
+</div><div class="column" style="width:50%;">
+<h3 id="sre">SRE</h3>
+<p><strong>Com aconseguim que els serveis siguin fiables a escala?</strong></p>
+</div></div>
+<div class="fragment concepte center udl-component udl-concepte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
+<p>Les <strong>fronteres</strong> entre aquests perfils <em>i el sysadmin tradicional</em> són cada vegada menys rígides.</p>
+</div>
+<aside class="notes">
+<p>Després de veure les definicions detallades de DevOps i SRE, val la pena quedar-nos amb una síntesi molt simple i memorable: un DevOps Engineer es pregunta principalment com col·laborem i lliurem software més ràpid i millor; un SRE es pregunta principalment com aconseguim que els serveis siguin fiables a gran escala. En la pràctica, ambdós rols comparteixen moltes eines (CI/CD, contenidors, IaC) i, cada vegada més, també comparteixen responsabilitats amb el sysadmin tradicional. No busqueu fronteres estrictes entre aquests perfils: al mercat laboral real, sovint es barregen.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
+<section id="terminologia-bàsica" class="title-slide slide level1 center">
+<h1>Terminologia bàsica</h1>
+
+</section>
+<section id="arquitectura-client-servidor" class="slide level2">
+<h2>Arquitectura Client-Servidor</h2>
+<p>Una arquitectura <strong>client-servidor</strong> involucra uns sistemes que necessiten serveis i uns servidors que processen i responen a aquestes peticions.</p>
+<div class="columns">
+<div class="column" style="width:40%;">
+<h3 id="client">Client</h3>
+<p>Un ordinador o dispositiu capaç de rebre informació o utilitzar un servei o proveïdor.</p>
+<h3 id="servidor">Servidor</h3>
+<p>Un ordinador o dispositiu remot capaç de proveir accés a un servei o a informació.</p>
+</div><div class="column" style="width:60%;">
+<p><img data-src="figures/terminologia/internet.png"></p>
+</div></div>
+<div class="reflexio fragment udl-component udl-reflexio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió</span></div>
+<p>Client i servidor descriuen <strong>rols</strong> dins d’una comunicació, no tipus de màquina. Un mateix sistema pot actuar com a client i com a servidor simultàniament.</p>
+</div>
+<aside class="notes">
+<p>Un dels conceptes més importants en l’administració de sistemes és l’arquitectura client-servidor. Aquesta arquitectura implica la interacció entre dos tipus de sistemes: els clients, que sol·liciten serveis o informació, i els servidors, que processen i responen a aquestes peticions. Aquesta arquitectura és àmpliament utilitzada en entorns informàtics, com ara la web, les xarxes d’ordinadors i les aplicacions empresarials.</p>
+<p>Per exemple, quan un usuari accedeix a una pàgina web, el seu navegador actua com a client i sol·licita la pàgina al servidor web. El servidor de DNS consulta la URL i retorna l’adreça IP del servidor web. El navegador envia una petició HTTP o HTTPS al servidor web, que respon amb els fitxers necessaris per mostrar la pàgina al navegador. Aquest procés implica la comunicació entre el client i el servidor per proporcionar la informació sol·licitada a l’usuari.</p>
+<p>És important remarcar davant la classe una idea que sovint es perd en la primera presa de contacte: “client” i “servidor” no són tipus de màquina, sinó <strong>rols</strong> que un sistema exerceix dins d’una comunicació concreta. Un mateix ordinador pot ser servidor en una comunicació i client en una altra, fins i tot alhora. Per exemple, el servidor web que respon les peticions dels navegadors és, alhora, client del servidor de base de dades quan li demana informació per construir la pàgina; i també pot ser client d’un servidor DNS, d’un servidor d’autenticació, etc. Aquesta idea de “rol” és la mateixa que reprendrem més endavant quan parlem dels diferents tipus de servidor: no és el maquinari el que determina si una màquina és client o servidor, sinó la funció que exerceix en una comunicació concreta.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="característiques-client-servidor" class="slide level2">
+<h2>Característiques <em>Client-Servidor</em></h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<h3 id="avantatges">Avantatges</h3>
+<ul>
+<li class="fragment">Sistema centralitzat → Totes les dades en un lloc.</li>
+<li class="fragment">Polítiques de recuperació de dades.</li>
+<li class="fragment">Separació de la lògica.</li>
+</ul>
+</div><div class="column" style="width:10%;">
+
+</div><div class="column" style="width:45%;">
+<h3 id="limitacions-del-disseny-centralitzat">Limitacions del disseny centralitzat</h3>
+<ul>
+<li class="fragment"><strong>Punt únic de fallada</strong> (<em>single point of failure</em>): si el servidor cau, tots els clients perden el servei alhora.</li>
+<li class="fragment"><strong>Coll d’ampolla d’escalabilitat</strong>: el servidor ha de créixer (o replicar-se) per atendre més clients; el rendiment del sistema depèn de la seva capacitat.</li>
+<li class="fragment"><strong>Concentració de recursos</strong>: tota la lògica i les dades depenen d’un mateix punt.</li>
+</ul>
+</div></div>
+<div class="exemple fragment udl-component udl-exemple" title="Consideracions de seguretat">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — Consideracions de seguretat</span></div>
+<p>La concentració de dades i lògica en un punt també fa del servidor un objectiu atractiu per a atacs: denegació de servei (DoS), <em>man-in-the-middle</em>, <em>phishing</em> o usurpació d’identitat (<em>spoofing</em>). Cal autenticació, autorització i xifratge per mitigar-ho —qüestions que no són exclusives d’aquesta arquitectura, però que hi són especialment rellevants.</p>
+</div>
+<aside class="notes">
+<p>Aquesta arquitectura té avantatges i inconvenients. Entre els avantatges es troba la centralització de les dades, ja que tota la informació es troba en un únic lloc, el que facilita la gestió i la recuperació de les dades. A més, permet establir polítiques de recuperació de dades i separar la lògica de negoci de la interfície d’usuari, el que facilita la gestió i el manteniment del sistema. D’aquesta manera, els desenvolupadors poden centrar-se en la lògica de negoci sense preocupar-se de la interfície d’usuari. Per exemple, en una aplicació web, la lògica de negoci es pot gestionar al servidor, mentre que la interfície d’usuari es pot gestionar al client.</p>
+<p>És important distingir dos nivells diferents en els inconvenients d’aquesta arquitectura. D’una banda, hi ha limitacions pròpies del disseny: com que les dades i la lògica es concentren en el servidor, aquest es converteix en un <strong>punt únic de fallada</strong> (<em>single point of failure</em>) — si cau, tots els clients perden el servei simultàniament, a diferència, per exemple, d’una arquitectura P2P on la caiguda d’un node no atura la resta. També apareix un <strong>coll d’ampolla d’escalabilitat</strong>: per atendre més clients cal fer créixer o replicar el servidor, i el rendiment global del sistema queda limitat per la seva capacitat.</p>
+<p>D’altra banda, hi ha consideracions de seguretat que, tot i no ser exclusives d’aquesta arquitectura, hi són especialment rellevants perquè la centralització la fa un objectiu atractiu per a atacs: un atac de denegació de servei (DoS) envia moltes peticions al servidor per saturar-lo i fer-lo caure; un atac de l’home al mig (<em>man-in-the-middle</em>) intercepta les comunicacions entre el client i el servidor per obtenir informació sensible; el <em>phishing</em> enganya els usuaris amb correus falsos per obtenir informació confidencial; i la usurpació d’identitat (<em>spoofing</em>) consisteix a fer-se passar per una altra persona o sistema per obtenir accés no autoritzat. Aquestes amenaces no són exclusives del client-servidor — qualsevol sistema connectat a una xarxa n’és susceptible —, però la centralització de dades i lògica en un únic punt en fa un objectiu especialment rendible per a un atacant. Per tant, cal implementar mesures com l’autenticació, l’autorització i el xifratge per protegir el sistema i les dades dels usuaris.</p>
+<p>A la figura s’observa com múltiples clients es comuniquen amb un servidor central per obtenir informació o serveis. I com múltiples servidors poden comunicar-se amb altres servidors per obtenir informació o serveis. També 1 client pot comunicar-se amb múltiples servidors. Per exemple, un client pot accedir a un servidor web per obtenir informació i a un servidor de correu per enviar correus electrònics. El servidor web pot comunicar-se amb el servidor de correu per enviar notificacions als usuaris.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="un-servidor-és-un-rol" class="slide level2">
+<h2>Un servidor és un rol</h2>
+<div class="reflexio udl-component udl-reflexio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió</span></div>
+<p>Client i servidor són rols, no tipus de màquina.</p>
+</div>
+<div class="fragment">
+<ul>
+<li class="fragment"><strong>ofereix</strong> un servei</li>
+<li class="fragment"><strong>rep</strong> peticions</li>
+<li class="fragment"><strong>consumeix o proporciona</strong> recursos</li>
+</ul>
+</div>
+<div class="fragment center">
+<p>Un mateix ordinador pot exercir diversos rols alhora.</p>
+</div>
+<aside class="notes">
+<p>Abans d’enumerar tipus de servidors, val la pena fixar-nos en el que tenen tots en comú: un servidor no és un tipus de màquina, és un rol que exerceix una màquina (física o virtual) —exactament la mateixa idea que hem introduït a la diapositiva de client-servidor. Aquest rol consisteix a oferir un servei concret, rebre peticions relacionades amb aquest servei, i consumir o proporcionar els recursos necessaris per atendre-les. És important entendre que “servidor” no és sinònim de “màquina dedicada”: un mateix ordinador pot exercir simultàniament el rol de servidor web i de servidor de base de dades, per exemple, encara que en entorns de producció sovint se separen per motius de rendiment i seguretat.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="servidors-més-comuns" class="slide level2">
+<h2>Servidors més comuns</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<ul>
+<li class="fragment">Servidor d’autenticació.</li>
+<li class="fragment">Servidor de fitxers.</li>
+<li class="fragment">Servidor d’emmagatzematge (<em>storage server</em>).</li>
+<li class="fragment">Servidor de correu.</li>
+<li class="fragment">Servidor de base de dades.</li>
+</ul>
+</div><div class="column" style="width:45%;">
+<ul>
+<li class="fragment">Servidor SSH.</li>
+<li class="fragment">Servidor Web.</li>
+<li class="fragment">Servidor d’aplicacions.</li>
+<li class="fragment">Servidor de backups.</li>
+<li class="fragment">Servidor de còmput.</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>Hi ha molts tipus de servidors en funció de l’objectiu que tenen. Alguns dels servidors més comuns són els servidors d’autenticació, que s’encarreguen de gestionar l’accés dels usuaris als sistemes; els servidors de fitxers, que emmagatzemen i gestionen els fitxers i documents de l’empresa; els servidors d’emmagatzematge, que proporcionen recursos d’emmagatzematge a altres sistemes; segons l’arquitectura, poden exposar fitxers (NAS) o blocs (SAN); els servidors de correu, que gestionen el correu electrònic de l’empresa; els servidors de base de dades, que emmagatzemen i gestionen les dades de l’empresa; els servidors SSH, que permeten l’accés remot als servidors; els servidors web, que allotgen les pàgines web de l’empresa; els servidors d’aplicacions, que executen les aplicacions de l’empresa; els servidors de backups, que realitzen còpies de seguretat de les dades de l’empresa; i els servidors de còmput, que realitzen càlculs i processos computacionals entre altres. Recordeu la diapositiva anterior: cadascun d’aquests noms és només una etiqueta per a un rol concret (oferir un servei, rebre peticions, consumir/proporcionar recursos), no pas un tipus diferent de maquinari.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="exemple-darquitectura-escalable" class="slide level2 smaller">
+<h2>Exemple d’arquitectura escalable</h2>
+
+<img data-src="figures/ex_arquitectura.png" style="text-align:center;" class="r-stretch"><aside class="notes">
+<p>A la figura proporcionada es mostra una arquitectura típicament utilitzada per al desplegament d’una web escalable i fiable. En aquesta arquitectura, el punt d’entrada és un balancejador de càrrega, que distribueix les peticions entre els diversos servidors web. Els servidors web, que poden ser rèpliques, allotgen les pàgines web i gestionen les peticions dels usuaris. Aquestes pàgines web necessiten accedir a un servidor de base de dades per emmagatzemar i gestionar les dades associades. Cada base de dades està protegida per un servidor de backups, que realitza còpies de seguretat per garantir la recuperació en cas de fallades. A més, per millorar la velocitat de càrrega de les pàgines web, es fa servir un dispositiu CDN (Content Delivery Network) que redirigeix les peticions als servidors més propers a l’usuari.</p>
+<p>Aquesta arquitectura és àmpliament utilitzada per allotjar llocs webs, ja que ofereix una combinació d’escalabilitat i fiabilitat, assegurant un rendiment òptim i una alta disponibilitat per als usuaris finals.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="les-preguntes-que-ha-de-respondre-un-administrador" class="slide level2">
+<h2>Les preguntes que ha de respondre un administrador</h2>
+<div class="center">
+<p>Aquestes són les preguntes que intentareu respondre durant tota l’assignatura.</p>
+</div>
+</section>
+<section id="problemes-més-comuns-servidors-i" class="slide level2">
+<h2>Problemes més comuns servidors (I)</h2>
+<ul>
+<li class="fragment"><strong>Qui i com accedeix a la informació?</strong>
+<ul>
+<li class="fragment">Determinar qui (usuari, procés o servei) pot accedir a quins fitxers i directoris i com ho pot fer (lectura, escriptura, execució).</li>
+<li class="fragment">Permisos, ACLs, polítiques de seguretat.</li>
+</ul></li>
+<li class="fragment"><strong>Com protegeixo la informació?</strong>
+<ul>
+<li class="fragment">Determinar com protegir la informació sensible i confidencial.</li>
+<li class="fragment">Xifratge, contrasenyes, autenticació, autorització, auditoria, backups.</li>
+</ul></li>
+<li class="fragment"><strong>Com asseguro el sistema?</strong>
+<ul>
+<li class="fragment">Protegir el sistema contra atacs i amenaces.</li>
+<li class="fragment">Firewall, IDS/IPS, antivirus, actualitzacions, patches, hardening.</li>
+</ul></li>
+</ul>
+<aside class="notes">
+<p>Un dels problemes més comuns en els servidors és determinar qui i com accedeix a la informació. Això implica definir qui (usuari, procés, servei) pot accedir a quins fitxers i directoris i com ho pot fer (lectura, escriptura, execució). Per fer-ho, es poden utilitzar permisos, llistes de control d’accés (ACLs) i polítiques de seguretat per garantir que només els usuaris autoritzats puguin accedir a la informació.</p>
+<p>Un altre problema comú és com protegir la informació sensible i confidencial. Això implica determinar com protegir la informació per evitar l’accés no autoritzat. Per fer-ho, es poden utilitzar tècniques com el xifratge, les contrasenyes, l’autenticació, l’autorització, l’auditoria i els backups per garantir la seguretat i la privacitat de la informació.</p>
+<p>Un altre problema és com assegurar el sistema contra atacs i amenaces. Això implica protegir el sistema contra atacs externs i interns que puguin comprometre la seguretat i la integritat del sistema. Per fer-ho, es poden utilitzar eines com el firewall, els sistemes de detecció i prevenció d’intrusions (IDS/IPS), l’antivirus, les actualitzacions, els patches i el hardening per garantir la seguretat del sistema.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="problemes-més-comuns-servidors-ii" class="slide level2">
+<h2>Problemes més comuns servidors (II)</h2>
+<ul>
+<li class="fragment"><strong>Com puc saber si el client és qui diu ser?</strong>
+<ul>
+<li class="fragment">Autenticar els usuaris i els dispositius.</li>
+<li class="fragment">Contrasenyes, certificats digitals, autenticació multifactorial.</li>
+</ul></li>
+<li class="fragment"><strong>Quins avantatges/inconvenients té un disseny respecte a un altre?</strong>
+<ul>
+<li class="fragment">Determinar quin disseny és més adequat per a les necessitats de l’empresa.</li>
+<li class="fragment">Escalabilitat, rendiment, seguretat, disponibilitat, fiabilitat.</li>
+</ul></li>
+<li class="fragment"><strong>Com asseguro el bon funcionament?</strong>
+<ul>
+<li class="fragment">Garantir que el sistema funcioni correctament i sense problemes.</li>
+<li class="fragment">Monitorització, alertes, backups, redundància, tolerància a fallades.</li>
+</ul></li>
+</ul>
+<aside class="notes">
+<p>Un altre problema és com autenticar els usuaris i els dispositius per garantir que siguin qui diuen ser. Això implica autenticar els usuaris i els dispositius per garantir que només els usuaris autoritzats puguin accedir a la informació. Per fer-ho, es poden utilitzar tècniques com les contrasenyes, els certificats digitals i l’autenticació multifactorial per garantir la seguretat i la privacitat de la informació.</p>
+<p>Un altre problema comú és determinar quins avantatges i inconvenients té un disseny respecte a un altre. Això implica determinar quin disseny és més adequat per a les necessitats de l’empresa en termes d’escalabilitat, rendiment, seguretat, disponibilitat i fiabilitat. Per fer-ho, es poden avaluar els avantatges i inconvenients de cada disseny per garantir que s’adeqüi a les necessitats de l’empresa.</p>
+<p>Un altre problema és com assegurar el bon funcionament del sistema. Això implica garantir que el sistema funcioni correctament i sense problemes. Per fer-ho, es poden utilitzar tècniques com la monitorització, les alertes, els backups, la redundància i la tolerància a fallades per garantir que el sistema funcioni correctament i sense problemes.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="problemes-més-comuns-servidors-iii" class="slide level2">
+<h2>Problemes més comuns servidors (III)</h2>
+<ul>
+<li class="fragment"><strong>Com dissenyo polítiques i plans d’emergència si tot falla?</strong>
+<ul>
+<li class="fragment">Preparar-se per a situacions d’emergència i desastres.</li>
+<li class="fragment">Plans de contingència, plans de recuperació, plans de resposta a incidents.</li>
+</ul></li>
+<li class="fragment"><strong>Com analitzo post-mortem les causes d’un atac?</strong>
+<ul>
+<li class="fragment">Identificar les causes d’un atac i prendre mesures correctives.</li>
+<li class="fragment">Anàlisi forense, auditoria, millora contínua.</li>
+</ul></li>
+</ul>
+<aside class="notes">
+<p>Un altre problema és com dissenyar polítiques i plans d’emergència si tot falla. Això implica preparar-se per a situacions d’emergència i desastres per garantir la continuïtat del negoci. Per fer-ho, es poden utilitzar plans de contingència, plans de recuperació i plans de resposta a incidents per garantir que l’empresa pugui respondre de manera eficaç a situacions d’emergència i desastres.</p>
+<p>Finalment, un altre problema és com analitzar post-mortem les causes d’un atac per identificar les causes i prendre mesures correctives. Això implica realitzar una anàlisi forense, una auditoria i una millora contínua per identificar les causes d’un atac i prendre mesures correctives per evitar que es repeteixin en el futur.</p>
+<p>Aquestes dues diapositives (I i II) són, probablement, les més importants de tota la unitat: no us demano que us les memoritzeu, sinó que reconegueu que són exactament les preguntes que anireu responent, unitat rere unitat, al llarg de tota l’assignatura. Quan parlem de permisos, xifratge, monitorització o plans de contingència, ho fem perquè donen resposta a alguna d’aquestes preguntes.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="del-concepte-a-la-infraestructura-real" class="slide level2 center">
+<h2>Del concepte a la infraestructura real</h2>
+<h3 id="sistema-servei-servidor-rack-cpd">Sistema → Servei → Servidor → Rack → CPD</h3>
+<aside class="notes">
+<p>Fins ara hem parlat de sistemes, serveis i servidors en abstracte. Però tot això s’acaba materialitzant en maquinari real, en un espai físic concret: un servidor s’instal·la en un rack, i els racks s’agrupen en un centre de dades (CPD). Les properes diapositives mostren exactament això amb fotografies reals, incloent el propi CPD de la UdL, per connectar els conceptes que hem après amb la infraestructura que hi ha darrere del Campus Virtual i dels serveis que useu cada dia.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-un-centre-de-dades" class="slide level2">
+<h2>Què és un centre de dades?</h2>
+<p>És una instal·lació que allotja un conjunt de servidors i equipament de xarxa (<strong>recursos heterogenis</strong>) per proporcionar recursos informàtics a diverses aplicacions i serveis (<strong>càrregues de treball diverses</strong>).</p>
+<div style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/data-center.png"></p>
+<figcaption>Esquema d’un centre dades</figcaption>
+</figure>
+</div>
+</div>
+<aside class="notes">
+<p>Un centre de dades o data center és un espai físic on s’allotgen els servidors, els dispositius de xarxa i altres equips informàtics necessaris per emmagatzemar, processar i distribuir la informació. Aquests centres de dades poden ser propis de l’empresa o externs, i poden ser gestionats per l’empresa o per un proveïdor de serveis. Els centres de dades són essencials per a les empreses que necessiten emmagatzemar i processar grans quantitats de dades, ja que proporcionen l’espai, la infraestructura i els recursos necessaris per garantir el funcionament dels sistemes informàtics.</p>
+<p>Un exemple notable de reutilització d’estructures per a centres de dades és l’ús d’edificis històrics com esglésies i mines abandonades. Aquests espais, amb les seves condicions úniques i sovint amb una infraestructura sòlida, són adaptats per allotjar servidors i equips. Per exemple, l’antiga església de Saint-Ouen a França ha estat convertida en un centre de dades, aprofitant la seva estructura i espai per complir amb els requisits tecnològics moderns. D’altra banda, la mina de carboni de Pionen a Suècia ha estat transformada en un centre de dades subterrani, oferint una protecció física addicional contra desastres naturals i atacs.</p>
+<p>Microsoft, amb el seu <em>Project Natick</em>, ha submergit centres de dades sencers al fons del mar (a la costa d’Escòcia), aprofitant la temperatura freda i estable de l’aigua per refredar-los passivament i reduir el consum energètic; a més, l’atmosfera de nitrogen segellada dins la càpsula va reduir la taxa de fallades respecte als servidors equivalents en terra. Google segueix una estratègia diferent, però també basada en l’aigua de mar: al seu centre de dades de Hamina (Finlàndia), utilitza aigua freda del mar Bàltic per refrigerar els servidors sense submergir-los. Aquestes iniciatives mostren la diversitat de solucions i enfoques per a la gestió de centres de dades, adaptant-se a les necessitats i condicions específiques de cada empresa.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-un-rack" class="slide level2">
+<h2>Què és un rack?</h2>
+<p>Un <strong>rack</strong> és una estructura metàl·lica que allotja servidors, switches, routers i altres equips informàtics en un centre de dades.</p>
+<div style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/terminologia/racks.png" style="width:50.0%"></p>
+<figcaption>Racks del CPD de la UdL</figcaption>
+</figure>
+</div>
+</div>
+<aside class="notes">
+<p>Un rack és una estructura metàl·lica que allotja servidors, switches, routers i altres equips informàtics en un centre de dades. Aquests racks permeten organitzar i protegir els equips informàtics, així com facilitar la gestió dels cables i la refrigeració dels equips. Cada rack pot contenir diversos servidors, switches i altres equips, i es pot apilar verticalment per aprofitar l’espai disponible al centre de dades. A més, els racks disposen de panells laterals i portes per protegir els equips i garantir la seguretat dels servidors i altres equips informàtics.</p>
+<p>Per exemple, a la imatge us mostro els racks d’un passadís del centre de dades de la Universitat de Lleida, on es poden aquests armaris, penseu que cada rack pot contenir diversos servidors, switches i altres equips informàtics, i únicament es veu un dels múltiples passadissos del centre de dades. En aquest centre de dades és on tenim el Campus Virtual, les eines i dades dels estudiants i professors, així com els servidors de recerca dels grups de recerca de la UdL, entre d’altres.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="exemple-de-racks" class="slide level2">
+<h2>Exemple de racks</h2>
+<div class="columns">
+<div class="column" style="width:40%;">
+<div style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/terminologia/rack1.png" style="width:70.0%"></p>
+<figcaption>Rack 1 - GCD - Davant</figcaption>
+</figure>
+</div>
+</div>
+</div><div class="column" style="width:20%;">
+
+</div><div class="column" style="width:40%;">
+<div style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/terminologia/rack2.png" style="width:70.0%"></p>
+<figcaption>Rack 1 - GCD - Darrera</figcaption>
+</figure>
+</div>
+</div>
+</div></div>
+<aside class="notes">
+<p>Ara us mostro un rack, en concret els servidors són del grup de recerca en computació distribuïda. A la part de dalt es pot veure un switch, i la resta són servidors. A la part de davant es poden veure els servidors i a la part de darrera els cables de xarxa i alimentació. En aquest cas, hi ha diferents colors de cables per identificar la xarxa a la qual pertanyen i la seva funció.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="exemple-de-servidor" class="slide level2 smaller">
+<h2>Exemple de servidor</h2>
+<div class="columns">
+<div class="column" style="width:40%;">
+<div style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/terminologia/stormy.png" style="width:70.0%"></p>
+<figcaption>Exterior d’un servidor</figcaption>
+</figure>
+</div>
+</div>
+</div><div class="column" style="width:20%;">
+
+</div><div class="column" style="width:40%;">
+<div style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/terminologia/servidor.png" style="width:70.0%"></p>
+<figcaption>Interior d’un servidor</figcaption>
+</figure>
+</div>
+</div>
+</div></div>
+<aside class="notes">
+<p>En aquestes imatges podem fer zoom i veure els components exteriors i interiors d’un servidor. A la imatge 8 es pot veure com cada disc té un indicador de color per identificar el disc en cas de fallada. A la imatge 9 es pot veure la placa base, els discos durs, la font d’alimentació, la memòria RAM i el processador.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-un-switch" class="slide level2 smaller">
+<h2>Què és un <strong>switch</strong>?</h2>
+<p>Un <strong>switch</strong> és un dispositiu de xarxa que connecta diversos equips informàtics per permetre la comunicació entre ells.</p>
+<div style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/terminologia/switch.png" style="width:60.0%"></p>
+<figcaption>Switch</figcaption>
+</figure>
+</div>
+</div>
+<aside class="notes">
+<p>Un switch Ethernet tradicional treballa principalment a <strong>capa 2</strong>: rep trames Ethernet i utilitza la seva taula de commutació per decidir per quin port les ha de reenviar segons l’adreça MAC de destinació.</p>
+<p>Un router treballa principalment a <strong>capa 3</strong>: rep paquets IP i utilitza una taula de rutes per decidir cap a quina xarxa s’han d’encaminar. Aquesta distinció conceptual és més útil que memoritzar simplement “switch = xarxa local” i “router = Internet”, perquè explica què està fent realment cada dispositiu.</p>
+<p>Els switches gestionats també poden incorporar funcionalitats de capa 3; per tant, “L2 vs L3” és el model conceptual de base, no una frontera absoluta de tots els dispositius comercials. Les VLAN introdueixen segmentació lògica a capa 2 i permeten crear dominis de broadcast separats.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
+<section id="disseny-de-sistemes-informàtics" class="title-slide slide level1 center">
+<h1>Disseny de sistemes informàtics</h1>
+
+</section>
+<section id="característiques-dun-sistema" class="slide level2">
+<h2>Característiques d’un sistema</h2>
+<ol type="1">
+<li class="fragment">Simplicitat</li>
+<li class="fragment"><strong>Mantenibilitat</strong></li>
+<li class="fragment">Escalabilitat</li>
+<li class="fragment">Seguretat</li>
+<li class="fragment">Fiabilitat</li>
+<li class="fragment">Disponibilitat</li>
+<li class="fragment">Rendiment</li>
+<li class="fragment">Facilitat d’ús</li>
+</ol>
+<div class="fragment center">
+<p><em>(Més endavant treballarem també l’observabilitat: la capacitat de saber què està passant dins d’un sistema.)</em></p>
+</div>
+<aside class="notes">
+<p>En el disseny de sistemes informàtics, és important tenir en compte diverses característiques per garantir que el sistema sigui eficient, segur i fiable. Algunes de les característiques més importants d’un sistema són la simplicitat, la mantenibilitat, l’escalabilitat, la seguretat, la fiabilitat, la disponibilitat, el rendiment i la facilitat d’ús. En una assignatura que porta per nom “Administració i Manteniment”, val la pena remarcar explícitament la mantenibilitat: la facilitat amb què un sistema es pot corregir, actualitzar o adaptar al llarg del temps. Més endavant al curs també parlarem d’observabilitat, és a dir, la capacitat de saber en tot moment què està passant dins d’un sistema mitjançant mètriques, logs i traces. Ara bé, sovint intentem dotar sistemes amb característiques que no es poden afegir després de la seva construcció. Per exemple, intentar aplicar “seguretat” després que les interfícies del sistema hagin estat definides produeix restriccions i limitacions; intentar fer un sistema amb limitacions intrínseques funcionar en circumstàncies per les quals no va ser dissenyat produeix “hacks” i “workarounds” i el resultat final sovint sembla més una casa de cartes fràgil que una estructura sòlida i fiable.</p>
+<p>Per tant, quan discutim sobre el disseny de sistemes informàtics, és important tenir en compte aquestes característiques i assegurar-nos que el sistema compleixi els objectius de l’empresa i sigui capaç de respondre a les necessitats dels usuaris</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-lescalabilitat" class="slide level2">
+<h2>Què és l’escalabilitat?</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>L’<strong>escalabilitat</strong> és la capacitat d’un sistema per gestionar un augment de la càrrega de treball sense afectar el rendiment.</p>
+<ul>
+<li class="fragment"><strong>Vertical</strong>: augmentar la capacitat d’un servidor afegint més recursos (CPU, memòria, disc).</li>
+<li class="fragment"><strong>Horitzontal</strong>: augmentar la capacitat d’un sistema afegint més servidors.</li>
+</ul>
+</div><div class="column fragment center-container" style="width:50%;">
+<div style="text-align:center;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/elasticity.png"></p>
+<figcaption>Escalabilitat</figcaption>
+</figure>
+</div>
+</div>
+</div></div>
+<div class="column" style="width:5%;">
+
+</div><div class="exemple fragment udl-component udl-exemple" title="Costos d'escalabilitat">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — Costos d'escalabilitat</span></div>
+<p>El cloud computing permet adaptar la capacitat disponible a la càrrega de treball real, pagant només pels recursos que s’utilitzen en cada moment.</p>
+</div>
+<aside class="notes">
+<p>Escalabilitat es refereix a la capacitat d’un sistema per gestionar un augment en la càrrega de treball sense que el seu rendiment es vegi afectat. És un concepte clau en el disseny de sistemes informàtics, especialment en entorns amb variacions en la demanda. Aquesta capacitat s’aconsegueix mitjançant dues estratègies principals:</p>
+<ul>
+<li><p>Escalabilitat Vertical: Consisteix en millorar la capacitat d’un servidor afegint més recursos com CPU, memòria o disc. Això permet que un servidor maneje una càrrega de treball més gran sense necessitat de maquinari addicional.</p></li>
+<li><p>Escalabilitat Horitzontal: Consisteix en augmentar la capacitat del sistema afegint més servidors. Això distribueix la càrrega de treball entre diversos servidors, millorant la capacitat global del sistema.</p></li>
+</ul>
+<p>En l’entorn de cloud computing, aquest concepte es relaciona sovint amb elasticitat, que és la capacitat d’un sistema per adaptar-se de manera dinàmica a les fluctuacions de la càrrega de treball. Per exemple, una botiga en línia podria experimentar un augment significatiu de trànsit durant el Black Friday. Un sistema escalable i elàstic podria gestionar aquest augment de demanda sense perdre rendiment, i després reduir la capacitat quan la demanda torna a nivells normals.</p>
+<p>L’objectiu és garantir que el sistema pugui mantenir un rendiment òptim i evitar problemes com temps d’espera llargs, errors o caigudes, que podrien afectar negativament l’experiència de l’usuari i els resultats comercials.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-és-la-fiabilitat" class="slide level2">
+<h2>Què és la fiabilitat?</h2>
+<p>La <strong>fiabilitat</strong> és la capacitat d’un sistema de complir la seva funció durant un període determinat sense fallar, sota unes condicions de funcionament especificades.</p>
+<p>El <strong>MTBF</strong> (<em>Mean Time Between Failures</em>) és una mesura habitual per caracteritzar el comportament de sistemes reparables.</p>
+<div class="concepte fragment udl-component udl-concepte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
+<p><strong>Definició estadística:</strong> el MTBF és el temps mitjà entre fallades del procés de fallades considerat.</p>
+<p><strong>Estimació a partir de dades observades:</strong></p>
+<p><span class="math display">\[
+\widehat{MTBF} =
+\frac{\text{temps total de funcionament}}
+{\text{nombre de fallades}}
+\]</span></p>
+<p>Aquesta fórmula és un <strong>estimador empíric</strong>, no la definició formal del MTBF.</p>
+</div>
+<div class="exemple fragment udl-component udl-exemple" title="Un model simplificat">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — Un model simplificat</span></div>
+<p>Si durant 10.000 hores de funcionament observem 10 fallades:</p>
+<p><span class="math display">\[
+\widehat{MTBF} = \frac{10.000}{10}=1.000\ h
+\]</span></p>
+<p>Això descriu el comportament mitjà observat; <strong>no significa que la propera fallada es produirà d’aquí a 1.000 hores</strong>.</p>
+</div>
+<aside class="notes">
+<p>La distinció entre magnitud estadística i estimador és important.</p>
+<p>En un <strong>model exponencial</strong> amb taxa de fallada constant <span class="math inline">\(\lambda\)</span>, el temps entre fallades segueix una distribució exponencial i:</p>
+<p><span class="math display">\[
+MTBF = \frac{1}{\lambda}
+\]</span></p>
+<p>Aquesta hipòtesi és útil per modelar la fase de vida útil d’un sistema, però no és universal.</p>
+<p>La <strong>corba de banyera (<em>bathtub curve</em>)</strong> descriu qualitativament tres règims habituals de taxa de fallada:</p>
+<ol type="1">
+<li><strong>Mortalitat infantil:</strong> taxa inicial elevada, sovint associada a defectes de fabricació, configuració o desplegament.</li>
+<li><strong>Vida útil:</strong> taxa aproximadament constant; és el règim on el model exponencial resulta especialment útil.</li>
+<li><strong>Desgast:</strong> la taxa de fallada augmenta amb l’envelliment o el deteriorament.</li>
+</ol>
+<p>Per tant, el MTBF observat és una mitjana condicionada al règim i a la població estudiats. Sense conèixer el model de fallades, l’edat del sistema i les seves condicions d’operació, <strong>el MTBF per si sol no permet predir la propera fallada</strong>.</p>
+<p>Una forma de millorar la fiabilitat és introduir <strong>redundància</strong>, però això no elimina necessàriament les fallades: pot permetre que el servei continuï o reduir el temps de recuperació.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="redundància-i-tolerància-a-fallades" class="slide level2">
+<h2>Redundància i tolerància a fallades</h2>
+<div class="fragment">
+<p>Algunes estratègies habituals són:</p>
+<ul>
+<li class="fragment"><strong>Cold standby</strong>: la reserva no està activa; cal iniciar-la o preparar-la després de la fallada.</li>
+<li class="fragment"><strong>Warm standby</strong>: la reserva està parcialment preparada.</li>
+<li class="fragment"><strong>Hot standby / active-passive</strong>: la reserva està preparada per assumir ràpidament el servei.</li>
+<li class="fragment"><strong>Active-active</strong>: diverses instàncies donen servei simultàniament.</li>
+</ul>
+</div>
+<aside class="notes">
+<p>La classificació cold/warm/hot és una simplificació útil per introduir el compromís entre <strong>cost, temps de recuperació i grau de preparació</strong>.</p>
+<p>No hi ha una configuració universalment millor. La decisió depèn del SLO, del cost assumible, de la capacitat de detectar la fallada i de les dependències del servei.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="ha-dr-i-fault-tolerance" class="slide level2">
+<h2>HA, DR i Fault Tolerance</h2>
+<ul>
+<li class="fragment"><strong>Redundància</strong> és un mecanisme de disseny</li>
+<li class="fragment"><strong>HA, DR i FT</strong> són conceptes més específics sobre com volem respondre a les fallades.</li>
+</ul>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concepte</th>
+<th>Objectiu</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>HA — Alta Disponibilitat</strong></td>
+<td>Minimitzar la interrupció del servei</td>
+<td>Failover entre instàncies dins d’un entorn</td>
+</tr>
+<tr class="even">
+<td><strong>DR — Disaster Recovery</strong></td>
+<td>Recuperar el servei després d’un desastre</td>
+<td>Recuperació des d’una altra ubicació</td>
+</tr>
+<tr class="odd">
+<td><strong>FT — Fault Tolerance</strong></td>
+<td>Continuar funcionant davant d’una fallada</td>
+<td>Components redundants amb continuïtat perceptiblement ininterrompuda</td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<p>HA i FT no són sinònims. Una arquitectura <strong>HA</strong> acostuma a acceptar una petita finestra d’interrupció durant el failover; <strong>fault tolerance</strong> busca que la fallada d’un component no sigui perceptible per al servei.</p>
+<p><strong>DR</strong> tracta especialment els escenaris en què una ubicació o un entorn complet deixa d’estar disponible. Per això sovint implica una estratègia geogràficament separada.</p>
+<p>Els termes tenen matisos diferents segons el marc o fabricant, però aquesta distinció és una bona base operativa per al curs.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="redundància-i-mttr" class="slide level2">
+<h2>Redundància i MTTR</h2>
+<p>La redundància pot reduir el <strong>MTTR efectiu percebut pel servei</strong> o, en una arquitectura tolerant a fallades, evitar que una fallada provoqui indisponibilitat.</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Estratègia</th>
+<th style="text-align: right;">Ordre de magnitud de la interrupció <sup>1</sup></th>
+<th>Efecte sobre el servei</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Cold standby</strong></td>
+<td style="text-align: right;">minuts → hores</td>
+<td>Cal preparar/iniciar la reserva</td>
+</tr>
+<tr class="even">
+<td><strong>Warm standby</strong></td>
+<td style="text-align: right;">segons → minuts</td>
+<td>Reserva parcialment preparada</td>
+</tr>
+<tr class="odd">
+<td><strong>Hot standby / active-passive</strong></td>
+<td style="text-align: right;">segons → minuts</td>
+<td>Failover ràpid</td>
+</tr>
+<tr class="even">
+<td><strong>Active-active</strong></td>
+<td style="text-align: right;">segons → gairebé zero</td>
+<td>El servei pot continuar mentre es redistribueix la càrrega</td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<p>Ara podem connectar quantitativament redundància i disponibilitat:</p>
+<p><span class="math display">\[
+A = \frac{MTBF}{MTBF+MTTR}
+\]</span></p>
+<p>Si mantenim constant el MTBF, reduir el MTTR augmenta directament la disponibilitat.</p>
+<p>Per exemple, amb MTBF = 1.000 h: - MTTR = 1 h → <span class="math inline">\(A \approx 99,90\%\)</span> - MTTR = 0,1 h → <span class="math inline">\(A \approx 99,99\%\)</span></p>
+<p>Això converteix la redundància en una decisió quantitativa: no es tracta simplement de «tenir una còpia», sinó de decidir <strong>quant temps d’interrupció podem permetre’ns i quin cost té reduir-lo</strong>.</p>
+<p>Els valors de la taula són orientatius. Un active-active mal dissenyat pot tenir una recuperació pitjor que un hot standby ben automatitzat.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+<aside><ol class="aside-footnotes"><li id="fn1"><p><strong>Ordres de magnitud orientatives</strong>, no valors universals: depenen de detecció, automatització, dependències i arquitectura.</p></li></ol></aside></section>
+<section id="què-és-la-disponibilitat-i" class="slide level2">
+<h2>Què és la disponibilitat? (I)</h2>
+<p>La <strong>disponibilitat</strong> d’un sistema es refereix a la seva capacitat per estar operatiu i accessible per als usuaris durant un període de temps determinat.</p>
+<div class="concepte fragment udl-component udl-concepte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
+<p><strong>Atenció al terme «disponibilitat»:</strong> aquí parlem de la disponibilitat del <strong>servei</strong> com a proporció de temps operatiu. En el model <strong>CIA</strong>, <em>Availability</em> és una propietat de seguretat: la informació i els serveis han d’estar accessibles quan són necessaris.</p>
+</div>
+<div class="fragment">
+<p>La disponibilitat depèn de dues magnituds: el MTBF (com de sovint falla el sistema) i el MTTR (Mean Time To Repair, com de ràpid es repara). Un sistema pot fallar sovint però ser molt disponible si es repara gairebé instantàniament, i viceversa. Per exemple, si un sistema té un MTTR de 2 hores, això vol dir que, de mitjana, es triga 2 hores a reparar-lo després d’una fallada.</p>
+</div>
+<div class="fragment">
+<p><span class="math display">\[ Disponibilitat = \frac{Temps\ de\ funcionament}{Temps\ de\ funcionament + Temps\ de\ reparar} \]</span></p>
+</div>
+</section>
+<section id="què-és-la-disponibilitat-ii" class="slide level2">
+<h2>Què és la disponibilitat? (II)</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<div class="exemple fragment udl-component udl-exemple" title="Exemple numèric">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — Exemple numèric</span></div>
+<p>Amb MTBF = 999 h i MTTR = 1 h:</p>
+<p><span class="math display">\[ A = \frac{999}{999+1} = 99,9\% \]</span></p>
+<p><strong>99,9% ≠ 99,99%.</strong> Quants minuts d’indisponibilitat anual implica cadascun?</p>
+</div>
+</div><div class="column" style="width:40%;">
+<div class="exemple fragment udl-component udl-exemple" title="SLA i acords de servei">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — SLA i acords de servei</span></div>
+<p>Alguns serveis cloud ofereixen SLA del 99,99% o superior, segons el servei contractat i les condicions concretes. Si el proveïdor no compleix el SLA acordat, el contracte pot establir compensacions, sovint en forma de crèdits de servei.</p>
+</div>
+</div></div>
+<aside class="notes">
+<p>La <strong>disponibilitat</strong> d’un sistema es refereix a la seva capacitat per estar operatiu i accessible per als usuaris durant un període de temps determinat. Depèn conjuntament del MTBF (amb quina freqüència falla) i del MTTR (Mean Time To Repair, com de ràpid es repara): Disponibilitat = MTBF / (MTBF + MTTR). Per exemple, si un sistema té un MTTR de 2 hores, això vol dir que, de mitjana, es triga 2 hores a reparar el sistema després d’una fallada. No confondre amb fiabilitat, que es refereix a la capacitat d’un sistema per operar sense interrupcions durant un període determinat.</p>
+<p>Per exemple, un sistema pot tenir una alta fiabilitat, però una baixa disponibilitat si el temps de reparació després d’una fallada és llarg. D’altra banda, un sistema pot tenir una baixa fiabilitat, però una alta disponibilitat si es pot reparar ràpidament després d’una fallada.</p>
+<p>Val la pena treballar un exemple numèric a classe: amb un MTBF de 999 hores i un MTTR d’1 hora, la disponibilitat és del 99,9%. Aquí és on convé aturar-se i preguntar als alumnes: 99,9% i 99,99% semblen números molt semblants, però a quants minuts d’indisponibilitat anual equival cadascun? (99,9% equival a uns 8,76 hores d’inactivitat l’any; 99,99% equival a poc més de 52 minuts). Aquesta diferència d’un sol “nou” té un impacte enorme en termes pràctics, i és un bon exercici per fer reflexionar sobre per què les empreses inverteixen tants recursos en pujar d’un “nou” al següent.</p>
+<p>Pel que fa als SLA (Service Level Agreement), cal evitar presentar-los com una propietat fixa d’un proveïdor concret: els nivells de disponibilitat garantits depenen del servei específic contractat i de les condicions del contracte, i poden variar amb el temps. El que sí és consistent és el principi: si el proveïdor no compleix el SLA acordat, sol haver-hi compensacions en forma de crèdits de servei.</p>
+<p>Aquest és un bon moment per tancar el cercle amb la diapositiva de SLI/SLO/SLA que vam veure a la secció d’SRE: la disponibilitat que acabem de calcular és exactament un SLI (la mètrica que mesurem), el percentatge que ens fixem com a objectiu (99,9%, 99,99%…) és el SLO, i el que finalment es compromet contractualment amb el client és el SLA. Val la pena que els alumnes vegin que aquests conceptes “moderns” de la cultura SRE no són res més que una formalització i professionalització d’idees que ja hem introduït amb MTBF i MTTR.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="principi-de-disseny-keep-it-simple-kiss" class="slide level2">
+<h2>Principi de disseny: Keep It Simple (KISS)</h2>
+<div class="concepte fragment udl-component udl-concepte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
+<p>La <strong>complexitat és un cost operatiu</strong>: cada component, dependència i excepció afegeix configuració, punts de fallada i càrrega de manteniment.</p>
+</div>
+<h3 id="com-es-tradueix-en-sistemes">Com es tradueix en sistemes?</h3>
+<ul>
+<li class="fragment"><strong>Prefereix mecanismes estàndard</strong> abans que solucions pròpies si resolen el mateix problema.</li>
+<li class="fragment"><strong>Redueix components i dependències</strong> que no aporten valor.</li>
+<li class="fragment"><strong>Fes explícita la configuració</strong> i evita passos manuals ocults.</li>
+<li class="fragment"><strong>Automatitza allò repetitiu</strong>, però sense introduir una plataforma més complexa que el problema.</li>
+<li class="fragment"><strong>Documenta les decisions i els casos excepcionals</strong>.</li>
+</ul>
+<div class="exemple fragment udl-component udl-exemple" title="Exemple: desplegar un servei web">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exemple"></use></svg><span>Exemple — Exemple: desplegar un servei web</span></div>
+<p>Per a dos servidors, pot ser més mantenible una configuració estàndard + una eina d’automatització que introduir una plataforma d’orquestració completa sense necessitat real.</p>
+<p><strong>KISS no vol dir <em>fer-ho simple a qualsevol preu</em></strong> : vol dir evitar complexitat que no està justificada pels requisits.</p>
+</div>
+<aside class="notes">
+<p>KISS no és simplement “fer coses senzilles”. En administració de sistemes, la complexitat té un cost operatiu concret: més components que actualitzar, més dependències que monitoritzar, més configuracions que entendre i més possibles modes de fallada.</p>
+<p>Per això és útil preguntar-se: quants components necessitem?, quantes dependències tenim?, quants passos manuals cal executar?, què passa si un component falla?, qui serà capaç de mantenir-ho d’aquí a dos anys?</p>
+<p>L’exemple no pretén afirmar que una tecnologia concreta sigui “dolenta”. Si necessitem orquestració, alta disponibilitat o una escala determinada, la complexitat addicional pot estar perfectament justificada. El principi KISS ens obliga a justificar-la.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
+<section id="eines-i-tecnologies" class="title-slide slide level1 center">
+<h1>Eines i tecnologies</h1>
+
+</section>
+<section id="del-problema-a-leina" class="slide level2">
+<h2>Del problema a l’eina</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problema</th>
+<th>Categoria</th>
+<th>Exemples</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Aïllar recursos</td>
+<td>Virtualització / Hypervisor</td>
+<td>VMs, Contenidors</td>
+</tr>
+<tr class="even">
+<td>Consum sota demanda</td>
+<td>Cloud Computing</td>
+<td>IaaS, PaaS, SaaS</td>
+</tr>
+<tr class="odd">
+<td>Configurar molts servidors</td>
+<td>Configuration management</td>
+<td>Ansible, Puppet, Chef</td>
+</tr>
+<tr class="even">
+<td>Definir infraestructura amb codi</td>
+<td>Infrastructure as Code</td>
+<td>Terraform, CloudFormation</td>
+</tr>
+<tr class="odd">
+<td>Saber què passa al sistema</td>
+<td>Monitoring / Logging</td>
+<td>Nagios, Zabbix, Prometheus</td>
+</tr>
+<tr class="even">
+<td>Construir i desplegar codi</td>
+<td>Delivery pipeline (CI/CD)</td>
+<td>Jenkins, GitLab CI</td>
+</tr>
+<tr class="odd">
+<td>Protegir la xarxa</td>
+<td>Security tooling</td>
+<td>PfSense, Suricata, Snort</td>
+</tr>
+<tr class="even">
+<td>Escalar contenidors</td>
+<td>Container orchestration</td>
+<td>Kubernetes, Docker Swarm</td>
+</tr>
+</tbody>
+</table>
+<aside class="notes">
+<p>En el món de l’administració de sistemes, hi ha una gran varietat d’eines i tecnologies que es poden utilitzar per gestionar i mantenir els sistemes informàtics. Els noms concrets de les eines canvien amb el temps —una eina de moda avui pot quedar obsoleta d’aquí a pocs anys—, però les categories de problemes que resolen són molt més estables. Per això aquesta taula està organitzada de problema a categoria, i només després a exemples concrets: el que val la pena retenir és la categoria (què resol) més que la marca concreta (amb què ho resol). No cal memoritzar-les totes avui: l’objectiu d’aquesta diapositiva és únicament que reconegueu els noms quan els tornem a trobar més endavant al curs.</p>
+<ul>
+<li><strong>Virtualització</strong>: crear màquines virtuals i contenidors per aïllar i gestionar els recursos del sistema. Ho tractarem en detall a la <strong>Unitat 5</strong>.</li>
+<li><strong>Cloud Computing</strong>: lliurament sota demanda de recursos informàtics a través d’internet. Ho tractarem en detall a la <strong>Unitat 6</strong>.</li>
+<li><strong>Configuration management</strong>: Ansible, Puppet i Chef permeten gestionar la configuració de molts servidors de manera eficient i reproduïble, sense executar les mateixes ordres manualment a cadascun.</li>
+<li><strong>Infrastructure as Code</strong>: eines com Terraform i CloudFormation permeten definir i desplegar infraestructura mitjançant fitxers de codi versionables, en lloc de configurar-la manualment.</li>
+<li><strong>Monitoring/Logging</strong>: Nagios, Zabbix i Prometheus permeten supervisar l’estat dels sistemes en temps real i detectar problemes abans que afectin el servei.</li>
+<li><strong>Delivery pipeline (CI/CD)</strong>: la integració contínua (CI) i el desplegament continu (CD) automatitzen la construcció, les proves i el desplegament de codi. Eines com Jenkins i GitLab CI implementen aquestes pràctiques.</li>
+<li><strong>Security tooling</strong>: PfSense, Suricata i Snort protegeixen els sistemes contra atacs i amenaces a nivell de xarxa.</li>
+<li><strong>Container orchestration</strong>: Kubernetes i Docker Swarm gestionen i escalen automàticament conjunts de contenidors. Ho tractarem en detall a la <strong>Unitat 5</strong>.</li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="què-significa-administrar-un-sistema" class="slide level2">
+<h2>Què significa administrar un sistema?</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<h3 id="garantir-que-el-servei-fa-el-que-ha-de-fer">Garantir que el servei fa el que ha de fer</h3>
+<ul>
+<li class="fragment"><strong>Funcionalitat</strong> → requisits i proves</li>
+<li class="fragment"><strong>Rendiment</strong> → latència, throughput, capacitat</li>
+<li class="fragment"><strong>Disponibilitat</strong> → uptime i SLO</li>
+<li class="fragment"><strong>Seguretat</strong> → confidencialitat, integritat i disponibilitat</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<h3 id="fer-ho-sostenible-en-el-temps">Fer-ho sostenible en el temps</h3>
+<ul>
+<li class="fragment"><strong>Fiabilitat</strong> → reduir i tolerar fallades</li>
+<li class="fragment"><strong>Mantenibilitat</strong> → corregir i evolucionar</li>
+<li class="fragment"><strong>Observabilitat</strong> → saber què està passant</li>
+<li class="fragment"><strong>Automatització</strong> → reduir treball manual i errors</li>
+</ul>
+</div></div>
+<div class="resum fragment udl-component udl-resum" title="Tot això convergeix en...">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-resum"></use></svg><span>Resum — Tot això convergeix en...</span></div>
+<p><strong>Dissenyar → Mesurar → Operar → Aprendre → Millorar</strong></p>
+</div>
+<div class="reflexio fragment udl-component udl-reflexio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió</span></div>
+<p>Un sistema ben administrat <strong>no és aquell que mai falla</strong>.</p>
+<p>És aquell del qual sabem <strong>detectar</strong>, <strong>gestionar</strong> i <strong>aprendre</strong> de les fallades.</p>
+</div>
+<aside class="notes">
+<p>Tanquem la unitat recuperant la pregunta inicial: què significa que un sistema “funcioni”?</p>
+<p>Ara tenim una resposta més precisa. No n’hi ha prou que el sistema faci la funció correcta: hem de poder mesurar el rendiment, garantir nivells de disponibilitat, protegir la informació segons els objectius de seguretat, tolerar fallades, mantenir i evolucionar el sistema i saber què està passant quan alguna cosa no funciona.</p>
+<p>Aquest és el model mental que volem conservar per a la resta de l’assignatura: <strong>dissenyar, mesurar, operar, aprendre i millorar</strong>. Cada eina o tècnica que veurem més endavant ha de poder relacionar-se amb algun d’aquests objectius.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section id="què-ens-emportem" class="title-slide slide level1 center">
+<h1>Què ens emportem?</h1>
+<div class="resum udl-component udl-resum" title="Take Home Message">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-resum"></use></svg><span>Resum — Take Home Message</span></div>
+<p>Administrar sistemes és convertir requisits en serveis que puguem mesurar, operar, protegir, mantenir i millorar.</p>
+</div>
+
+
+</section>
+
+
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+<p>Administració i Manteniment de Sistemes i Aplicacions (AMSA) &nbsp; <a href="../../../index.html" class="home-link" aria-label="Inici"><svg class="home-icon" viewbox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 52 C27 43 39 31 60 12 C78 30 93 42 108 51" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></path><path d="M25 48 C25 64 25 76 24 87 C35 84 45 85 53 87 M95 48 C95 64 95 76 97 87 C87 84 77 85 68 87" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M51 87V70 C51 64 55 60 60 60 C65 60 69 64 69 70V87Z" fill="currentColor"></path><path d="M82 29V17 C82 14 84 13 87 13H94 C96 13 97 15 96 17 C94 20 93 24 94 32Z" fill="currentColor"></path></svg></a></p>
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="../../../site_libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="../../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="../../../site_libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/search/search.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'fade',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1600,
+
+        height: 900,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 8.0e-2,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp("https:\/\/igualada\.amsa\.udl\.cat");
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
