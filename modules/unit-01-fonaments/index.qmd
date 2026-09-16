@@ -1,0 +1,55 @@
+---
+title: "Unitat 1 — Fonaments de l'Administració de Sistemes"
+subtitle: "1 sessió — Setmana 1"
+format:
+  udl-course-html:
+    toc: false
+---
+
+## Visió general
+
+Sessió introductòria al rol de l'administrador de sistemes: què implica la disciplina, com ha evolucionat cap a perfils moderns com DevOps i SRE, i quin vocabulari bàsic de fiabilitat i disponibilitat ( MTBF, MTTR, SLI/SLO/SLA) s'utilitzarà al llarg del curs.
+
+La part pràctica introdueix QEMU com a eina de virtualització i `apt`/`dpkg` com a gestor de paquets, amb un únic fil conductor: **administrar un sistema és entendre el seu estat i ser capaç de canviar-lo de manera controlada**.
+
+## Objectius d'aprenentatge
+
+::: {.resultat title="En acabar aquesta unitat seràs capaç de..."}
+- Descriure què és l'administració de sistemes, el rol de qui l'exerceix, i com ha evolucionat cap a perfils moderns com DevOps i SRE.
+- Definir i aplicar amb precisió el vocabulari bàsic de fiabilitat i disponibilitat d'un sistema (MTBF, MTTR, disponibilitat, redundància HA/DR/FT, SLI/SLO/SLA).
+- Distingir els rols client/servidor i identificar la terminologia bàsica d'infraestructura (servidor, rack, CPD, switch).
+- Crear, arrencar i gestionar l'estat d'una màquina virtual amb QEMU, incloent-hi la configuració inicial amb cloud-init i l'ús de snapshots.
+- Gestionar el cicle de vida de paquets amb `apt`/`dpkg`, distingint `remove` de `purge` i explicant el paper de les dependències automàtiques.
+:::
+
+## Càrrega estimada
+
+2h de teoria + 2h de pralab, distribuïdes en dues sessions durant la primera setmana. Les activitats complementàries (Activitats per a casa) són opcionals i no tenen una durada fixada.
+
+## Prerequisits
+
+::: {.prerequisits}
+- Experiència prèvia en entorns Linux o Unix (altament recomanable).
+- Coneixements sòlids de les funcions principals dels Sistemes Operatius.
+- Experiència treballant en mode text i amb llenguatges de scripting.
+:::
+
+## Contingut
+
+**Teoria**
+
+1. [Fonaments de l'Administració de Sistemes](theory/01-fonaments.qmd)
+
+**Pralab**
+
+1. [QEMU, cloud-init i gestió de paquets amb apt](pralab/01-qemu.qmd)
+
+**Activitats complementàries**
+
+- [Activitats teòriques — Unitat 1](activities/01-fonaments.qmd)
+- [Activitats pràctiques — Unitat 1](activities/01-qemu.qmd)
+
+
+:::{.examtip}
+Aquesta unitat no té una prova competencial pròpia. Però els seus continguts s'avaluaran en les proves escrites i són el fonament dels propers laboratoris.
+:::

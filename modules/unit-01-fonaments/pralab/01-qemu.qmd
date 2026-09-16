@@ -1,0 +1,834 @@
+---
+title: "Laboratori 1 — QEMU i gestió de paquets"
+format:
+  udl-course-html:
+    toc: false
+    number-sections: false
+---
+
+## Objectius
+
+En acabar el laboratori hauríeu de poder:
+
+1. Identificar l'arquitectura del vostre host i distingir **virtualització** d'**emulació**.
+2. Crear i arrencar una màquina virtual Debian amb QEMU.
+3. Entendre el paper de **cloud-init** en la configuració inicial d'una màquina.
+4. Connectar-vos a la màquina virtual mitjançant SSH.
+5. Observar com un *snapshot* modifica la gestió de l'estat d'una màquina virtual.
+6. Instal·lar, eliminar i purgar paquets amb `apt`.
+7. Interpretar l'estat d'un paquet amb `dpkg`.
+8. Justificar tècnicament el comportament observat, no només descriure'l.
+
+---
+
+# Abans de començar
+
+Als **PCs del laboratori ja trobareu QEMU i les eines necessàries** per realitzar aquesta pràctica.
+
+Cada estudiant necessitarà, però, una clau SSH pròpia. Comproveu si ja en teniu una:
+
+```bash
+ls ~/.ssh/*.pub
+```
+
+Si no en teniu cap, genereu-ne una:
+
+```bash
+ssh-keygen -t ed25519
+```
+
+Podeu acceptar els valors per defecte prement `Enter`.
+
+::: {.callout-tip title="Checkpoint 0"}
+Abans de continuar, comproveu que:
+
+- QEMU està disponible;
+- teniu una clau pública SSH;
+- podeu consultar-la amb:
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+**No compartiu mai la clau privada (`id_ed25519`).**
+:::
+
+::: {.callout-note title="Preparació del professor"}
+**Abans de la sessió**, és recomanable comprovar als PCs del laboratori:
+
+- que `qemu-system-x86_64` està disponible;
+- que l'usuari de l'alumne pot utilitzar **KVM** (`/dev/kvm`);
+- que la imatge Debian 12 *cloud* està disponible o es pot descarregar sense bloquejos de xarxa;
+- que el port local `2222` és lliure.
+
+Si la imatge es pot deixar **pre-descarregada** als PCs, és preferible: la sessió hauria de dedicar el temps a experimentar amb el sistema, no a esperar una descàrrega.
+
+:::
+
+# Bloc A — Construïm una màquina virtual
+
+## 1. Quina màquina tenim?
+
+Abans de crear una màquina virtual, hem de saber **sobre quin maquinari estem treballant**.
+
+Executeu:
+
+```bash
+uname -m
+```
+
+Observeu el resultat.
+
+| Resultat habitual | Arquitectura |
+|---|---|
+| `x86_64` | x86-64 |
+| `aarch64` / `arm64` | ARM64 |
+
+Als PCs del laboratori, el resultat esperat és **`x86_64`**.
+
+::: {.callout-note title="Parem i pensem"}
+**Quina arquitectura té el vostre host?**
+
+I una pregunta més important:
+
+> Per què és rellevant que l'arquitectura del guest coincideixi amb la del host?
+
+No busqueu encara la resposta. Feu primer una hipòtesi.
+:::
+
+La idea fonamental és:
+
+> **Virtualitzar no és el mateix que emular.**
+
+**Emular** vol dir traduir, instrucció per instrucció, el codi màquina d'una arquitectura (per exemple, ARM64) a una seqüència d'instruccions equivalents d'una arquitectura diferent (per exemple, x86-64). QEMU ho fa amb el seu **TCG** (*Tiny Code Generator*): interpreta o recompila dinàmicament el codi del guest, i aquesta traducció té un cost real, perquè cada instrucció del guest sol requerir diverses instruccions natives del host per reproduir-ne l'efecte.
+
+**Virtualitzar**, en canvi, vol dir executar el codi del guest **directament** sobre el processador físic, sense traduir-lo, sempre que guest i host comparteixin arquitectura. **KVM** (*Kernel-based Virtual Machine*) és el mecanisme del nucli de Linux que ho fa possible: converteix el mateix nucli que esteu utilitzant al host en un hipervisor, i QEMU l'aprofita per executar les instruccions del guest amb un cost pràcticament nul respecte a executar-les nadiament.
+
+Això explica per què el requeriment inicial del laboratori insistia que l'arquitectura del guest coincidís amb la del host: sense aquesta coincidència, KVM no es pot fer servir, i QEMU ha de recórrer necessàriament a TCG — amb un cost de rendiment típicament d'un ordre de magnitud respecte a l'execució accelerada.
+
+::: {.callout-note title="Checkpoint 1"}
+Als PCs del laboratori treballem amb **x86-64 + KVM**.
+
+Heu identificat:
+
+- l'arquitectura del host;
+- el mecanisme d'acceleració;
+- la diferència conceptual entre virtualització i emulació.
+
+**Ara sí: continuem.**
+:::
+
+---
+
+## 2. Una imatge de màquina no és una màquina
+
+Descarregarem una imatge *cloud* de Debian 12 (Bookworm).
+
+Als PCs del laboratori treballarem amb **x86-64**:
+
+```bash
+wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
+```
+
+Aquesta imatge és una **imatge base**.
+
+::: {.callout-note title="Parem i pensem"}
+Quina diferència hi ha entre:
+
+- una **imatge base**;
+- el **disc de la màquina virtual**;
+- la **màquina virtual en execució**?
+
+No són tres noms per al mateix objecte.
+:::
+
+Val la pena fixar aquests tres nivells abans de continuar, perquè els tornarem a fer servir constantment:
+
+```text
+imatge base                  → el fitxer .qcow2 immutable que heu descarregat
+disc de treball               → una còpia pròpia d'aquesta plantilla, la que modificareu
+màquina virtual en execució   → el procés QEMU que interpreta aquest disc i hi executa un SO
+```
+
+Cadascun té un cicle de vida diferent. La **imatge base** no hauria de canviar mai: és el punt de partida reproduïble al qual sempre podeu tornar. El **disc de treball** és on viu l'estat persistent — tot allò que sobreviu a apagar i tornar a arrencar la MV: fitxers, paquets instal·lats, configuració. La **màquina virtual en execució** hi afegeix, a més, l'estat volàtil: el contingut de la memòria RAM, els processos en marxa, les connexions obertes — tot allò que normalment es perd en apagar la màquina.
+
+Aquesta distinció és exactament la que fa possible un *snapshot*: quan feu `savevm`, QEMU no toca la imatge base, sinó que captura conjuntament l'estat del disc de treball **i** l'estat volàtil de la màquina en execució, dins del mateix `debian-treball.qcow2`.
+
+---
+
+## 3. Com configurem una màquina sense instal·lar-la manualment?
+
+Les imatges *cloud* utilitzen **cloud-init** per a la configuració inicial.
+
+Crearem un fitxer `user-data`:
+
+```yaml
+#cloud-config
+users:
+  - name: estudiant
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - PEGUEU_AQUI_LA_VOSTRA_CLAU_PUBLICA
+```
+
+Substituïu la darrera línia per la vostra clau pública.
+
+Podeu consultar-la amb:
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+Ara generarem el dispositiu que conté aquesta configuració:
+
+```bash
+cloud-localds seed.img user-data
+```
+
+::: {.callout-note title="Parem i pensem"}
+La màquina encara no ha arrencat.
+
+**Com pot ser que ja li hàgim proporcionat un usuari i una clau SSH?**
+
+Quin paper té `seed.img`?
+:::
+
+`seed.img` conté la resposta a la pregunta anterior: és un petit disc (una imatge ISO9660 amb l'etiqueta `cidata`) que **cloud-init** — un servei ja preinstal·lat a les imatges *cloud* de Debian — llegeix durant els primers segons d'arrencada, abans que cap usuari hi pugui interactuar.
+
+Aquest mecanisme s'anomena ***image-based provisioning***: en lloc d'instal·lar un sistema operatiu pas a pas de manera interactiva (com faríeu amb un instal·lador clàssic), partiu d'una imatge ja construïda i li injecteu, de manera **declarativa**, l'estat inicial que voleu que tingui (usuaris, claus SSH, xarxa). Declarativa vol dir que vosaltres descriviu *quin estat final voleu* (el `user-data`), no *els passos per arribar-hi* — és cloud-init qui decideix com aplicar-ho.
+
+Aquesta mateixa idea —descriure l'estat desitjat en lloc dels passos per aconseguir-lo— reapareixerà quan parlem d'infraestructura com a codi més endavant al curs.
+
+---
+
+## 4. Creem el disc de treball
+
+No modificarem la imatge base directament.
+
+```bash
+cp debian-12-genericcloud-amd64.qcow2 debian-treball.qcow2
+```
+
+
+
+Ara tenim:
+
+```text
+debian-12-genericcloud-*.qcow2   ← plantilla
+                 │
+                 └── cp
+                      ↓
+             debian-treball.qcow2 ← disc de treball
+```
+
+::: {.callout-note title="Parem i pensem"}
+Per què pot ser una mala pràctica modificar directament la imatge base?
+
+Penseu en què passaria si demà volguéssim crear una segona màquina amb la mateixa configuració inicial.
+:::
+
+---
+
+# 5. Arrenquem QEMU
+
+Ara apareix la primera comanda llarga de la pràctica.
+
+### PCs del laboratori — x86-64 amb KVM
+
+```bash
+qemu-system-x86_64 -enable-kvm -m 2048 -smp 2 \
+  -drive file=debian-treball.qcow2,if=virtio \
+  -drive file=seed.img,format=raw,readonly=on \
+  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+  -device virtio-net-pci,netdev=net0 \
+  -nographic
+```
+
+
+::: {.callout-note title="No memoritzeu aquesta comanda"}
+No és necessari memoritzar-la.
+
+Durant el curs aprendrem a llegir els paràmetres importants. Per ara, identifiqueu:
+
+- memòria: `-m 2048`;
+- CPU virtuals: `-smp 2`;
+- disc: `-drive`;
+- xarxa: `-netdev` i `-device`;
+- redirecció de ports: `hostfwd`;
+- consola: `-nographic`.
+:::
+
+::: {.callout-tip title="Checkpoint 2"}
+La màquina ha començat a arrencar.
+
+**No continueu fins que tots els membres del grup tinguin la seva MV en funcionament.**
+
+Si no arrenca, no canvieu aleatòriament paràmetres de la comanda: observeu el missatge d'error i discutiu amb el professor quina part de la configuració pot explicar-lo.
+:::
+
+---
+
+# 6. Entrem a la màquina
+
+Obriu un segon terminal i executeu:
+
+```bash
+ssh -p 2222 estudiant@localhost
+```
+
+::: {.callout-important title="Si SSH refusa connectar-se amb un avís sobre la clau del servidor"}
+Si en algun moment SSH mostra un avís del tipus *"REMOTE HOST IDENTIFICATION HAS CHANGED"* i es nega a connectar, **no apliqueu la solució directament**. Primer, diagnostiqueu-ho:
+
+- Llegiu el missatge d'error sencer. Quin fitxer i quina línia concreta assenyala com a origen del conflicte?
+- Per què SSH reacciona així en lloc de connectar-se directament? Quina amenaça de seguretat intenta evitar aquest comportament?
+- Quin esdeveniment concret del laboratori pot haver causat que la clau del servidor "hagi canviat" des del punt de vista de SSH?
+
+Un cop hàgiu raonat la resposta, la solució consisteix a eliminar **només l'entrada corresponent a aquest host/port** de `~/.ssh/known_hosts`, no tot el fitxer:
+
+```bash
+ssh-keygen -R '[localhost]:2222'
+```
+
+No elimineu mai tot `known_hosts` sense haver entès abans exactament què estava passant: aquest avís existeix precisament per detectar si algú diferent de la vostra MV està responent en aquest port.
+:::
+
+Ara esteu dins del guest.
+
+Comproveu on sou:
+
+```bash
+hostname
+uname -m
+```
+
+I observeu els recursos disponibles:
+
+```bash
+free -h
+nproc
+df -h
+```
+
+::: {.callout-note title="Parem i pensem"}
+Ara teniu dos sistemes operatius executant-se:
+
+```text
+HOST
+ └── QEMU
+      └── GUEST Debian
+```
+
+Quan executeu:
+
+```bash
+uname -m
+```
+
+al guest, **quin sistema esteu preguntant?**
+
+I quan l'executeu al terminal original, quin?
+:::
+
+Aquesta és una primera oportunitat per distingir clarament **host** i **guest**.
+
+---
+
+# Bloc A.2 — L'estat de la màquina
+
+## 7. Fem un canvi
+
+Des de la sessió SSH:
+
+```bash
+touch ~/abans_del_snapshot.txt
+ls ~
+```
+
+Ara tornarem al terminal on s'està executant QEMU.
+
+Per accedir al monitor de QEMU, premeu:
+
+```text
+Ctrl+A
+C
+```
+
+Al monitor veureu:
+
+```text
+(qemu)
+```
+
+Creeu un snapshot:
+
+```text
+savevm punt_inicial
+```
+
+::: {.callout-note title="Un snapshot no és un backup"}
+`savevm` reverteix l'estat **dins del mateix fitxer de disc** (`debian-treball.qcow2`); no crea cap còpia independent en un altre suport.
+
+Si perdeu o corrompeu `debian-treball.qcow2`, perdeu **també** tots els snapshots que conté. Un backup real implica una còpia en un mitjà independent, precisament per sobreviure a la pèrdua del disc original.
+:::
+
+Torneu a la consola amb:
+
+```text
+Ctrl+A
+C
+```
+
+Torneu a la sessió SSH i feu un segon canvi:
+
+```bash
+touch ~/despres_del_snapshot.txt
+ls ~
+```
+
+Ara tornarem al monitor i restaurarem l'estat:
+
+```text
+(qemu) loadvm punt_inicial
+```
+
+Torneu a connectar-vos per SSH si és necessari.
+
+Comproveu:
+
+```bash
+ls ~
+```
+
+::: {.callout-note title="Parem i pensem"}
+Quin dels dos fitxers hauria de continuar existint?
+
+Abans de respondre, feu una hipòtesi sobre **quin estat ha restaurat realment `loadvm`**.
+:::
+
+::: {.callout-note title="Parem i pensem — temps de restauració"}
+Mesureu, amb un **cronòmetre extern** (el del mòbil, per exemple — no cap comanda dins de la MV), el temps transcorregut des que executeu `loadvm punt_inicial` fins que podeu tornar a connectar-vos correctament per SSH.
+
+I, per separat, el temps transcorregut des que inicieu QEMU des de zero (arrencada completa de Debian) fins que podeu connectar-vos per SSH per primer cop.
+
+**Per què un cronòmetre extern i no una comanda dins la MV?** Perquè el rellotge que voleu mesurar és precisament el de l'estat que esteu restaurant: mesurar el temps de `loadvm` amb una marca de temps presa *dins* de la sessió SSH que esteu a punt de perdre (i que `loadvm` restaurarà a un instant anterior) no dona una mesura fiable. Mesurar des de fora evita aquest problema, i a més mesura exactament el que interessa des del punt de vista d'un servei: **el temps fins que torna a ser accessible**, no un detall intern d'implementació.
+
+Compareu els dos temps de restauració.
+
+Relacionant-ho amb els conceptes de **MTTR** i **redundància** vistos a la teoria:
+
+- quin mecanisme restaura l'estat més ràpidament?
+- com afecta un temps de restauració curt al temps d'indisponibilitat?
+- amb quin tipus de recuperació s'assembla més conceptualment cada cas: *cold*, *warm* o *hot*?
+
+**Important:** `loadvm` no és tècnicament un mecanisme de *standby*: és una funcionalitat de QEMU per restaurar l'estat d'una única màquina virtual, no una arquitectura de redundància amb una rèplica independent. Utilitzeu la classificació cold/warm/hot com una **analogia** per raonar sobre el temps de restauració, no com una equivalència estricta.
+
+**Precisió de vocabulari:** el que acabeu de mesurar és un **temps de restauració** (una magnitud concreta, d'aquest experiment). El **MTTR** és un concepte més ampli — el temps mitjà de reparació d'un incident real — del qual la restauració tècnica és només un component. No useu els dos termes com a sinònims.
+
+Guardeu els dos temps mesurats: els necessitareu a la **Pregunta 5**, a la secció final de preguntes de raonament.
+:::
+
+El que acabeu d'observar té una explicació precisa: `savevm` no ha "desat un fitxer", ha capturat **tot l'estat de la màquina virtual en aquell instant** —el contingut complet de la memòria RAM i l'estat del disc de treball— dins del mateix `debian-treball.qcow2`. `loadvm` no desinstal·la res ni desfà accions una a una: substitueix tot aquest estat pel que hi havia capturat, com si féssiu un salt en el temps.
+
+Això és fonamentalment diferent de com funciona, per exemple, `apt purge`, que sí que desfà una acció concreta (eliminar un paquet i la seva configuració) sense tocar la resta de l'estat de la màquina. Un snapshot revoca **tot** l'estat global de cop; una operació com `apt purge` modifica **una part** concreta d'aquest estat de manera selectiva. Aquesta diferència de granularitat és exactament la que explorarem a la pregunta següent.
+
+::: {.callout-note title="Parem i pensem"}
+És equivalent restaurar un snapshot a executar `apt purge paquet`?
+
+Penseu-hi en termes de **model d'estat**: què pot revertir un snapshot, què modifica explícitament `apt purge`, i si cadascuna d'aquestes operacions és local a un paquet o afecta l'estat global de la màquina virtual.
+
+Desenvoluparem la resposta completa a la **Pregunta 2** de la secció final.
+:::
+
+---
+
+# Bloc B — Gestionem programari
+
+Ara deixarem QEMU en funcionament i treballarem sobre la Debian que acabem de crear.
+
+## 8. Actualitzem la informació dels paquets
+
+Executeu:
+
+```bash
+sudo apt update
+```
+
+::: {.callout-note title="Parem i pensem"}
+`apt update` ha instal·lat actualitzacions?
+
+Abans de continuar, expliqueu al vostre company què creieu que ha canviat en el sistema.
+:::
+
+`apt update` **no instal·la ni actualitza cap paquet**: només sincronitza el catàleg local amb les metadades que publica cada repositori configurat (quines versions existeixen, quines dependències tenen, on descarregar-les). Confondre "actualitzar la informació disponible" amb "actualitzar el sistema" és, probablement, l'error de comprensió més habitual amb `apt`.
+
+```text
+repositori → metadades publicades → apt update → catàleg local de paquets
+```
+
+`apt install`, en canvi, sí que descarrega i instal·la realment el contingut d'un paquet — però ho fa consultant el catàleg local que `apt update` acaba de deixar preparat, no el repositori remot directament:
+
+```text
+apt install → consulta el catàleg local → descarrega paquets → instal·la paquets
+```
+
+Per això, si el catàleg local està desactualitzat, `apt install` pot intentar instal·lar una versió que ja no existeix al repositori, o no trobar un paquet que sí que hi és disponible.
+
+---
+
+# 9. Instal·lem un paquet
+
+`build-essential` és un metapaquet: no té gairebé fitxers propis, així que no és un bon exemple per veure què passa amb els **fitxers de configuració**. Farem servir un paquet petit que sí que en té un de debò: `nano`.
+
+Instal·leu:
+
+```bash
+sudo apt install nano
+```
+
+Comproveu:
+
+```bash
+which nano
+nano --version
+```
+
+I consulteu l'estat amb `dpkg`:
+
+```bash
+dpkg -l nano
+```
+
+`dpkg -l` sempre imprimeix una capçalera abans de la llista de paquets (**Desired** / **Status** / **Err?**). Els dos primers caràcters de cada línia (per exemple `ii`) **no són "una columna d'estat"**: són dues columnes diferents concatenades — l'**acció desitjada** (i = install, r = remove, p = purge...) i l'**estat actual** (i = installed, c = config-files-remain, n = not-installed...). Llegiu la capçalera real que imprimeix `dpkg -l` (no la resumim aquí a propòsit) i identifiqueu quina lletra correspon a quin significat.
+
+Podeu comprovar el mateix directament a la font que `dpkg -l` resumeix:
+
+```bash
+grep -A5 '^Package: nano$' /var/lib/dpkg/status
+```
+
+`dpkg -l` és només una vista còmoda d'aquest fitxer de text pla.
+
+Finalment, comproveu que el fitxer de configuració existeix:
+
+```bash
+ls -l /etc/nanorc
+```
+
+::: {.callout-note title="Checkpoint 3"}
+Hauríeu de poder demostrar que `nano` està instal·lat, identificar quines lletres del `dpkg -l` corresponen a acció desitjada i a estat actual, i confirmar que `/etc/nanorc` existeix.
+
+No continueu fins que pugueu explicar què demostra cadascuna de les comandes anteriors.
+:::
+
+---
+
+# 10. `apt remove`
+
+Ara eliminarem el paquet:
+
+```bash
+sudo apt remove nano
+```
+
+I tornarem a consultar:
+
+```bash
+dpkg -l nano
+```
+
+::: {.callout-note title="Parem i pensem"}
+Si `apt remove` ha eliminat el paquet, per què `dpkg -l` encara pot mostrar una entrada relacionada?
+
+Amb el que heu après al pas 9 sobre les dues columnes (acció desitjada / estat actual): quina combinació de lletres esperàveu veure ara, i quina hi veieu realment?
+:::
+
+Comproveu ara el fitxer de configuració:
+
+```bash
+ls -l /etc/nanorc
+```
+
+::: {.callout-note title="Parem i pensem"}
+`/etc/nanorc`, encara hi és després de l'`apt remove`? Relacioneu-ho amb el que acabeu d'observar a `dpkg -l`.
+:::
+
+Comprovem si `apt` detecta dependències que ja no són necessàries:
+
+```bash
+sudo apt autoremove --dry-run
+```
+
+No s'eliminarà res: `--dry-run` només mostra què faria `apt`.
+
+::: {.callout-note title="Parem i pensem"}
+`nano` té molt poques dependències pròpies, així que és probable que `autoremove --dry-run` no trobi gairebé res a eliminar.
+
+Guardeu-vos aquest resultat: el compararem a la secció 13 amb un paquet que sí que arrossega moltes dependències.
+
+Mentrestant: quina informació necessita `apt` per decidir si un paquet es pot considerar **prescindible**?
+:::
+
+---
+
+# 11. `apt purge`
+
+Ara executarem:
+
+```bash
+sudo apt purge nano
+```
+
+I tornarem a consultar:
+
+```bash
+dpkg -l nano
+```
+
+I, sobretot, el fitxer de configuració:
+
+```bash
+ls -l /etc/nanorc
+```
+
+Compareu els tres estats (`install` → `remove` → `purge`), tant a `dpkg -l` com a l'existència de `/etc/nanorc`.
+
+::: {.callout-note title="Parem i pensem"}
+Ara sí que `/etc/nanorc` hauria d'haver desaparegut.
+
+Per què conservar fitxers de configuració després d'un `remove` pot ser **desitjable** en una administració de sistemes real? Penseu en un exemple concret. I quan podria ser, al contrari, inconvenient o problemàtic conservar-la?
+
+Desenvoluparem la resposta tècnica completa a la **Pregunta 3** de la secció final — en aquella pregunta us demanarem que citeu la font (`man apt-get`, secció de `remove`/`purge`, o la Debian Policy sobre fitxers de configuració) que sustenta la vostra explicació.
+:::
+
+---
+
+# 12. Instal·lar de nou: què queda al sistema?
+
+Torneu a instal·lar:
+
+```bash
+sudo apt install nano
+```
+
+Observeu especialment:
+
+- si cal descarregar el paquet;
+- els missatges que mostra `apt`.
+
+I comproveu la memòria cau d'APT **abans** de tocar el snapshot:
+
+```bash
+ls -lh /var/cache/apt/archives/
+```
+
+Ara torneu al snapshot:
+
+```text
+(qemu) loadvm punt_inicial
+```
+
+Reconnecteu-vos si és necessari i, **abans** de tornar a instal·lar res, comproveu de nou la memòria cau:
+
+```bash
+ls -lh /var/cache/apt/archives/
+```
+
+::: {.callout-note title="Parem i pensem"}
+Compareu aquest resultat amb el que acabeu d'anotar just abans del `loadvm`.
+
+Ha canviat el contingut de `/var/cache/apt/archives/`? Recordeu que `punt_inicial` es va crear **abans** que comencéssiu el Bloc B sencer.
+:::
+
+Ara torneu a instal·lar i, un cop més, comproveu la memòria cau:
+
+```bash
+sudo apt update
+sudo apt install nano
+ls -lh /var/cache/apt/archives/
+```
+
+::: {.callout-note title="Parem i pensem"}
+La segona instal·lació és exactament igual que la primera?
+
+Raoneu la resposta distingint entre l'estat del sistema de fitxers, la memòria cau de paquets d'APT, l'estat capturat pel snapshot, i l'estat del host.
+
+Desenvoluparem la resposta completa a la **Pregunta 4** de la secció final.
+:::
+
+---
+
+# 13. Metapaquets i dependències
+
+Fins ara heu treballat amb `nano`, un paquet petit i quasi sense dependències pròpies. Ara farem el mateix exercici amb un paquet de característiques molt diferents: `build-essential`.
+
+Consulteu, sense instal·lar-lo encara:
+
+```bash
+apt show build-essential
+apt depends build-essential
+```
+
+Observeu que `build-essential` no representa simplement un únic executable: és un **metapaquet** que depèn d'altres paquets necessaris per proporcionar un entorn bàsic de compilació (gcc, g++, make, dpkg-dev, entre altres).
+
+Instal·leu-lo:
+
+```bash
+sudo apt install build-essential
+```
+
+I elimineu-lo:
+
+```bash
+sudo apt remove build-essential
+```
+
+Ara torneu a comprovar què faria `autoremove`:
+
+```bash
+sudo apt autoremove --dry-run
+```
+
+No espereu necessàriament que desapareguin **totes** les dependències que heu vist amb `apt depends`: `autoremove` no pregunta només «qui depenia d'aquest paquet?», sinó també si aquestes dependències **continuen sent necessàries per a algun altre paquet** o si estan **marcades com a instal·lades manualment** (i, per tant, `apt` no les toca).
+
+Si el professor ho indica i voleu observar el canvi real:
+
+```bash
+sudo apt autoremove
+```
+
+::: {.callout-note title="Parem i pensem"}
+Compareu aquest resultat amb el que vau obtenir al pas 10 amb `nano`.
+
+**Per què la diferència és tan gran?** Penseu en quants paquets va arrossegar cadascun com a dependència "automàtica", i què fa `apt` amb els paquets automàtics que ja ningú necessita.
+
+Ara compareu la llista que `apt depends build-essential` us va mostrar a l'inici d'aquesta secció amb la llista que `autoremove --dry-run` proposa eliminar ara. **Són exactament la mateixa llista?** Si no ho són, quina explicació hi ha per a la diferència?
+
+A partir d'aquí, com decideix `apt` quins paquets pot eliminar amb `autoremove`? Investigueu el paper de les dependències marcades com a **automàtiques** i de les dependències que encara són **necessàries per a altres paquets**.
+
+La pregunta important no és només «què elimina?», sinó:
+
+> **Com sap `apt` que un paquet ja no té cap motiu per continuar instal·lat?**
+:::
+
+Aquesta darrera secció tanca el fil del Bloc B: heu vist que un paquet pot ser una eina senzilla amb un fitxer de configuració propi (`nano`) o un metapaquet que només existeix per arrossegar-ne d'altres (`build-essential`), i que `apt` manté, per a cadascun, un registre de quines dependències són **automàtiques** i quines han estat demanades explícitament per vosaltres.
+
+Aquesta distinció és, en el fons, la diferència entre **instal·lar una aplicació** (una acció puntual, centrada en un paquet) i **gestionar un sistema de paquets** (una responsabilitat contínua, centrada en l'estat global: quins paquets hi ha, per què hi són, i què passaria si els traguéssiu). És exactament aquesta segona mirada —la de l'estat global del sistema, no la d'una acció aïllada— la que distingeix administrar un sistema de simplement fer-lo servir.
+
+---
+
+# Preguntes de raonament
+
+Aquestes preguntes resumeixen els conceptes que hem treballat durant el laboratori.
+
+## Pregunta 1 — Virtualització i emulació
+
+Durant el laboratori heu treballat amb un host **x86-64** i un guest **x86-64**, aprofitant KVM.
+
+Ara feu una transferència del concepte:
+
+> **Què canviaria si intentéssim executar una imatge x86-64 sobre un host ARM64?**
+
+La resposta ha de distingir:
+
+- arquitectura del host;
+- arquitectura del guest;
+- virtualització;
+- emulació;
+- TCG;
+- acceleració per maquinari.
+
+No cal haver-ho experimentat durant el laboratori: és una **pregunta teòrica de transferència** basada en el concepte introduït al Checkpoint 1.
+
+
+## Pregunta 2 — Snapshots i `apt purge`
+
+Compareu conceptualment:
+
+```text
+loadvm punt_inicial
+```
+
+amb:
+
+```bash
+apt purge paquet
+```
+
+No expliqueu només «un restaura i l'altre desinstal·la».
+
+Expliqueu **quin model d'estat modifica cadascuna de les operacions**.
+
+## Pregunta 3 — `remove` i `purge`
+
+Expliqueu què diferencia:
+
+```bash
+apt remove
+```
+
+de:
+
+```bash
+apt purge
+```
+
+Incloeu:
+
+- estat del paquet;
+- fitxers de configuració (recolzeu-vos en el que heu observat amb `/etc/nanorc`);
+- utilitat de conservar configuració;
+- situació en què conservar-la pot ser un problema.
+
+**Citeu la font** que sustenta la vostra explicació tècnica: `man apt-get` (secció de `remove`/`purge`) o la Debian Policy sobre fitxers de configuració. No n'hi ha prou amb l'explicació oral del professor.
+
+## Pregunta 4 — Snapshots i memòria cau
+
+Expliqueu per què una instal·lació de `nano` després d'un `loadvm` es va comportar diferent de la primera instal·lació.
+
+La resposta ha d'identificar **on es troben les diferents parts de l'estat** i quines queden afectades pel snapshot. Feu servir els resultats reals de `ls -lh /var/cache/apt/archives/` que vau anotar als tres moments del pas 12.
+
+## Pregunta 5 — Restauració i MTTR
+
+Durant l'experiment heu mesurat el **temps de restauració** amb `loadvm` i el temps d'una arrencada completa de la màquina virtual.
+
+Suposeu que un servei té com a objectiu recuperar-se en menys de **60 segons**.
+
+Ompliu amb les vostres dades mesurades:
+
+- arrencada completa: **______ segons**;
+- restauració amb `loadvm`: **______ segons**.
+
+Indiqueu quin mecanisme compleix l'objectiu i justifiqueu-ho relacionant el temps de restauració amb el **MTTR** i la disponibilitat.
+
+**Important:** el temps de restauració que heu mesurat és només una part del MTTR d'un incident real. El MTTR complet pot incloure detecció, diagnosi, intervenció i validació del servei, no només l'operació tècnica de restauració — no useu els dos termes com a sinònims.
+
+---
+
+# Què heu de conservar
+
+Aquest laboratori és principalment **de treball i discussió a classe**.
+
+Al final de la sessió heu de poder conservar:
+
+- les respostes a les **cinc preguntes de raonament**, amb la citació de font demanada a la Pregunta 3;
+- els temps mesurats (no estimats) de restauració amb `loadvm` i d'arrencada completa;
+- els tres resultats de `ls -lh /var/cache/apt/archives/` del pas 12 (abans del `loadvm`, després del `loadvm`, i després de reinstal·lar);
+- el resultat de `sudo apt autoremove --dry-run` amb `nano` **i** amb `build-essential`, per poder comparar-los;
+- una captura o transcripció del resultat de `dpkg -l nano` i de `ls -l /etc/nanorc` després de `remove` i després de `purge`.
+
+No busquem respostes llargues. Busquem **explicacions tècnicament justificades**.
+
+::: {.callout-tip title="Idea final"}
+Durant el laboratori heu fet molt més que executar QEMU i `apt`.
+
+Heu treballat amb una mateixa idea des de dues perspectives:
+
+> **Administrar un sistema és entendre el seu estat i ser capaç de canviar-lo de manera controlada.**
+
+QEMU us ha permès experimentar amb l'estat d'una màquina sencera.
+
+`apt` us ha permès experimentar amb l'estat del programari dins d'aquesta màquina.
+
+Aquesta manera de pensar —**estat → canvi → observació → verificació**— serà recurrent durant tot el curs.
+:::

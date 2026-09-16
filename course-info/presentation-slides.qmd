@@ -1,0 +1,410 @@
+---
+title: "Presentació del curs"
+subtitle: "Administració i Manteniment de Sistemes i Aplicacions (AMSA)"
+author: "Jordi Mateo Fornés"
+
+format:
+  revealjs:
+    theme: [simple, ../_extensions/udl-course/styles/revealjs.scss]
+    transition: fade
+    slide-number: true
+    incremental: true
+    chalkboard: false
+    slide-level: 2
+    width: 1600
+    height: 900
+    margin: 0.08
+    center: false
+    footer: 'Administració i Manteniment de Sistemes i Aplicacions (AMSA) &nbsp; <a href="/index.html" class="home-link" aria-label="Inici"><svg class="home-icon" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 52 C27 43 39 31 60 12 C78 30 93 42 108 51" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 48 C25 64 25 76 24 87 C35 84 45 85 53 87 M95 48 C95 64 95 76 97 87 C87 84 77 85 68 87" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M51 87V70 C51 64 55 60 60 60 C65 60 69 64 69 70V87Z" fill="currentColor"/><path d="M82 29V17 C82 14 84 13 87 13H94 C96 13 97 15 96 17 C94 20 93 24 94 32Z" fill="currentColor"/></svg></a>'
+  
+editor: visual
+---
+
+# Benvinguda
+
+## AMSA — Administració i Manteniment de Sistemes i Aplicacions
+
+-   1r Semestre, 3r Curs del Grau en Enginyeria Informàtica
+-   6 ECTS · Obligatòria · Presencial
+-   3 ECTS de Teoria · 3 ECTS de PRALAB
+-   Codi: 105013 · Idioma: català (100%)
+
+::: {.fragment style="text-align:center;"}
+![(Font: Extret de [Neowin](https://www.neowin.net/news/to-our-readers-happy-sysadmin-day/))](https://cdn.neow.in/news/images/uploaded/1_devotion_to_duty.jpg)
+:::
+
+> [Guia docent](https://guiadocent.udl.cat/html/2026-27_105013)
+
+::: notes
+Benvinguts al curs de **Administració i Manteniment de Sistemes i Aplicacions**.
+
+Aquesta assignatura és una continuació del curs de Sistemes Operatius. Per cursar-la és altament recomanable tenir experiència prèvia en entorns Linux o Unix, una base sòlida dels conceptes dels sistemes operatius i experiència treballant en mode text i amb llenguatges de scripting.
+:::
+
+## Què necessitem?
+
+-   Experiència prèvia en entorns **Linux o Unix**.
+-   Una base sòlida dels conceptes principals dels **Sistemes Operatius**.
+-   Experiència treballant en **mode text**.
+-   Experiència amb **llenguatges de scripting**.
+
+## Temari (I)
+
+::::: columns
+::: {.column width="50%"}
+### Procés d'arrencada i inicialització del sistema
+
+-   BIOS i UEFI.
+-   GRUB.
+-   Procés d'arrencada de Linux.
+-   `systemd` i gestió de serveis.
+:::
+
+::: {.column .fragment width="50%"}
+### Fitxers i emmagatzematge
+
+-   Sistemes de fitxers de Linux.
+-   Particions i muntatge.
+-   Permisos i control d'accés.
+-   RAID.
+-   LVM.
+-   Administració de l'emmagatzematge.
+-   Xifrat de discs amb LUKS.
+:::
+:::::
+
+## Temari (II)
+
+:::::::: columns
+::: {.column width="20%"}
+### Autenticació i autorització
+
+-   Usuaris i grups de Linux, PAM.
+-   SSH.
+-   LDAP.
+-   Autenticació centralitzada i control d'accés.
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column .fragment width="40%"}
+### Virtualització i contenidors
+
+-   Conceptes de virtualització.
+-   Arquitectura de Docker, imatges i registres.
+-   Docker Compose.
+-   Xarxes, emmagatzematge i desplegament amb contenidors.
+:::
+
+::: {.column width="5%"}
+:::
+
+::: {.column .fragment width="20%"}
+### Computació al núvol
+
+-   Fonaments de cloud computing.
+-   Amazon EC2, S3, IAM.
+-   Desplegament d'infraestructura.
+-   AWS Lambda.
+:::
+::::::::
+
+::: notes
+Aquesta assignatura és una continuació del curs de Sistemes Operatius i s'organitza en dues parts: la primera se centra en els fonaments del sistema operatiu i l'emmagatzematge; la segona, en autenticació, virtualització i cloud.
+:::
+
+## Metodologia
+
+:::::: columns
+::: {.column width="30%"}
+### Sessions de teoria
+
+-   Conceptes fonamentals de cada unitat, exemples pràctics i casos reals d'administració de sistemes.
+-   Les sessions tenen un caràcter participatiu i preparen per a les activitats pràctiques i les proves competencials.
+:::
+
+::: {.column .fragment width="30%"}
+### Pralabs
+
+-   Activitats **Hands-On**, **CodeLabs** i projectes guiats.
+-   Treball individual o en petits grups.
+-   Situacions pròpies de l'administració de sistemes.
+:::
+
+::: {.column .fragment width="34%"}
+### Treball autònom
+
+-   Activitats i reptes proposats.
+-   Preparació de les proves competencials.
+-   Lectura de documentació tècnica.
+-   Visualització dels materials proporcionats.
+:::
+::::::
+
+::: {.fragment .fragment style="text-align:center;"}
+**Important:** totes les sessions requereixen disposar del vostre entorn de desenvolupament.
+:::
+
+# Planificació
+
+## Primera part del curs
+
+| **Set.** | **Dilluns (2h)** | **Dimecres (2h)** |
+|:----------------:|:--------------------------|:--------------------------|
+| 1a | Unitat 1: Fonaments de l'Administració de Sistemes | Unitat 2: Procés d'Arrencada i Inicialització del Sistema |
+| 2a | Unitat 2: Procés d'Arrencada i Inicialització del Sistema | Unitat 2: Procés d'Arrencada i Inicialització del Sistema |
+| 3a | Unitat 2: Procés d'Arrencada i Inicialització del Sistema | **Examen Competencial Pràctic 1** |
+| 4a | Unitat 3: Sistemes de Fitxers i Emmagatzematge | Unitat 3: Sistemes de Fitxers i Emmagatzematge |
+| 5a | **Festiu** | Unitat 3: Sistemes de Fitxers i Emmagatzematge |
+| 6a | Unitat 3: Sistemes de Fitxers i Emmagatzematge | **Examen Competencial Pràctic 2** |
+| 7a | Unitat 4: Autenticació i Autorització | Unitat 4: Autenticació i Autorització |
+| 8a | Unitat 4: Autenticació i Autorització | **Examen Competencial Pràctic 3** |
+| 9a | **Examen Escrit Teòric 1** | — |
+
+## Segona part del curs
+
+| **Set.** | **Dilluns (2h)** | **Dimecres (2h)** |
+|:----------------:|:--------------------------|:--------------------------|
+| 10a | Unitat 5: Virtualització i Contenidors | Unitat 5: Virtualització i Contenidors |
+| 11a | Unitat 5: Virtualització i Contenidors | **Examen Competencial Pràctic 4** |
+| 12a | Unitat 6: Computació al Núvol | Unitat 6: Computació al Núvol |
+| 13a | Unitat 6: Computació al Núvol | **Examen Competencial Pràctic 5** |
+| 14a | **Projecte** | **Projecte** |
+| 15a | **Projecte** | **Examen Competencial Pràctic 6** |
+| 16a | **Examen Escrit Teòric 2** | — |
+| 17a | — | — |
+| 18a | — | — |
+| 19a | **Recuperacions** | — |
+
+# Avaluació
+
+## Avaluació contínua {.smaller}
+
+| **Bloc** | **Activitat d'avaluació** | **Acrònim** | **Ponderació** | **Recuperable** |
+|:--------------|:--------------|:-------------:|:-------------:|:-------------:|
+| Teòric 1 | Examen Escrit Teòric 1 | T1 | 20% | Sí |
+| Teòric 2 | Examen Escrit Teòric 2 | T2 | 20% | Sí |
+| Pràctic 1 | Examen Competencial Pràctic 1 | P1 | 10% | No |
+| Pràctic 2 | Examen Competencial Pràctic 2 | P2 | 10% | No |
+| Pràctic 3 | Examen Competencial Pràctic 3 | P3 | 10% | No |
+| Pràctic 4 | Examen Competencial Pràctic 4 | P4 | 10% | No |
+| Pràctic 5 | Examen Competencial Pràctic 5 | P5 | 10% | No |
+| Pràctic 6 | Examen Competencial Pràctic 6 | P6 | 10% | No |
+| Bonus | Contribucions als materials oberts | B | +0,5 punts | No |
+
+-   Per superar l'assignatura cal obtenir una **nota final igual o superior a 5,0**.
+-   **No s'estableix cap nota mínima en cap activitat d'avaluació.**
+-   Totes les activitats d'avaluació són **individuals**.
+
+## Càlcul de la nota final
+
+$$
+NF =
+\min(
+0.2T1 + 0.2T2 +
+0.1P1 + 0.1P2 + 0.1P3 +
+0.1P4 + 0.1P5 + 0.1P6 +
+B,\ 10
+)
+$$
+
+on:
+
+-   **B** és el bonus per contribucions als materials docents.
+-   **0 ≤ B ≤ 0,5**.
+-   La nota final no pot superar els **10 punts**.
+
+::: {.fragment style="text-align:center;"}
+**Abans de cada activitat d'avaluació es publicaran els criteris de correcció i els aspectes objecte d'avaluació.**
+:::
+
+## Exàmens teòrics
+
+Els exàmens teòrics **T1 i T2** són proves escrites que avaluen els coneixements teòrics i pràctics adquirits durant el curs. Són **individuals i presencials**, en les dates establertes al calendari acadèmic.
+
+::: fragment
+### No es permet
+
+-   telèfons mòbils,
+-   ordinadors portàtils,
+-   tauletes,
+-   rellotges,
+-   calculadores.
+:::
+
+::: fragment
+### Es permet
+
+-   Es permet **un únic full DIN A4**, escrit exclusivament **a mà pel mateix estudiant**, per les dues cares.
+
+-   No s'admeten documents impresos, fotocòpies, reproduccions mecàniques ni materials elaborats per terceres persones.
+
+-   El full d'apunts s'ha d'entregar amb l'examen.
+:::
+
+## Recuperació dels exàmens teòrics
+
+-   **T1 i T2 són recuperables**.
+-   La recuperació es realitza durant la setmana de recuperació.
+-   Cada prova de recuperació inclou **únicament els continguts de l'examen teòric corresponent**.
+-   La qualificació obtinguda **substitueix íntegrament** la nota original.
+-   Es pot recuperar **un o tots dos** exàmens teòrics.
+-   Cada examen recuperat es realitza mitjançant una prova independent.
+
+## Exàmens competencials pràctics
+
+::::: columns
+::: {.column width="50%"}
+Els exàmens competencials pràctics **P1–P6**:
+
+-   Són **individuals i presencials**.
+-   Es realitzen durant les sessions de pralab indicades al pla docent.
+-   Es duen a terme als laboratoris del centre.
+-   S'utilitzen els equips de l'aula.
+:::
+
+::: {.column .fragment width="50%"}
+-   Es realitzen **sense accés a Internet ni a recursos externs**, excepte els que el professorat autoritzi expressament.
+-   Consisteixen en la resolució de **tasques pràctiques en un entorn controlat**.
+-   S'utilitzen les eines i la documentació disponibles als equips del laboratori.
+-   **No són recuperables**.
+:::
+:::::
+
+## Bonus — Contribucions als materials
+
+:::::: {.lliurament title="Fins a 0,5 punts addicionals"}
+::::: columns
+::: {.column width="50%"}
+**Es poden fer contribucions com:**
+
+-   Creació de contingut nou.
+-   Millora de la documentació existent.
+-   Revisió i correcció de materials.
+:::
+
+::: {.column .fragment width="50%"}
+**Condicions:**
+
+-   S'han de documentar i presentar mitjançant **pull requests** al repositori de l'assignatura.
+-   Han de ser **rellevants, significatives** i aportar **valor afegit**.
+-   Han de ser **acceptades pel professorat**.
+-   La puntuació depèn de la **qualitat i l'impacte** de la contribució.
+:::
+:::::
+::::::
+
+## Assistència i activitats d'avaluació
+
+:::::: columns
+:::: {.column width="50%"}
+### Assistència
+
+-   L'assistència a les classes de teoria i a les sessions de laboratori **no és obligatòria**.
+-   Es recomana assistir-hi per facilitar el seguiment de l'assignatura i la preparació de les activitats d'avaluació.
+
+::: fragment
+### Dates
+
+| **Activitat d'avaluació**     | **Data**   |
+|:------------------------------|:-----------|
+| Examen Competencial Pràctic 1 | 30/09/2026 |
+| Examen Competencial Pràctic 2 | 21/10/2026 |
+| Examen Competencial Pràctic 3 | 04/11/2026 |
+| Examen Competencial Pràctic 4 | 25/11/2026 |
+| Examen Competencial Pràctic 5 | 09/12/2026 |
+| Examen Competencial Pràctic 6 | 23/12/2026 |
+:::
+::::
+
+::: {.column .fragment width="50%"}
+### Canvi de data
+
+-   Només es podrà autoritzar un canvi de data per les causes justificades previstes a la normativa d'avaluació de la UdL.
+-   La sol·licitud haurà d'estar **degudament documentada** i tramitar-se d'acord amb el **procediment establert per la Universitat de Lleida**.
+-   La no assistència a una activitat d'avaluació comportarà un **0**, excepte si s'ha autoritzat prèviament un canvi de data.
+:::
+::::::
+
+# Normes i eines
+
+## Ús de la Intel·ligència Artificial Generativa
+
+Les eines d'**IAG** poden utilitzar-se com a recurs de suport per:
+
+-   Obtenir explicacions sobre conceptes teòrics.
+-   Explorar diferents estratègies de resolució.
+-   Generar exemples o fragments de codi amb finalitats d'aprenentatge.
+-   Identificar errors i obtenir suggeriments de millora.
+-   Donar suport a la documentació dels projectes.
+
+::: fragment
+> En tots els casos, l'estudiant és responsable de **comprendre**, **validar** i **adaptar** les respostes proporcionades. Quan una activitat permeti l'ús d'IAG, cal **declarar explícitament** les parts afectades i els prompts utilitzats.
+:::
+
+## Ús de la IAG — No està permès
+
+-   Presentar com a propi codi generat íntegrament per una eina d'IAG.
+-   Utilitzar respostes generades automàticament sense comprendre'n el funcionament.
+-   Utilitzar IAG durant una activitat d'avaluació quan el seu ús no estigui expressament autoritzat.
+
+::: {.fragment style="text-align:center;"}
+> L'ús indegut de les eines d'IAG es considerarà una forma de **frau acadèmic**.
+:::
+
+## Revisió de les activitats d'avaluació
+
+-   L'estudiant té dret a sol·licitar la revisió de qualsevol activitat d'avaluació d'acord amb la normativa de la Universitat de Lleida.
+
+-   La qualificació podrà modificar-se **a l'alça o a la baixa** si es detecten errades en la correcció o en l'aplicació dels criteris d'avaluació.
+
+-   Si es detecten indicis compatibles amb una possible situació de frau acadèmic, el professorat podrà convocar una revisió individual per verificar:
+
+    -   La comprensió dels continguts.
+    -   La correcta aplicació dels procediments.
+    -   L'autoria de les respostes.
+
+## Frau acadèmic
+
+Es considera frau acadèmic, entre d'altres:
+
+-   còpia,
+-   plagi,
+-   suplantació d'identitat,
+-   manipulació o falsificació de resultats,
+-   comunicació no autoritzada entre estudiants durant una prova,
+-   consulta o utilització de material no autoritzat,
+-   ús d'IAG o d'altres recursos tecnològics quan no estiguin expressament permesos.
+
+::: fragment
+> Qualsevol incompliment serà tractat d'acord amb la normativa vigent de la Universitat de Lleida.
+:::
+
+# Recursos
+
+## Materials, recursos i tutories
+
+### Materials i recursos
+
+-   Apunts de l'assignatura i materials proporcionats pel professor.
+-   Documentació oficial de les eines i tecnologies utilitzades.
+-   Manuals de Linux.
+-   Documentació tècnica oficial.
+-   Exemples treballats a classe.
+
+::: fragment
+### Tutories i Consultes
+
+Correu: `jordi.mateo@udl.cat`
+:::
+
+## Bibliografia
+
+-   Mike Gancarz. *Linux and the Unix Philosophy*. Digital Press, 2003.
+-   Evi Nemeth, Garth Snyder, Trent R. Hein, Ben Whaley i Dan Mackin. *UNIX and Linux System Administration Handbook*. Pearson Education.
+-   Adrian Mouat. *Using Docker: Developing and Deploying Software with Containers*. O'Reilly Media, 2016.
+-   James Turnbull. *The Docker Book*.
+-   Andreas Wittig i Michael Wittig. *Amazon Web Services in Action*. Manning Publications, 2015.
+-   Amazon Web Services. Conferències i continguts de vídeo.
+-   Richard Blum i Christine Bresnahan. *Linux Command Line and Shell Scripting Bible*, 3a edició. John Wiley & Sons, 2015.

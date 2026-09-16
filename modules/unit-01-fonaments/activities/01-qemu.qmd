@@ -1,0 +1,132 @@
+---
+title: "Activitats pràctiques — Unitat 1"
+subtitle: "Administració i Manteniment de Sistemes i Aplicacions"
+author: "Universitat de Lleida"
+format:
+  udl-course-html:
+    toc: true
+    number-sections: false
+---
+
+# Activitats per a casa
+
+Aqueste activitat és **no avaluables** i tenen com a objectiu complementar la sessió del laboratori. El principal objectiu és que pugueu reproduir l'entorn del laboratori al vostre ordinador i practicar amb QEMU, sense necessitat de tenir accés a un laboratori físic.
+
+---
+
+::: {.callout-note}
+### Transformació de l'Administrador de Sistemes a SRE
+
+Visualitza la xerrada de **Damon Edwards**, cofundador de Rundeck, presentada a **DevOpsCon 2019**:
+
+[**Damon Edwards — From SysAdmin to SRE**](https://www.youtube.com/watch?v=DGLpUoh-waM)
+:::
+
+La xerrada presenta l'evolució del paper tradicional de l'administrador de sistemes cap a un perfil **Site Reliability Engineer (SRE)**, i relaciona aquesta evolució amb la fiabilitat dels sistemes i la productivitat dels equips de desenvolupament.
+
+::: {.callout-important}
+Edwards és cofundador de Rundeck, una eina comercial d'automatització d'operacions. Teniu-ho present com a possible biaix en com presenta les solucions: la xerrada no deixa de ser, en part, una argumentació a favor del tipus de producte que ell mateix ven.
+:::
+
+### Què busquem en aquesta activitat?
+
+No intenteu retenir una llista de tecnologies.
+
+Fixeu-vos en **com canvia la manera de treballar**:
+
+- Quines tasques es poden automatitzar?
+- Quines tasques deixen de ser operacions manuals?
+- Quina relació apareix entre desenvolupament i operacions?
+- Quin paper tenen els **SLO**?
+- Què significa prendre decisions utilitzant un **error budget**?
+- Què passa quan la fiabilitat es tracta com un problema d'enginyeria?
+
+::: {.callout-tip}
+### Una pregunta per quedar-vos
+
+> **Quina diferència hi ha entre «mantenir un sistema funcionant» i «dissenyar l'operació perquè el sistema sigui fiable»?**
+:::
+
+---
+
+## Activitat 1 — Configurar QEMU al vostre ordinador
+
+::: {.callout-note}
+Aquesta activitat és una **extensió del laboratori** que hem fet a classe. L'objectiu és que pugueu practicar amb QEMU al vostre propi ordinador, sense necessitat de tenir accés a un laboratori físic. No hi ha suport garantit del professorat per a problemes específics de la vostra màquina personal (controladors, virtualització imbricada, antivirus, particularitats del fabricant...).
+:::
+
+Comproveu que la virtualització està activada a la BIOS/UEFI del vostre ordinador (sol anomenar-se "Intel VT-x", "AMD-V" o "SVM Mode"). Sense això, cap dels mecanismes d'acceleració següents (KVM, HVF, WHPX) funcionarà, i QEMU cauria en emulació per programari (TCG) — molt més lent, tal com vam explicar al laboratori.
+
+Si el vostre ordinador executa ja una màquina virtual (per exemple, un portàtil corporatiu gestionat per VDI), és possible que la virtualització imbricada no estigui disponible i que cap d'aquests passos funcioni, independentment de la configuració de la BIOS.
+
+### Linux
+
+```bash
+sudo apt install qemu-system qemu-utils cloud-image-utils
+```
+
+Per fer servir KVM sense `sudo` cada vegada, el vostre usuari ha de pertànyer al grup `kvm`:
+
+```bash
+groups
+sudo usermod -aG kvm $USER
+```
+
+(cal tancar sessió i tornar a entrar perquè el canvi tingui efecte). Comproveu l'accés amb:
+
+```bash
+ls -l /dev/kvm
+```
+
+La resta del procés (descàrrega de la imatge, `cloud-init`, `cloud-localds`, arrencada) és exactament el mateix que heu fet al laboratori.
+
+### macOS (Apple Silicon)
+
+```bash
+brew install qemu cloud-image-utils
+```
+
+Aquí l'accelerador és **HVF** (*Hypervisor.framework*), no KVM. Com que Apple Silicon és **ARM64**, no x86-64, heu d'executar `qemu-system-aarch64` (no `qemu-system-x86_64`) i descarregar la imatge *cloud* de Debian per a `arm64`:
+
+```bash
+wget https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-arm64.qcow2
+```
+
+Comanda d'arrencada:
+
+```bash
+qemu-system-aarch64 -accel hvf -cpu host -m 2048 -smp 2 \
+  -M virt -bios /opt/homebrew/share/qemu/edk2-aarch64-code.fd \
+  -drive file=debian-treball.qcow2,if=virtio \
+  -drive file=seed.img,format=raw,readonly=on \
+  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+  -device virtio-net-pci,netdev=net0 \
+  -nographic
+```
+
+Fixeu-vos que aquí sí que **guest i host tenen la mateixa arquitectura**, a diferència del cas d'un Mac Intel: en un Mac Apple Silicon, guest ARM64 sobre host ARM64 és el cas *homogeni* (com al laboratori, host i guest coincideixen), i és precisament el que permet fer servir HVF en lloc de TCG.
+
+### Windows
+
+Cal activar la característica **"Windows Hypervisor Platform"** (Panell de control → Programes → Activar o desactivar característiques de Windows), que requereix Windows 10/11 Pro, Enterprise o Education, permisos d'administrador, i un reinici.
+
+Instal·leu QEMU des de l'instal·lador oficial de [qemu.org](https://www.qemu.org/download/). Si preferiu WSL2, tingueu en compte que WSL2 ja fa servir el seu propi hipervisor i KVM no hi és directament disponible sense passos addicionals; la via més senzilla a Windows és l'accelerador **WHPX** natiu, no KVM dins de WSL2.
+
+Comanda d'arrencada (PowerShell):
+
+```powershell
+qemu-system-x86_64.exe -accel whpx -cpu host -m 2048 -smp 2 `
+  -drive file=debian-treball.qcow2,if=virtio `
+  -drive file=seed.img,format=raw,readonly=on `
+  -netdev user,id=net0,hostfwd=tcp::2222-:22 `
+  -device virtio-net-pci,netdev=net0 `
+  -nographic
+```
+
+Un cop tingueu l'entorn funcionant a casa, dues idees per practicar sense guió:
+
+- Repetiu l'exercici de `nano` (install/remove/purge, `dpkg -l`, `/etc/nanorc`) però amb `neovim`. 
+- Compareu el resultat amb el que vau obtenir amb `nano` al laboratori: **per què és diferent?** (omproveu quins fitxers instal·la el paquet `neovim` amb `dpkg -L neovim`, i on espera trobar la seva configuració un cop instal·lat.)
+- Repetiu l'exercici de temps de restauració (`loadvm` vs. arrencada completa) al vostre propi maquinari, i compareu els vostres temps amb els que vau mesurar a l'aula. Si els resultats són molt diferents, penseu quins factors del vostre maquinari (SSD vs. disc mecànic, quantitat de RAM assignada, accelerador disponible) podrien explicar-ho.
+
+

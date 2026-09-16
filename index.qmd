@@ -1,0 +1,19 @@
+---
+title: "Administració i Manteniment de Sistemes i Aplicacions"
+subtitle: "Grau en Enginyeria Informàtica · 3r curs · 1r semestre"
+author: "Jordi Mateo Fornés"
+format:
+  udl-course-html:
+    toc: false
+---
+
+Aquesta assignatura proporciona una visió integral de l’administració, el manteniment i el desplegament de sistemes i aplicacions, des dels sistemes Linux fins a les infraestructures modernes al núvol. Aprendràs a configurar, gestionar, protegir i supervisar sistemes, aprofundint en l’arrencada i els serveis, l’emmagatzematge, els usuaris, els permisos i els mecanismes d’autenticació i autorització. Treballaràs amb virtualització i contenidors per desplegar aplicacions de manera eficient, reproduïble i segura, entenent els principis que permeten gestionar infraestructures modernes. Finalment, descobriràs les possibilitats de la computació al núvol amb AWS, des de la infraestructura i els serveis d’emmagatzematge fins a la gestió d’identitats i la computació sense servidor, adquirint una visió global del cicle de vida dels sistemes i les aplicacions.
+
+![Generat amb ChatGPT d’OpenAI (2026) a partir de la indicació: Crear una il·lustració educativa per a l’assignatura Administració i Manteniment de Sistemes i Aplicacions, amb una estètica universitària, professional i propera, utilitzant una paleta cromàtica inspirada en la identitat visual de la Universitat de Lleida (UDL) i representant visualment els principals àmbits del temari.](assets/images/amsa.png)
+
+
+## Professorat
+
+- Jordi Mateo <mailto:jordi.mateo@udl.cat>
+
+

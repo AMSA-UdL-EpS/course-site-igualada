@@ -1,0 +1,129 @@
+---
+title: "Activitats tèoriques · Unitat 1"
+subtitle: "Administració i Manteniment de Sistemes i Aplicacions"
+format:
+  udl-course-html:
+    toc: true
+    number-sections: false
+---
+
+Per complementar la sessió teòrica, proposem dues activitats per fer a casa.
+
+Les dues activitats són **no avaluables**. No cal lliurar-les ni preparar una resposta formal. L'objectiu és ampliar la perspectiva sobre dues idees que reprendrem al llarg del curs:
+
+- **l'escala transforma el problema d'administrar sistemes**;
+- **l'operació de sistemes evoluciona cap a una disciplina d'enginyeria**.
+
+---
+
+## Activitat 1 — Una lectura per obrir boca
+
+::: {.exercici title="Lectura: The Datacenter as a Computer"}
+
+Llegeix la **introducció (capítol 1)** de:
+
+> Barroso, L. A., Hölzle, U., i Ranganathan, P. (2018).  
+> *The Datacenter as a Computer: Designing Warehouse-Scale Machines*.  
+> 3a ed. Morgan & Claypool / Springer.
+
+El llibre està disponible en **accés obert** a través de OAPEN:
+
+[**OAPEN Library — The Datacenter as a Computer**](https://library.oapen.org/handle/20.500.12657/61844)
+
+És una obra de referència sobre *warehouse-scale computing* i permet fer un salt d'escala respecte dels sistemes que hem analitzat a classe: què passa quan el «sistema» ja no és un servidor, sinó un centre de dades sencer tractat com una màquina?
+
+:::
+
+### Què heu de buscar en el capítol 1?
+
+No cal fer un resum del capítol. La lectura és **panoràmica**: busqueu les idees que permetin entendre com canvia el problema quan augmenta l'escala.
+
+#### Preguntes que podeu respondre amb la lectura
+
+- Què significa tractar un centre de dades com un **únic ordinador**?
+- Quins avantatges pot aportar pensar a escala de *warehouse* en lloc de pensar màquina per màquina?
+- Quins components o recursos passen a formar part del «sistema»?
+- Quins problemes que semblaven locals en un servidor passen a ser problemes d'arquitectura quan tenim moltes màquines?
+
+#### Idees que deixem obertes per a més endavant
+
+El capítol 1 és introductori i **no cal que hi trobeu totes les respostes** a les qüestions següents. Són preguntes que deixem plantejades perquè les puguem recuperar en unitats posteriors:
+
+- Com es gestionen les fallades quan el nombre de components és molt gran?
+- Quin paper tenen la redundància i la tolerància a fallades?
+- Com canvien la monitorització i l'automatització?
+- Com s'administra una infraestructura formada per milers de màquines?
+
+::: {.callout-note}
+**No busquem encara les respostes.** La idea és que el capítol 1 us deixi veure el problema a gran escala i que, més endavant, puguem tornar-hi amb les eines conceptuals que desenvoluparem al curs.
+:::
+
+::: {.callout-tip}
+### Una pregunta per quedar-vos
+
+> **Si un centre de dades es pot veure com un únic ordinador, què passa amb el paper de l'administrador de sistemes?**
+:::
+
+---
+
+## Activitat 2 — De SysAdmin a SRE
+
+::: {.exercici title="Vídeo: SysAdmin to SRE"}
+
+Visualitza la xerrada de **Damon Edwards**:
+
+> *SysAdmin to SRE: creating Capacity to make tomorrow better than today*  
+> DevOpsCon, 2019.
+
+[**Veure la xerrada a YouTube**](https://www.youtube.com/watch?v=DGLpUoh-waM)
+
+Edwards és cofundador de **Rundeck**, una eina orientada a l'automatització i l'operació de sistemes.
+
+:::
+
+### Què heu de buscar en aquesta activitat?
+
+No intenteu retenir una llista de tecnologies. Fixeu-vos sobretot en **com canvia la manera de treballar** quan les operacions es tracten com un problema d'enginyeria.
+
+Podeu observar:
+
+- Quines tasques manuals es poden automatitzar?
+- Com es pot reduir el treball operatiu repetitiu?
+- Quina relació apareix entre desenvolupament i operacions?
+- Quin paper tenen els **SLO**?
+- Què significa treballar amb un **error budget**?
+- Quina diferència hi ha entre reaccionar a incidents i dissenyar el sistema perquè sigui més fiable?
+
+### Llegir també la font amb una mirada crítica
+
+::: {.callout-warning}
+**Considereu el possible conflicte d'interès.**
+
+Damon Edwards és cofundador de Rundeck, una empresa vinculada precisament a les eines d'automatització d'operacions. Això **no invalida la xerrada ni implica que les seves afirmacions siguin incorrectes**, però és un element que cal tenir present quan una font presenta tant el problema com determinades solucions.
+
+Una pregunta útil és:
+
+> **Quines afirmacions de la xerrada són principis generals d'enginyeria i quines poden estar condicionades per la perspectiva o els interessos de l'orador?**
+:::
+
+### Font complementària
+
+Per contrastar la perspectiva de la xerrada amb una font primària de Google sobre SRE, podeu consultar:
+
+[**Google — Site Reliability Engineering**](https://sre.google/books/)
+
+No cal llegir el llibre sencer. Podeu utilitzar-lo simplement per contrastar els conceptes de **fiabilitat, SLO i error budgets** que apareixen a la xerrada.
+
+::: {.callout-tip}
+### Una pregunta per quedar-vos
+
+> **Quina diferència hi ha entre «mantenir un sistema funcionant» i «dissenyar l'operació perquè el sistema sigui fiable»?**
+:::
+
+---
+
+::: {.callout-note}
+> **L'escala canvia la manera de dissenyar i operar els sistemes.**
+
+> **L'automatització i l'enginyeria canvien la manera d'administrar-los.**
+:::

@@ -1,0 +1,57 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Administració i Manteniment de Sistemes i Aplicacions"
+  description: "Grau en Enginyeria Informàtica — UdL — Codi 105013"
+  page-navigation: true
+  favicon: assets/logo.svg
+  navbar:
+    background: "#141e2f"
+    title: "AMSA"
+    left:
+      - text: "Inici"
+        href: index.qmd
+      - text: "Temari"
+        menu:
+          - text : "Unitat 1 · Fonaments de l'Administració de Sistemes"
+            href: modules/unit-01-fonaments/index.qmd
+      - text: "Guia docent"
+        href: https://guiadocent.udl.cat/html/2026-27_105013
+      
+    right:
+      - icon: github
+        href: https://github.com/amsa-gei-udl-2526-105013
+  sidebar:
+    logo: assets/logo.png
+    logo-alt: "AMSA Logo"
+
+    style: floating
+    collapse-level: 3
+    contents:
+    - href: course-info/presentation-slides.qmd
+      text: "Presentació del curs"
+    - href: course-info/contributions/contribute.qmd
+      text: "Contribueix al curs"
+    - section: "Temari"
+      contents:
+        - section: "Unitat 1 · Fonaments de l'Administració de Sistemes"
+          contents:
+            - href: modules/unit-01-fonaments/index.qmd
+              text: "Fitxa de la unitat"
+            - section: Teoria
+              contents:
+                - modules/unit-01-fonaments/theory/01-fonaments.qmd
+            - section: "Pralab"
+              contents:
+                - modules/unit-01-fonaments/pralab/01-qemu.qmd
+            - section: "Activitats"
+              contents:
+                - modules/unit-01-fonaments/activities/01-fonaments.qmd
+                - modules/unit-01-fonaments/activities/01-qemu.qmd
+          
+      
+format:
+  udl-course-html:
+    toc: true
