@@ -40,14 +40,9 @@ La part pràctica introdueix QEMU com a eina de virtualització i `apt`/`dpkg` c
 
 1. [Fonaments de l'Administració de Sistemes](theory/01-fonaments.qmd)
 
-**Pralab**
-
-1. [QEMU, cloud-init i gestió de paquets amb apt](pralab/01-qemu.qmd)
-
 **Activitats complementàries**
 
 - [Activitats teòriques — Unitat 1](activities/01-fonaments.qmd)
-- [Activitats pràctiques — Unitat 1](activities/01-qemu.qmd)
 
 
 :::{.examtip}
