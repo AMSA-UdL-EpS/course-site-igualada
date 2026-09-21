@@ -46,6 +46,17 @@ website:
             - section: "Activitats"
               contents:
                 - modules/unit-01-fonaments/activities/01-fonaments.qmd
+        - section: "Unitat 2 · Arrancada"
+          contents:
+            - section: Teoria
+              contents:
+                - modules/unit-02-arrancada/theory/01-arrancada.qmd
+            - section: "Activitats"
+            - section: "Pralabs"
+              contents:
+                - modules/unit-02-arrancada/pralabs/01-arrancada.qmd
+
+
 
           
       

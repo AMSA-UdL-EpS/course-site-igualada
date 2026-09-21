@@ -1,0 +1,927 @@
+---
+title: "Arrencada (I)"
+author: "Jordi Mateo Fornés"
+format:
+  udl-course-html:
+    toc: false
+    number-sections: false
+---
+
+## Introducció
+
+A la sessió de teoria hem seguit el camí que fa una màquina des del *reset* fins al primer codi que controlem. En aquest laboratori el recorrerem amb les nostres mans: construirem un *bootloader* de dues etapes per a BIOS i el veurem funcionar amb un depurador.
+
+
+```bash
+BIOS ──llegeix LBA 0──► 0x7C00   Stage 1
+                             │
+                             │  INT 13h (AH = 0x42)
+                             ▼
+LBA 2048 ─────────────► 0x8000   Stage 2
+```
+
+Tot es fa amb **QEMU**: no s'arrenca ni es modifica cap ordinador real. Treballem amb un sol fitxer, `disk.img`, que QEMU presenta al BIOS com si fos un disc.
+
+:::{.concepte title="Què emulem: x86 amb BIOS, en mode real"}
+En aquest laboratori QEMU emula una màquina **x86 amb BIOS**. El nostre Stage 1 i Stage 2 s'executen en **mode real de 16 bits**: **no** estem fent un programa x86-64. Fem servir `qemu-system-i386` perquè GDB hi mostra els registres com `eip` i `esp` (de 32 bits), que contenen els `IP` i `SP` de 16 bits de la teoria.
+:::
+
+::: {.resultat title="En acabar aquest laboratori seràs capaç de..."}
+-   Construir un *boot sector* de 512 B amb la signatura `55 AA`, escriure'l al sector 0 d'una imatge de disc i comprovar-lo amb `hexdump`.
+-   Arrencar-lo amb QEMU i **observar amb GDB** què fa el BIOS: on carrega el codi i com hi transfereix el control.
+-   Implementar un Stage 1 que carregui un Stage 2 des de `LBA 2048` amb `INT 13h AH = 0x42` i hi salti.
+-   Distingir entre **carregar** i **executar** codi.
+:::
+
+::: {.programari}
+`nasm` (inclou `ndisasm`), `qemu-system-i386`, `gdb`, i les utilitats `dd`, `hexdump` i `wc`.
+
+Instal·leu els paquets amb el gestor del vostre sistema (a Debian/Ubuntu, per exemple: `nasm`, `qemu-system-x86` i `gdb`) seria ```sudo apt-get update && sudo apt-get install nasm qemu-system-x86 gdb build-essential -y```. Si teniu processador basat en ARM, cal instal·lar ```sudo apt install gdb-multiarch -y```
+
+
+:::
+
+---
+
+## Preparació
+
+Creeu una carpeta de treball i comproveu que teniu les eines:
+
+```{.bash}
+mkdir -p ~/lab-arrencada
+cd ~/lab-arrencada
+
+nasm --version
+qemu-system-i386 --version
+gdb --version
+```
+
+:::{.bonapractica}
+Feu tot el laboratori en aquesta carpeta. Cada fitxer que crearem (`boot.asm`, `second_boot.asm`, `disk.img`, ...) hi ha de ser.
+:::
+
+:::{.concepte title="Miniguia de NASM"}
+| Element | Què fa |
+|:--|:--|
+| `mov dst, src` | copia `src` a `dst` |
+| `xor ax, ax` | posa `AX` a 0 |
+| `lodsb` | `AL = [DS:SI]` i `SI = SI + 1` |
+| `test al, al` + `jz etiqueta` | salta si `AL` és 0 |
+| `int 0x10` / `int 0x13` | crida un servei del BIOS (vídeo / disc) |
+| `call etiqueta` / `ret` | crida i retorn d'una subrutina (fa servir la pila) |
+| `cli` / `sti` | desactiva / activa les interrupcions |
+| `hlt` | atura la CPU fins a la propera interrupció |
+| `jmp 0x0000:etiqueta` | salt *far*: també fixa `CS` |
+| `db` / `dw` / `dq` | reserva 1 / 2 / 8 bytes de dades |
+| `[org 0x7c00]` | l'adreça que NASM utilitza per calcular les adreces del codi i de les dades (a la teoria, la *link address*; aquí no hi ha enllaçador: NASM genera directament un binari pla) |
+| `times 510 - ($ - $$) db 0` | omple de zeros fins al byte 510 |
+
+Registres que farem servir: `AX` (`AH`/`AL`), `BX`, `DS`, `ES`, `SS`, `SP`, `SI` i `DL`.
+:::
+
+---
+
+## Part A — El disc i Stage 1
+
+### El disc virtual
+
+Per a QEMU, un disc és un fitxer. Creeu-ne un de *10 MiB* ple de zeros:
+
+```{.bash}
+dd if=/dev/zero of=disk.img bs=512 count=20480
+ls -lh disk.img
+hexdump -C -n 64 disk.img
+```
+
+`dd` només és l'eina que copia bytes: el que ens interessa és el resultat, un fitxer de 20480 sectors de 512 bytes.
+
+:::{.errorcomu}
+`dd` escriu **on li digueu**. Comproveu sempre que `of=` és un fitxer (`disk.img`) i **mai** un dispositiu com `/dev/sda`: si us equivoqueu, podeu destruir dades reals.
+:::
+
+::: {.exercici}
+Què hi ha ara al sector 0? Podria arrencar aquest disc? (`hexdump` substitueix les línies repetides per un `*`.)
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Només zeros. El BIOS necessita que el sector 0 acabi en `55 AA` per considerar-lo arrencable; aquest disc no l'arrencaria (ho comprovareu a l'activitat posterior).
+:::
+
+</details>
+
+### Stage 1
+
+Aquest és el nostre primer *boot sector*. Guardeu-lo com a `boot.asm`:
+
+```{.nasm}
+[org 0x7c00]
+bits 16
+
+    jmp 0x0000:start            ; far jump: força CS = 0x0000
+
+start:
+    cli                         ; sense interrupcions mentre canviem SS:SP
+    xor  ax, ax
+    mov  ds, ax                 ; DS = 0
+    mov  es, ax                 ; ES = 0
+    mov  [boot_drive], dl       ; guardem la unitat d'arrencada (DL)
+    mov  ss, ax                 ; SS = 0
+    mov  sp, 0x7c00             ; pila: creix cap a adreces més baixes
+    sti
+
+    mov  si, msg_stage1
+    call print
+
+.halt:
+    hlt                         ; dorm fins a la propera interrupció
+    jmp  .halt
+
+; print: escriu la cadena de DS:SI (acabada en 0) amb INT 10h, AH = 0x0E
+print:
+.next:
+    lodsb                       ; AL = [DS:SI], SI = SI + 1
+    test al, al                 ; AL == 0 ?
+    jz   .done
+    mov  ah, 0x0e               ; teletype
+    mov  bx, 0x0007             ; pàgina 0, color gris
+    int  0x10
+    jmp  .next
+.done:
+    ret
+
+boot_drive  db 0
+msg_stage1  db "Stage 1: hola!", 13, 10, 0
+
+times 510 - ($ - $$) db 0
+dw 0xaa55
+```
+
+Recordeu la sessió de teoria:
+
+-   `jmp 0x0000:start` és el *far jump* que fixa `CS = 0`.
+-   Inicialitzem `DS`, `ES`, `SS` i `SP` perquè **no podem assumir** cap valor, i guardem `DL` (la unitat d'arrencada).
+-   `print` escriu una cadena amb `INT 10h`; per poder fer `call`/`ret` necessitem la pila que acabem de configurar.
+-   `boot_drive` és una dada: va **després** del codi que s'executa, mai enmig.
+
+:::{.errorcomu}
+Si feu servir `-nographic` (vegeu més avall), no poseu `cli` abans del `hlt`: en les nostres proves, l'últim caràcter del missatge no arribava a la terminal. Per això el nostre bucle és `hlt` sense `cli`.
+:::
+
+### Assemblar i escriure al sector 0
+
+:::{.concepte}
+Un *boot sector* és simplement **un binari de 512 bytes que acaba escrit al sector 0 del disc**. Assemblem el fitxer i el copiem allà.
+:::
+
+```{.bash}
+nasm -f bin -o boot.bin boot.asm
+wc -c boot.bin
+dd if=boot.bin of=disk.img bs=512 count=1 conv=notrunc
+hexdump -C -s 510 -n 2 disk.img
+```
+
+Sortida esperada:
+
+```bash
+512 boot.bin
+000001fe  55 aa                                             |U.|
+```
+
+:::{.concepte title="Recepta per escriure en un sector"}
+`dd if=FITXER of=disk.img bs=512 seek=SECTOR conv=notrunc` copia `FITXER` al disc a partir del sector `SECTOR` (el 0 si no hi ha `seek`). `conv=notrunc` evita que `dd` **escurci** `disk.img`. No cal memoritzar-la: la reutilitzarem canviant només `FITXER` i `SECTOR`.
+:::
+
+::: {.exercici}
+Al codi hem escrit `dw 0xaa55`, però `hexdump` mostra `55 aa`. Per què?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Perquè x86 és *little-endian*: el byte menys significant (`0x55`) es guarda primer. La signatura, en memòria i al disc, és la seqüència de bytes `55 AA`.
+:::
+
+</details>
+
+### Primera execució
+
+```{.bash}
+qemu-system-i386 -drive file=disk.img,format=raw
+```
+
+Hauríeu de veure, a la finestra de QEMU, el missatge `Stage 1: hola!`. Tanqueu la finestra per sortir.
+
+:::{.bonapractica}
+Si treballeu només per terminal, afegiu `-nographic`: la sortida apareix a la terminal i es surt amb `Ctrl+A` i després `X`.
+:::
+
+---
+
+## Part B — Mirar l'arrencada amb GDB
+
+### Preparació
+
+Creeu un petit fitxer d'ajuda perquè GDB mostri només els registres que ens interessen:
+
+```{.bash}
+cat > lab.gdb <<'EOF'
+set pagination off
+define regs
+  info registers cs eip esp edx ds es ss
+end
+EOF
+```
+
+Necessiteu **dues terminals** a la carpeta de treball.
+
+Terminal 1: arrenqueu QEMU **aturat** i amb un servidor de depuració:
+
+```{.bash}
+qemu-system-i386 -drive file=disk.img,format=raw -S -s
+```
+
+- `-S` no deixa que la CPU comenci a executar
+- `-s` obre el servidor de GDB al port 1234. 
+- La finestra queda negra: la CPU està aturada al *reset*.
+
+Terminal 2: connecteu GDB.
+
+```{.bash}
+gdb -q
+# Si teniu ARM, gdb-multiarch -q
+```
+
+Dins de GDB:
+
+```bash
+# Si teniu ARM, set architecture i386
+source lab.gdb
+target remote :1234
+```
+
+:::{.bonapractica}
+GDB pot mostrar avisos sobre l'*executable* o l'*OS ABI*. Són normals: ignoreu-los.
+:::
+
+### Demostració guiada: el *reset*
+
+Abans de deixar córrer la CPU, mirem on és. Dins de GDB:
+
+```bash
+info registers cs eip
+monitor info registers
+```
+
+`monitor` envia l'ordre a QEMU; la segona sortida és llarga, busqueu-hi la línia que comença per `CS =`.
+
+Sortida esperada (extracte):
+
+```
+cs             0xf000              61440
+eip            0xfff0              0xfff0
+...
+CS =f000 ffff0000 0000ffff 00009b00
+```
+
+::: {.exercici}
+La CPU ha de llegir la primera instrucció a `base de CS + EIP`. Quina adreça és? Coincideix amb la diapo del *reset vector*?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+`0xFFFF0000 + 0xFFF0 = 0xFFFFFFF0`, la de la teoria. GDB només mostra el **selector** (`0xf000`); la **base** (`0xffff0000`) és una part oculta del registre que només veiem amb el monitor de QEMU.
+:::
+
+</details>
+
+### B1. Arribar a `0x7C00`
+
+Posem un punt d'aturada a l'adreça on el BIOS carrega el *boot sector* i deixem córrer la CPU:
+
+```bash
+hbreak *0x7c00
+continue
+```
+
+Trigarà un segon o dos (el BIOS està fent la seva feina) i GDB s'aturarà: `Breakpoint 1, 0x00007c00 in ?? ()`.
+
+::: {.exercici}
+Abans d'executar `regs`: quin valor creieu que tenen `DL`, `DS`, `ES`, `SS` i `SP` en aquest moment? Podem assumir-los?
+:::
+
+```bash
+regs
+```
+
+Sortida esperada (els valors exactes poden variar):
+
+```bash
+cs             0x0                 0
+eip            0x7c00              0x7c00
+esp            0x6f08              0x6f08
+edx            0x80                128
+ds             0x0                 0
+es             0x0                 0
+ss             0x0                 0
+```
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+-   `DL = 0x80`: el BIOS ens dona la unitat d'arrencada (el primer disc dur). És una **convenció** que sí podem fer servir, i per això la guardem a `boot_drive`.
+-   `CS = 0`, `eip = 0x7c00`: el BIOS ha saltat a `0x7C00` amb `CS = 0`.
+-   `DS`, `ES` i `SS` valen 0, però **només perquè QEMU ho fa així**: un altre BIOS podria deixar-los amb altres valors. Per això no ho assumim i els inicialitzem.
+-   `SP = 0x6f08`, no `0x7c00`: la pila inicial **no** és la nostra. `mov sp, 0x7c00` és una elecció d'aquest *bootloader*, no una regla del BIOS.
+:::
+
+</details>
+
+### B2. El codi és a la RAM
+
+Mirem els primers bytes de `0x7C00` i els comparem amb el fitxer `boot.bin` i amb les seves instruccions:
+
+```bash
+x/16bx 0x7c00
+shell hexdump -C -n 16 boot.bin
+shell ndisasm -b 16 -o 0x7c00 boot.bin | head -9
+```
+
+Sortida esperada (extracte):
+
+```
+0x7c00:	0xea	0x05	0x7c	0x00	0x00	0xfa	0x31	0xc0
+0x7c08:	0x8e	0xd8	0x8e	0xc0	0x88	0x16	0x2e	0x7c
+00000000  ea 05 7c 00 00 fa 31 c0  8e d8 8e c0 88 16 2e 7c  |..|...1........||
+00007C00  EA057C0000        jmp 0x0:0x7c05
+00007C05  FA                cli
+00007C06  31C0              xor ax,ax
+00007C08  8ED8              mov ds,ax
+00007C0A  8EC0              mov es,ax
+00007C0C  88162E7C          mov [0x7c2e],dl
+00007C10  8ED0              mov ss,ax
+00007C12  BC007C            mov sp,0x7c00
+00007C15  FB                sti
+```
+
+::: {.exercici}
+Els bytes de la RAM coincideixen amb els del fitxer? **Què demostra això?**
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Coincideixen: el BIOS ha **copiat** el sector 0 del disc a `0x7C00` i hi ha **transferit el control**. El primer byte, `0xEA`, és l'opcode del *far jump*; `05 7c` és l'*offset* (`0x7c05`, en *little-endian*) i `00 00` el segment.
+:::
+
+</details>
+
+:::{.errorcomu}
+No feu servir `x/i` per desassemblar: en aquest mode, GDB pot interpretar el codi de 16 bits com si fos de 32 i mostrar instruccions absurdes. Per veure les instruccions correctes, feu servir `ndisasm -b 16 -o <adreça> <fitxer>`.
+:::
+
+### B3. Quan passa `SP` a `0x7C00`?
+
+A la sortida de `ndisasm` trobeu l'adreça de la instrucció `mov sp,0x7c00` (`0x7c12`). Aturem la CPU just abans, mirem la pila, fem **una** instrucció (`si`) i tornem a mirar:
+
+```bash
+hbreak *0x7c12
+continue
+regs
+si
+regs
+```
+
+::: {.exercici}
+Quin valor tenia `SP` abans de `mov sp, 0x7c00`? I després? Què demostra sobre la pila inicial?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Abans, `esp = 0x6f08`; després, `esp = 0x7c00` (i `eip = 0x7c15`). La pila que ens deixa el BIOS **no** és la nostra: en construïm una nosaltres, i és el que necessita `call`/`ret`.
+:::
+
+</details>
+
+Deixeu córrer el programa i tanqueu:
+
+```bash
+continue
+```
+
+Veureu el missatge a la finestra de QEMU. Per sortir: `quit` a GDB (responeu `y`) i tanqueu la finestra de QEMU (o `Ctrl+C` a la terminal 1).
+
+---
+
+## Part C — Stage 2 i `INT 13h`
+
+Fins ara el BIOS ha carregat **un** sector. Volem que el nostre Stage 1 carregui un segon programa, més gran, des d'una altra posició del disc.
+
+:::{.concepte}
+Stage 2 anirà a `LBA 2048` del disc i el carregarem a `0x8000` de la RAM. Recordeu: `0x7C00` és la convenció del BIOS; **`0x8000` i `LBA 2048` són una elecció nostra**. `LBA 2048` és el sector 2048 del disc (`2048 × 512 B = 1 MiB`), **no** l'adreça `0x2048`.
+:::
+
+### Stage 2 al disc
+
+Guardeu-lo com a `second_boot.asm`:
+
+```{.nasm}
+[org 0x8000]
+bits 16
+
+    mov  si, msg
+.next:
+    lodsb
+    test al, al
+    jz   .halt
+    mov  ah, 0x0e
+    mov  bx, 0x0007
+    int  0x10
+    jmp  .next
+
+.halt:
+    hlt
+    jmp  .halt
+
+msg db "Stage 2: el control ha arribat aqui!", 13, 10, 0
+```
+
+Assembleu-lo i escriviu-lo al sector 2048 (la mateixa recepta d'abans, ara amb `seek`):
+
+```{.bash}
+nasm -f bin -o second_boot.bin second_boot.asm
+wc -c second_boot.bin
+dd if=second_boot.bin of=disk.img bs=512 seek=2048 conv=notrunc
+hexdump -C -s 1048576 -n 32 disk.img
+```
+
+`1048576` és `2048 × 512`, el byte del disc on comença el sector 2048.
+
+Sortida esperada:
+
+```
+59 second_boot.bin
+00100000  be 14 80 ac 84 c0 74 09  b4 0e bb 07 00 cd 10 eb  |......t.........|
+00100010  f2 f4 eb fd 53 74 61 67  65 20 32 3a 20 65 6c 20  |....Stage 2: el |
+```
+
+::: {.exercici}
+Ara Stage 2 és al disc. Si arrenqueu `disk.img` amb el Stage 1 actual, s'executarà Stage 2? Prediu-ho i comproveu-ho:
+
+```{.bash}
+qemu-system-i386 -drive file=disk.img,format=raw
+```
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+No: només surt `Stage 1: hola!`. El BIOS **només carrega el sector 0**; qui ha de llegir Stage 2 és Stage 1, i el nostre encara no ho fa. Que Stage 2 **existeixi al disc** no vol dir que estigui **carregat**.
+:::
+
+</details>
+
+### El DAP: què li diem al BIOS?
+
+`INT 13h`, funció `0x42`, llegeix del disc amb LBA. Li hem de passar un *Disk Address Packet* (DAP), una estructura de 16 bytes:
+
+```{.nasm}
+dap:                            ; Disk Address Packet (16 bytes)
+    db 0x10, 0                  ; mida del DAP, reservat
+    dw 1                        ; nombre de sectors a llegir
+    dw 0x8000, 0x0000           ; destí: offset, segment
+    dq 2048                     ; LBA inicial
+```
+
+Els registres: `AH = 0x42`, `DL` = unitat d'arrencada, `DS:SI` apunta al DAP. Si hi ha un error, el BIOS posa `CF = 1`.
+
+::: {.exercici}
+Sense executar res: **què li estem demanant al BIOS** amb aquest DAP? Expliqueu-ho amb una frase.
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+«Llegeix **1 sector**, des de **`LBA 2048`**, i deixa'l a **`0000:8000`**». Aquesta és la idea que cal recordar; els camps són només la manera de dir-ho.
+:::
+
+</details>
+
+### Stage 1 carrega Stage 2
+
+Substituïu `boot.asm` per aquesta versió. El DAP ja hi és; us falten **3 `TODO`**:
+
+```{.nasm}
+[org 0x7c00]
+bits 16
+
+    jmp 0x0000:start            ; far jump: força CS = 0x0000
+
+start:
+    cli                         ; sense interrupcions mentre canviem SS:SP
+    xor  ax, ax
+    mov  ds, ax                 ; DS = 0
+    mov  es, ax                 ; ES = 0
+    mov  [boot_drive], dl       ; guardem la unitat d'arrencada (DL)
+    mov  ss, ax                 ; SS = 0
+    mov  sp, 0x7c00             ; pila: creix cap a adreces més baixes
+    sti
+
+    mov  si, msg_stage1
+    call print
+
+.load_stage2:
+    mov  si, dap                ; DS:SI → DAP
+    ; TODO 1: DL = unitat d'arrencada (variable boot_drive) i AH = funció «lectura estesa»
+    int  0x13
+    ; TODO 2: si la lectura ha fallat (CF = 1), salta a .boot_failed
+    ; TODO 3: transfereix el control a Stage 2 (segment 0x0000, offset 0x8000)
+
+.halt:
+    hlt
+    jmp  .halt
+
+.boot_failed:
+    mov  si, msg_fail
+    call print
+    jmp  .halt
+
+print:
+.next:
+    lodsb
+    test al, al
+    jz   .done
+    mov  ah, 0x0e
+    mov  bx, 0x0007
+    int  0x10
+    jmp  .next
+.done:
+    ret
+
+dap:                            ; Disk Address Packet (16 bytes)
+    db 0x10, 0                  ; mida del DAP, reservat
+    dw 1                        ; nombre de sectors a llegir
+    dw 0x8000, 0x0000           ; destí: offset, segment
+    dq 2048                     ; LBA inicial
+
+boot_drive  db 0
+msg_stage1  db "Stage 1: carregant Stage 2...", 13, 10, 0
+msg_fail    db "Error carregant Stage 2!", 13, 10, 0
+
+times 510 - ($ - $$) db 0
+dw 0xaa55
+```
+
+Ajuda per als `TODO`:
+
+-   **1.** `DL` es carrega des de `boot_drive`; `AH` val `0x42`.
+-   **2.** Després de `int 0x13`, si `CF = 1` la lectura ha fallat (`jc`).
+-   **3.** Un salt *far* a `0x0000:0x8000`.
+
+Aneu pas a pas. Ompliu **només els `TODO` 1 i 2**, assembleu i escriviu el nou Stage 1 (**només** el sector 0):
+
+```{.bash}
+nasm -f bin -o boot.bin boot.asm
+dd if=boot.bin of=disk.img bs=512 count=1 conv=notrunc
+ls -l disk.img
+qemu-system-i386 -drive file=disk.img,format=raw
+```
+
+::: {.exercici}
+Stage 1 ja **llegeix** Stage 2 a `0x8000`, però encara no hi salta. Què veureu? On és Stage 2 ara mateix? Què falta?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Només surt `Stage 1: carregant Stage 2...`. Stage 2 **ja és a la RAM** (a `0x8000`), però ningú no hi ha transferit el control: falta el salt. Ho comprovarem amb GDB a la Part D.
+:::
+
+</details>
+
+Ara afegiu el **`TODO` 3** i torneu a executar les mateixes ordres (assemblar, escriure el sector 0 i arrencar):
+
+Sortida esperada a QEMU:
+
+```
+Stage 1: carregant Stage 2...
+Stage 2: el control ha arribat aqui!
+```
+
+:::{.errorcomu}
+Si `ls -l disk.img` no mostra `10485760` bytes, heu oblidat `conv=notrunc` i `dd` ha escurçat el disc: torneu a la Part A.
+:::
+
+<details>
+<summary><b>Pots veure la solució</b></summary>
+
+::: {.solucio}
+```{.nasm}
+[org 0x7c00]
+bits 16
+
+    jmp 0x0000:start            ; far jump: força CS = 0x0000
+
+start:
+    cli                         ; sense interrupcions mentre canviem SS:SP
+    xor  ax, ax
+    mov  ds, ax                 ; DS = 0
+    mov  es, ax                 ; ES = 0
+    mov  [boot_drive], dl       ; guardem la unitat d'arrencada (DL)
+    mov  ss, ax                 ; SS = 0
+    mov  sp, 0x7c00             ; pila: creix cap a adreces més baixes
+    sti
+
+    mov  si, msg_stage1
+    call print
+
+.load_stage2:
+    mov  si, dap                ; DS:SI → DAP
+    mov  dl, [boot_drive]       ; DL = unitat d'arrencada
+    mov  ah, 0x42               ; AH = lectura estesa (LBA)
+    int  0x13
+    jc   .boot_failed           ; CF = 1 → error
+
+    jmp  0x0000:0x8000          ; transferim el control a Stage 2
+
+.halt:
+    hlt
+    jmp  .halt
+
+.boot_failed:
+    mov  si, msg_fail
+    call print
+    jmp  .halt
+
+print:
+.next:
+    lodsb
+    test al, al
+    jz   .done
+    mov  ah, 0x0e
+    mov  bx, 0x0007
+    int  0x10
+    jmp  .next
+.done:
+    ret
+
+dap:                            ; Disk Address Packet (16 bytes)
+    db 0x10, 0                  ; mida del DAP, reservat
+    dw 1                        ; nombre de sectors a llegir
+    dw 0x8000, 0x0000           ; destí: offset, segment
+    dq 2048                     ; LBA inicial
+
+boot_drive  db 0
+msg_stage1  db "Stage 1: carregant Stage 2...", 13, 10, 0
+msg_fail    db "Error carregant Stage 2!", 13, 10, 0
+
+times 510 - ($ - $$) db 0
+dw 0xaa55
+```
+:::
+
+</details>
+
+::: {.exercici}
+Fixeu-vos que `DL` es carrega des de `boot_drive` en lloc d'escriure `mov dl, 0x80`. Per què és millor?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Perquè el BIOS ens dona la unitat d'arrencada a `DL`: no sempre és `0x80` (podria ser un altre disc). Un *bootloader* ha de conservar aquesta informació, no suposar-la.
+:::
+
+</details>
+
+---
+
+## Part D — Carregar no és executar
+
+Ara podem veure amb GDB la diferència entre **carregar** i **executar**.
+
+Terminal 1: `qemu-system-i386 -drive file=disk.img,format=raw -S -s`. Terminal 2: `gdb -q` i, dins de GDB:
+
+```
+source lab.gdb
+target remote :1234
+hbreak *0x7c00
+continue
+```
+
+Som al principi de Stage 1 i encara no ha llegit res.
+
+::: {.exercici}
+Què creieu que hi ha a `0x8000` ara mateix? Comproveu-ho:
+
+```
+x/16bx 0x8000
+```
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Zeros. Stage 2 és al **disc**, no a la RAM: encara no l'ha carregat ningú. (Que siguin zeros és cert a QEMU; en una màquina real la RAM podria tenir qualsevol valor.)
+:::
+
+</details>
+
+Ara deixem que Stage 1 faci la lectura i s'aturi just abans d'executar Stage 2:
+
+```
+hbreak *0x8000
+continue
+regs
+x/16bx 0x8000
+shell hexdump -C -n 16 second_boot.bin
+```
+
+Sortida esperada (extracte):
+
+```
+cs             0x0                 0
+eip            0x8000              0x8000
+esp            0x7c00              0x7c00
+edx            0x80                128
+0x8000:	0xbe	0x14	0x80	0xac	0x84	0xc0	0x74	0x09
+0x8008:	0xb4	0x0e	0xbb	0x07	0x00	0xcd	0x10	0xeb
+00000000  be 14 80 ac 84 c0 74 09  b4 0e bb 07 00 cd 10 eb  |......t.........|
+```
+
+Per saber quina instrucció hi ha a `0x8000`:
+
+```
+shell ndisasm -b 16 -o 0x8000 second_boot.bin | head -4
+```
+
+```
+00008000  BE1480            mov si,0x8014
+00008003  AC                lodsb
+00008004  84C0              test al,al
+00008006  7409              jz 0x8011
+```
+
+::: {.exercici}
+Responeu:
+
+1.  Quin valor tenen `CS` i `IP` quan GDB s'atura?
+2.  Quina instrucció s'executarà a `0x8000`?
+3.  Quina diferència hi ha entre **carregar** Stage 2 i **executar** Stage 2?
+4.  Quin registre conserva la unitat d'arrencada? Com ho sabeu?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+1.  `CS = 0` i `eip = 0x8000`: hem arribat amb el *far jump* `jmp 0x0000:0x8000`.
+2.  `mov si, 0x8014`: apunta a la cadena `msg` de Stage 2.
+3.  **Carregar** és copiar el codi a la RAM: `INT 13h` ha portat els bytes de `LBA 2048` a `0x8000`. **Executar** és que la CPU comenci a llegir-hi instruccions: només passa amb el `jmp`. Entre els dos moments el codi és a la RAM però **inert**.
+4.  `DL`: continua valent `0x80` a `0x8000`; Stage 1 no l'ha trencat.
+:::
+
+</details>
+
+### Ampliació: `[org]` (si sobra temps)
+
+Hem vist que `mov si, msg` s'ha assemblat com `mov si, 0x8014`: una adreça **absoluta** que depèn de `[org 0x8000]`. En aquest laboratori l'`org` coincideix amb l'adreça on esperem que Stage 1 carregui Stage 2. Comprovem què passa si no hi coincideix.
+
+::: {.exercici}
+Feu una còpia de Stage 2, canvieu `[org 0x8000]` per `[org 0x0]` i assembleu-la a un altre fitxer:
+
+```{.bash}
+cp second_boot.asm sb_org0.asm
+# editeu sb_org0.asm: [org 0x8000] → [org 0x0]
+nasm -f bin -o sb_org0.bin sb_org0.asm
+hexdump -C -n 3 sb_org0.bin
+hexdump -C -n 3 second_boot.bin
+```
+
+Què canvia als tres primers bytes? Escriviu la versió incorrecta al disc i, **abans d'executar**, prediu què veureu:
+
+```{.bash}
+dd if=sb_org0.bin of=disk.img bs=512 seek=2048 conv=notrunc
+qemu-system-i386 -drive file=disk.img,format=raw
+```
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Els bytes passen de `be 14 80` a `be 14 00`: la instrucció `mov si, imm16` porta l'adreça de `msg` **dins** l'instrucció. Amb `[org 0x0]`, `SI` apunta a `0x0014` (la taula de vectors d'interrupció) i no al missatge: només surt `Stage 1: carregant Stage 2...` i **cap missatge de Stage 2**. L'adreça que assumeix NASM (`org`) ha de coincidir amb l'adreça on es carrega el codi (`0x8000`).
+
+Per deixar-ho tot com estava, torneu a escriure la versió bona:
+
+```{.bash}
+dd if=second_boot.bin of=disk.img bs=512 seek=2048 conv=notrunc
+```
+:::
+
+</details>
+
+---
+
+## Activitat posterior — Trenca-ho
+
+:::{.repte}
+**Fora de la sessió.** Trenqueu l'arrencada de tres maneres i relacioneu cada símptoma amb la diapo de diagnòstic. Per cada cas: **prediu**, comproveu i digueu **en quina etapa ha fallat**: el firmware, Stage 1 o Stage 2. Treballeu sobre una **còpia** de `disk.img`.
+:::
+
+### E1. Sense signatura
+
+```{.bash}
+cp disk.img disk_e1.img
+printf '\000\000' | dd of=disk_e1.img bs=1 seek=510 count=2 conv=notrunc
+hexdump -C -s 510 -n 2 disk_e1.img
+qemu-system-i386 -drive file=disk_e1.img,format=raw
+```
+
+<details>
+<summary><b>Què veureu</b></summary>
+
+::: {.solucio}
+El firmware rebutja el sector 0 com a no arrencable i **no executa res nostre**. El missatge exacte depèn de la implementació de BIOS (a QEMU, `Boot failed: not a bootable disk`). Falla **el firmware**: és la família de símptomes de `No bootable device` de la diapo.
+:::
+
+</details>
+
+### E2. Lectura fallida
+
+Editeu `boot.asm` i canvieu l'LBA del DAP (`dq 2048`) per `dq 30000`, fora dels 20480 sectors del disc. Assembleu-lo i escriviu-lo en una còpia del disc:
+
+```{.bash}
+nasm -f bin -o boot_e2.bin boot.asm
+cp disk.img disk_e2.img
+dd if=boot_e2.bin of=disk_e2.img bs=512 count=1 conv=notrunc
+qemu-system-i386 -drive file=disk_e2.img,format=raw
+```
+
+<details>
+<summary><b>Què veureu</b></summary>
+
+::: {.solucio}
+`Stage 1: carregant Stage 2...` i `Error carregant Stage 2!`. `INT 13h` ha retornat `CF = 1`, i el nostre `jc .boot_failed` ho ha detectat. Falla **Stage 1** (no pot llegir), i ho sap dir: és el que fa `.boot_failed`. Recordeu tornar a posar `2048` a `boot.asm`.
+:::
+
+</details>
+
+### E3. Stage 2 desaparegut
+
+```{.bash}
+cp disk.img disk_e3.img
+dd if=/dev/zero of=disk_e3.img bs=512 seek=2048 count=1 conv=notrunc
+qemu-system-i386 -drive file=disk_e3.img,format=raw
+```
+
+:::{.exercici}
+Ara Stage 1 llegeix «amb èxit» el sector 2048, però el missatge de Stage 2 no surt. On ha fallat? Com ho comprovaríeu amb GDB?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Només veieu `Stage 1: carregant Stage 2...`: Stage 1 ha funcionat, i el problema és **després**. Amb GDB: `hbreak *0x8000`, `continue` i `x/16bx 0x8000`: són tot zeros. La lectura ha anat bé, però el que ha carregat és un sector buit; la CPU executa zeros sense imprimir res. Falla **Stage 2** (no existeix): un missatge que **falta** també és una pista sobre l'etapa on som.
+:::
+
+</details>
+
+---
+
+## Resum
+
+:::{.resum}
+**Què hem après.** El BIOS només llegeix el sector 0 i el copia a `0x7C00`, on salta amb `DL` = unitat d'arrencada; tota la resta és feina de Stage 1. Amb GDB hem vist el codi a la RAM, els registres que **no** podem assumir i la diferència entre **carregar** i **executar**.
+
+| Teoria | Laboratori |
+|:--|:--|
+| `0x7C00` (convenció del BIOS) | Part B: GDB s'atura a `0x7C00` |
+| *boot sector* de 512 B, `55 AA` | Part A: `wc -c`, `hexdump -s 510` |
+| mode real, `CS:IP` | Part B: `cs`, `eip` |
+| «No assumim» / entorn mínim | Part B: `ds = es = ss = 0` per sort, `sp = 0x6f08` → `0x7c00` |
+| `INT 10h` | `print` a Stage 1 i Stage 2 |
+| `INT 13h AH = 0x42`, DAP | Part C |
+| LBA ≠ adreça de memòria | `seek=2048` vs `0x8000` |
+| carregar ≠ executar | Part C (sense el `jmp`) i Part D (GDB a `0x8000`) |
+| *load address* ≠ *link address* | Ampliació: `be 14 80` vs `be 14 00` |
+| diagnòstic | Activitat posterior |
+:::
+
+A la Part 2 de la unitat veurem què passa **després** de Stage 2: taules de particions, GRUB, el kernel i l'*initramfs*. L'activitat de casa continuarà amb UEFI.
+
