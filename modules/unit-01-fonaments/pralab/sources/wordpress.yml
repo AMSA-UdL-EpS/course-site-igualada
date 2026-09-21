@@ -1,0 +1,65 @@
+---
+- hosts: webserver
+  become: yes
+  tasks:
+    - name: Actualitzar repositoris
+      dnf:
+        name: "*"
+        state: latest
+
+    - name: Instal·lar Apache i PHP amb extensions
+      dnf:
+        name: 
+          - httpd
+          - php
+          - php-mysqlnd
+          - php-gd
+          - php-xml
+          - php-json
+          - php-intl
+          - php-cli
+        state: present
+
+    - name: Activar i arrencar Apache
+      systemd:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Descarregar WordPress
+      get_url:
+        url: https://wordpress.org/latest.tar.gz
+        dest: /tmp/latest.tar.gz
+
+    - name: Descomprimir WordPress
+      unarchive:
+        src: /tmp/latest.tar.gz
+        dest: /var/www/html/
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+
+    - name: Assignar permisos correctes
+      file:
+        path: /var/www/html
+        owner: apache
+        group: apache
+        mode: '0755'
+        recurse: yes
+
+    - name: Crear arxiu wp-config.php bàsic
+      copy:
+        dest: /var/www/html/wp-config.php
+        content: |
+          <?php
+          define('DB_NAME', 'wordpress');
+          define('DB_USER', 'wordpress');
+          define('DB_PASSWORD', 'wordpress');
+          define('DB_HOST', '<RDS_ENDPOINT>');
+          define('DB_CHARSET', 'utf8');
+          define('DB_COLLATE', '');
+          $table_prefix = 'wp_';
+          define('WP_DEBUG', false);
+          if ( !defined('ABSPATH') )
+            define('ABSPATH', __DIR__ . '/');
+          require_once ABSPATH . 'wp-settings.php';
+          

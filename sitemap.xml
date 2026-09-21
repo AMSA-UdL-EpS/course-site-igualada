@@ -1,35 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://igualada.amsa.udl.cat/modules/unit-01-fonaments/pralab/01-qemu.html</loc>
-    <lastmod>2026-09-19T05:53:47.322Z</lastmod>
+    <loc>https://igualada.amsa.udl.cat/modules/unit-01-fonaments/pralab/01-aws-introduction.html</loc>
+    <lastmod>2026-09-21T05:37:39.467Z</lastmod>
+  </url>
+  <url>
+    <loc>https://igualada.amsa.udl.cat/modules/unit-01-fonaments/pralab/02-aws-wordpress.html</loc>
+    <lastmod>2026-09-21T05:37:39.467Z</lastmod>
   </url>
   <url>
     <loc>https://igualada.amsa.udl.cat/modules/unit-01-fonaments/activities/01-fonaments.html</loc>
-    <lastmod>2026-09-19T05:53:47.322Z</lastmod>
+    <lastmod>2026-09-21T05:37:39.467Z</lastmod>
   </url>
   <url>
     <loc>https://igualada.amsa.udl.cat/modules/unit-01-fonaments/index.html</loc>
-    <lastmod>2026-09-19T05:53:47.322Z</lastmod>
+    <lastmod>2026-09-21T05:37:39.467Z</lastmod>
   </url>
   <url>
     <loc>https://igualada.amsa.udl.cat/course-info/presentation-slides.html</loc>
-    <lastmod>2026-09-19T05:53:47.321Z</lastmod>
+    <lastmod>2026-09-21T05:37:39.466Z</lastmod>
   </url>
   <url>
     <loc>https://igualada.amsa.udl.cat/index.html</loc>
-    <lastmod>2026-09-19T05:53:47.321Z</lastmod>
+    <lastmod>2026-09-21T05:37:39.466Z</lastmod>
   </url>
   <url>
     <loc>https://igualada.amsa.udl.cat/course-info/contributions/contribute.html</loc>
-    <lastmod>2026-09-19T05:53:47.311Z</lastmod>
+    <lastmod>2026-09-21T05:37:39.454Z</lastmod>
   </url>
   <url>
     <loc>https://igualada.amsa.udl.cat/modules/unit-01-fonaments/theory/01-fonaments.html</loc>
-    <lastmod>2026-09-19T05:53:47.322Z</lastmod>
+    <lastmod>2026-09-21T05:37:39.480Z</lastmod>
   </url>
   <url>
     <loc>https://igualada.amsa.udl.cat/modules/unit-01-fonaments/activities/01-qemu.html</loc>
-    <lastmod>2026-09-19T05:53:47.322Z</lastmod>
+    <lastmod>2026-09-21T05:37:39.467Z</lastmod>
+  </url>
+  <url>
+    <loc>https://igualada.amsa.udl.cat/modules/unit-01-fonaments/pralab/01-qemu.html</loc>
+    <lastmod>2026-09-21T05:37:39.467Z</lastmod>
   </url>
 </urlset>
