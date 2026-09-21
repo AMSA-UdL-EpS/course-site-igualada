@@ -46,6 +46,10 @@ website:
             - section: "Activitats"
               contents:
                 - modules/unit-01-fonaments/activities/01-fonaments.qmd
+            - section: "Pralabs"
+              contents:
+                - modules/unit-01-fonaments/pralab/01-aws-introduction.qmd
+                - modules/unit-01-fonaments/pralab/02-aws-wordpress.qmd
 
           
       

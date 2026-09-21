@@ -10,8 +10,6 @@ format:
 
 Sessió introductòria al rol de l'administrador de sistemes: què implica la disciplina, com ha evolucionat cap a perfils moderns com DevOps i SRE, i quin vocabulari bàsic de fiabilitat i disponibilitat ( MTBF, MTTR, SLI/SLO/SLA) s'utilitzarà al llarg del curs.
 
-La part pràctica introdueix QEMU com a eina de virtualització i `apt`/`dpkg` com a gestor de paquets, amb un únic fil conductor: **administrar un sistema és entendre el seu estat i ser capaç de canviar-lo de manera controlada**.
-
 ## Objectius d'aprenentatge
 
 ::: {.resultat title="En acabar aquesta unitat seràs capaç de..."}
