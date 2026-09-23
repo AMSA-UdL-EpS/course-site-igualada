@@ -1,0 +1,356 @@
+---
+title: "Laboratori 2: Arrencada (II)"
+author: "Jordi Mateo Fornés"
+format:
+  udl-course-html:
+    toc: false
+    number-sections: false
+---
+
+## Introducció
+
+Al Laboratori 1 vam construir un *bootloader* per a **BIOS**: un binari pla, carregat a `0x7C00` per convenció, on nosaltres havíem de resoldre a mà tot el que el firmware no ens garantia. En aquest laboratori fem el mateix recorregut, però amb l'**altre contracte** que vam veure a teoria: **UEFI**.
+
+
+:::{.objectius }
+**Arrencar un joc de Tetris amb QEMU, sense passar per cap sistema operatiu**. 
+
+```
+UEFI firmware
+     │
+     ├── localitza una EFI System Partition (ESP)
+     ├── hi accedeix (FAT32)
+     ├── carrega una aplicació EFI (tetris.efi)
+     └── l'executa amb les seves pròpies interfícies
+```
+:::
+
+
+Farem servir **dos mètodes**. El primer és ràpid i ens deixa veure l'ESP, des de la UEFI Shell. El segon construeix una imatge de disc completa amb taula de particions GPT, tal com trobaríeu en un ordinador real.
+
+::: {.resultat title="En acabar aquest laboratori seràs capaç de..."}
+-   Distingir, amb un exemple real a les mans, el contracte UEFI del contracte BIOS del Laboratori 1.
+-   Explicar què és l'ESP, per què ha de ser FAT32, i per què `\EFI\BOOT\BOOTX64.EFI` és una ruta de *fallback* i no l'única manera d'arrencar.
+-   Crear una taula de particions GPT i una partició ESP, i escriure-hi un executable EFI sense necessitat de muntar cap sistema de fitxers.
+-   Arrencar la mateixa aplicació EFI de dues maneres diferents (UEFI Shell i imatge de disc completa) i reconèixer què tenen en comú.
+:::
+
+::: {.prerequisits}
+-   [Pralab 1](./01_arrencada.qmd) (Arrencada I, amb BIOS).
+-   [Unitat 2 · Arrencada](../theory/01-arrancada.qmd).
+-   Ús bàsic de la terminal.
+:::
+
+:::: {.programari}
+Una màquina virtual amb **Debian** i entorn gràfic (la UEFI, per defecte, necessita una pantalla). `qemu-system-x86`, **`qemu-utils`** (per a `qemu-img`), `ovmf`, `make`, `gnu-efi`, `gdisk`, `mtools`, `dosfstools`, `git`, i un compilador de C per a x86_64:
+
+::: {.panel-tabset}
+## x86_64 (Intel / AMD)
+
+`gcc` normal: com que el vostre processador ja és x86_64, compila nadiu per a l'objectiu que necessitem.
+
+## ARM (Apple Silicon, Raspberry Pi...)
+
+`gcc-x86-64-linux-gnu`: el vostre processador és ARM, així que necessiteu un compilador **encreuat** (*cross-compiler*), que genera codi per a x86_64 tot i executar-se sobre ARM.
+:::
+::::
+
+---
+
+## Preparació
+
+### Entorn gràfic
+
+La UEFI Shell i el joc necessiten pantalla. Si la vostra VM de Debian no en té:
+
+```{.bash}
+su -c "apt install task-gnome-desktop -y"
+```
+
+:::{.bonapractica}
+Un cop instal·lat l'entorn d'escriptori, reinicieu la VM i inicieu sessió abans de continuar. I, molt important: **feu tot aquest laboratori des de la terminal de la VM**, no per SSH. QEMU necessita una finestra gràfica pròpia, i sobre SSH dona problemes.
+:::
+
+### Instal·lar les eines
+
+::: {.panel-tabset}
+## x86_64 (Intel / AMD)
+
+```{.bash}
+su -c "apt install qemu-system-x86 qemu-utils ovmf gcc make gnu-efi gdisk mtools dosfstools git -y"
+```
+
+## ARM (Apple Silicon, Raspberry Pi...)
+
+```{.bash}
+su -c "apt install qemu-system-x86 qemu-utils ovmf gcc-x86-64-linux-gnu make gnu-efi gdisk mtools dosfstools git -y"
+```
+:::
+
+:::{.errorcomu}
+Al Laboratori 1 potser vau instal·lar `nasm`: aquí **no** el necessitem, perquè el codi de Tetris és en C, no en assemblador. En canvi, no oblideu **`qemu-utils`**: és el paquet que porta `qemu-img`, i sense ell la creació de la imatge de disc (mètode 2) fallarà amb un **command not found** que no diu res sobre la causa real.
+:::
+
+### Clonar el codi
+
+```{.bash}
+git clone https://github.com/a1ive/uefi-tetris.git
+cd uefi-tetris
+ls
+```
+
+Hi trobareu `tetris.c` (el codi font), un `Makefile`, i ja hi ha un `tetris.efi` **precompilat**. Guardeu-ho a la memòria: si en algun moment la compilació us falla (per exemple, en una VM amb processador ARM), sempre podeu fer servir directament aquest fitxer i continuar amb els mètodes 1 i 2 igualment.
+
+---
+
+## Compilar `tetris.efi`
+
+Compilar-lo no és obligatori (ja en teniu un a la carpeta), però val la pena fer-ho una vegada: és la millor manera d'entendre, amb les mans, què vol dir que **una aplicació EFI és un executable PE/COFF**.
+
+:::: {.panel-tabset}
+## x86_64 (Intel / AMD)
+
+```{.bash}
+make
+file tetris.efi
+```
+
+Sortida esperada (la mida pot variar lleugerament):
+
+```
+cc ... -c -o tetris.o tetris.c
+ld -nostdlib ... -o tetris.so tetris.o -lefi -lgnuefi
+objcopy -j .text -j .sdata ... --target=efi-app-x86_64 tetris.so tetris.efi
+tetris.efi: PE32+ executable (EFI application) x86-64 ..., for MS Windows, 6 sections
+```
+
+## ARM (Apple Silicon, Raspberry Pi...)
+
+El `Makefile` fa servir `cc` i les biblioteques de `gnu-efi` de `/usr/lib`. En un host ARM, aquestes biblioteques són les d'**ARM**, no les d'x86_64: no n'hi ha prou amb canviar el compilador per `gcc-x86-64-linux-gnu`, perquè encara enllaçaríeu contra `crt0-efi-x86_64.o` i les `.a` equivocades (o, més probablement, ni existiran). Podeu provar-ho igualment:
+
+```{.bash}
+make ARCH=x86_64 CC=x86_64-linux-gnu-gcc
+```
+
+::: {.bonapractica}
+Si falla (és l'escenari més probable), **no és un error vostre**: és un problema real d'encreuar arquitectures amb aquest `Makefile` concret. No hi perdeu més temps: feu servir directament el `tetris.efi` que ja porta el repositori i continueu amb els mètodes 1 i 2, que no depenen de com s'ha generat el fitxer.
+:::
+::::
+
+::: {.exercici}
+Tres eines, tres passos. `cc` compila `tetris.c` a codi objecte; `ld` l'enllaça amb les biblioteques `gnu-efi`, seguint un `.lds` especial per a EFI; `objcopy` n'extreu només les seccions necessàries i les etiqueta com a `efi-app-x86_64`. La línia de `file` diu **`PE32+ executable... for MS Windows`**. Per què un executable pensat per a UEFI s'identifica com **per a MS Windows**?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Perquè PE/COFF és el mateix format que fan servir els executables de Windows (`.exe`, `.dll`). UEFI el va adoptar tal qual, en lloc d'inventar-se'n un de propi. `file` no sap distingir un `.exe` normal d'una aplicació EFI perquè, al nivell del format de fitxer, **són el mateix**: la diferència és a la capçalera (el subsistema PE que declara) i a on s'executa.
+:::
+
+</details>
+
+---
+
+## Mètode 1 — La UEFI Shell (ràpid)
+
+Aquest mètode no necessita cap imatge de disc: QEMU pot presentar un directori normal del vostre sistema com si fos una unitat FAT.
+
+```{.bash}
+qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd \
+  -drive format=raw,file=fat:rw:./ -net none
+```
+
+- `-bios /usr/share/qemu/OVMF.fd`: carrega **OVMF**, la implementació d'UEFI per a QEMU (l'equivalent, en aquest laboratori, del BIOS/SeaBIOS del Laboratori 1).
+- `-drive format=raw,file=fat:rw:./`: munta el directori actual com si fos una unitat FAT.
+
+:::{.errorcomu title="El teclat dins la UEFI Shell"}
+Per escriure els dos punts (`:`) de `fs0:` en un teclat físic espanyol, la tecla que heu de prémer és **`Shift` + `Ñ`**, no `Shift` + `.`. No és cap error del teclat ni falta cap opció de QEMU: amb la finestra gràfica normal (GTK/SDL), QEMU envia al firmware la **posició física** de la tecla, i la UEFI Shell interpreta aquesta posició com si el teclat fos **nord-americà**, sigui quin sigui el sistema operatiu amfitrió. La tecla física que en un teclat US produeix `:` és, en un teclat espanyol, la de la `Ñ`.
+
+Si cap tecla us funciona, obriu el monitor de QEMU (`Ctrl+Alt+2` dins la finestra, o `Ctrl+Alt+1` per tornar-hi) i escriviu `sendkey shift-semicolon`: injecta els dos punts directament, sense passar pel teclat físic.
+:::
+
+Com que no hi ha cap sistema operatiu ni cap partició arrencable, el firmware no troba res a executar automàticament i cau a la **UEFI Shell**, una línia d'ordres pròpia d'UEFI.
+
+::: {.reflexio}
+Abans de continuar: relacioneu això amb la diapositiva de diagnòstic del Lab 1. Quan el BIOS no trobava un sector arrencable, dèiem `No bootable device`. Aquí, quan UEFI no en troba cap, **no s'atura**: cau a una interfície pròpia, la Shell. És un altre exemple de "mateix problema, diferent contracte".
+:::
+
+### Navegar i executar
+
+```
+fs0:
+# Utilitzeu ls i cd per veure el contingut del directori i entrar-hi, aneu a la carpeta on hi ha `tetris.efi`, i executeu-lo amb
+tetris.efi
+```
+
+`fs0:` és el nom que la Shell dona a la primera unitat FAT que troba (el vostre directori actual).
+
+::: {.bonapractica}
+Si `fs0:` no funciona, escriviu `map` per veure totes les unitats disponibles i proveu amb `fs1:`, etc.
+:::
+
+::: {.reflexio}
+No cal respondre-ho per poder continuar, però penseu-hi mentre navegueu: quan feu `fs0:`, esteu dins d'una unitat FAT que QEMU ha muntat des del vostre directori. A la teoria, quina partició del disc fa aquest mateix paper (contenir un sistema de fitxers FAT que el firmware sap llegir directament)?
+:::
+
+<details>
+<summary><b>Pots veure la resposta</b></summary>
+
+::: {.solucio}
+L'ESP, l'*EFI System Partition*. Aquí no n'hi ha cap de veritat (és només un directori), però el firmware es comporta exactament igual que si hi accedís: llegeix un sistema de fitxers FAT, sense necessitar cap sistema operatiu.
+:::
+
+</details>
+
+### Jugar-hi
+
+En executar `tetris.efi`, el joc arrenca directament. Els controls:
+
+| Tecla | Acció |
+|:--|:--|
+| ← / → | Moure la peça |
+| ↑ | Girar |
+| ↓ | Caiguda suau |
+| Enter | Caiguda ràpida |
+| P | Pausa |
+| S | Mostrar estadístiques |
+| D | Informació de depuració |
+| H | Ajuda |
+| Esc | Sortir |
+
+Per tancar QEMU del tot: tanqueu la finestra, o premeu `Esc` dins del joc i després tanqueu la finestra.
+
+---
+
+## Mètode 2 — Una imatge de disc amb partició ESP (realista)
+
+El mètode 1 és ràpid, però **fa trampa**: QEMU crea la unitat FAT per nosaltres. Ara ho farem tal com ho trobaríeu en un ordinador real: una imatge de disc amb la seva pròpia taula de particions GPT i una partició ESP de veritat.
+
+### Crear el disc virtual
+
+```{.bash}
+qemu-img create -f raw tetris.img 64M
+```
+
+Un disc de 64 MiB és de sobres per a un executable de menys de 100 KiB.
+
+### Crear la taula de particions GPT i l'ESP
+
+```{.bash}
+# Aquesta comanda cal executar-la com a root, o amb sudo, perquè gdisk necessita permisos per escriure la taula de particions dins del fitxer.
+gdisk tetris.img
+```
+
+Dins de `gdisk`, en aquest ordre:
+
+1. `o` — crear una taula GPT nova.
+2. **`Y`** — confirmar. *`gdisk` sempre demana confirmació abans de destruir la taula anterior; si no premeu `Y` aquí, el següent pas no funcionarà com espereu.*
+3. `n` — afegir una partició nova.
+4. `1` ↵ — número de partició (per defecte).
+5. ↵ — sector inicial (per defecte).
+6. ↵ — sector final, és a dir, fins al final del disc (per defecte).
+7. `ef00` ↵ — tipus de partició: *EFI System Partition*.
+8. `w` — escriure els canvis.
+9. `Y` — confirmar (`gdisk` torna a preguntar, perquè escriure la taula és irreversible).
+
+::: {.errorcomu}
+El pas 2 és el que sol saltar-se, perquè `gdisk` no torna a mostrar el menú després de prémer `o`: sembla que no ha passat res. Si continueu prement `n`, `1`... sense confirmar abans, aquestes tecles es interpreten com a respostes a la pregunta de confirmació, i acabareu amb **una taula GPT buida, sense cap partició**, tot i que al final `gdisk` digui **operation completed successfully**. Comproveu-ho sempre amb el pas següent.
+:::
+
+Comproveu que la partició existeix i que té el tipus correcte:
+
+```{.bash}
+gdisk -l tetris.img
+```
+
+Sortida esperada (heu de veure una fila, amb el codi `EF00`):
+
+```
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048          129023   62.0 MiB    EF00  EFI system partition
+```
+
+::: {.exercici}
+Si aquesta llista surt buida, torneu a fer `gdisk tetris.img` i repetiu els nou passos, fixant-vos especialment en el pas 2.
+:::
+
+### Formatar i escriure-hi el fitxer, sense muntar res
+
+Aquí ve una diferència importants respecte de com es fa normalment (i respecte del que potser heu vist en altres tutorials): **no cal `losetup`, ni `mount`, ni ser root**. Podem formatar i escriure dins d'una partició concreta d'un fitxer d'imatge exactament amb el mateix esperit amb què vau fer servir `hexdump` al Laboratori 1: accedint-hi directament, sense passar pel sistema de fitxers de la VM.
+
+La partició ESP comença al sector 2048 (ho hem vist amb `gdisk -l`), és a dir, al byte `2048 × 512 = 1.048.576`:
+
+```{.bash}
+# Reviseu els paths i actualitzeu-los si cal.
+mkfs.fat -F 32 -n ESP --offset 2048 tetris.img
+
+mmd   -i tetris.img@@1048576 ::EFI
+mmd   -i tetris.img@@1048576 ::EFI/BOOT
+mcopy -i tetris.img@@1048576 tetris.efi ::EFI/BOOT/BOOTX64.EFI
+
+mdir  -i tetris.img@@1048576 ::EFI/BOOT
+```
+
+`mkfs.fat --offset` formata en FAT32 exactament a partir d'aquell sector, sense tocar la resta del fitxer. `mmd`/`mcopy`, de `mtools`, creen carpetes i hi copien fitxers **directament dins d'aquell tros de FAT32**, amb la mateixa sintaxi `imatge@@byte` per indicar on comença. Sortida esperada del `mdir`:
+
+```
+Directory for ::/EFI/BOOT
+
+.            <DIR>
+..           <DIR>
+BOOTX64  EFI     62587
+```
+
+::: {.bonapractica}
+`\EFI\BOOT\BOOTX64.EFI`, amb barres invertides, és com ho escriu la documentació d'UEFI; `EFI/BOOT/BOOTX64.EFI`, amb barres normals, és el mateix camí escrit a la manera de Linux. És exactament la ruta de *fallback* de la diapositiva **UEFI: on és el bootloader?**.
+:::
+
+### Arrencar la imatge
+
+```{.bash}
+qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd \
+  -drive format=raw,file=tetris.img -net none
+```
+
+Si tot ha anat bé, el Tetris arrenca **directament**, sense passar per la Shell.
+
+::: {.exercici}
+Al mètode 1 vau haver de fer `fs0:`, `cd` i `tetris.efi`. Aquí no cal escriure res: el joc arrenca sol. Per què? Pista: on hem posat el fitxer.
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Perquè l'hem posat exactament a `EFI/BOOT/BOOTX64.EFI` de l'ESP, que és la ruta que UEFI **executa automàticament** quan no hi ha cap altra entrada d'arrencada configurada (a la NVRAM, que veurem a la Part 2). Al mètode 1, el directori era una unitat FAT qualsevol, sense aquesta estructura, i per això calia navegar-hi i executar-lo a mà.
+:::
+
+</details>
+
+---
+
+## Trenca-ho: veure el *fallback* en acció
+
+Aquesta petita prova connecta directament amb la diapositiva de diagnòstic del Lab 1, ara aplicada a UEFI.
+
+```{.bash}
+cp tetris.img tetris_trencat.img
+mren -i tetris_trencat.img@@1048576 ::EFI/BOOT/BOOTX64.EFI ::EFI/BOOT/BOOTX64.OLD
+
+qemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd \
+  -drive format=raw,file=tetris_trencat.img -net none
+```
+
+::: {.exercici}
+Prediu-ho abans d'executar: si UEFI no troba `BOOTX64.EFI` a la seva ruta per defecte, què creieu que farà?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+::: {.solucio}
+Cau a la UEFI Shell, exactament com al principi del mètode 1. La partició ESP existeix, té sistema de fitxers FAT vàlid, però no hi ha res a `EFI/BOOT/BOOTX64.EFI`: el firmware no té cap ruta d'arrencada més a provar (no hem configurat cap entrada de NVRAM), i el seu últim recurs és oferir-nos una línia d'ordres. És el mateix comportament de fons que un `grub rescue>`: el firmware o el bootloader arriba fins on pot, i quan no troba el codi següent, ens dona alguna cosa amb què seguir nosaltres.
+:::
+
+</details>

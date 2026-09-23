@@ -54,7 +54,8 @@ website:
             - section: "Activitats"
             - section: "Pralabs"
               contents:
-                - modules/unit-02-arrancada/pralabs/01-arrancada.qmd
+                - modules/unit-02-arrancada/pralabs/01_arrencada.qmd
+                - modules/unit-02-arrancada/pralabs/02_arrencada.qmd
 
 
 
