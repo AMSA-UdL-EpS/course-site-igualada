@@ -50,6 +50,18 @@ website:
               contents:
                 - modules/unit-01-fonaments/pralab/01-aws-introduction.qmd
                 - modules/unit-01-fonaments/pralab/02-aws-wordpress.qmd
+        - section: "Unitat 2 · Arrancada"
+          contents:
+            - section: Teoria
+              contents:
+                - modules/unit-02-arrancada/theory/01-arrancada.qmd
+            - section: "Activitats"
+            - section: "Pralabs"
+              contents:
+                - modules/unit-02-arrancada/pralabs/01_arrencada.qmd
+                - modules/unit-02-arrancada/pralabs/02_arrencada.qmd
+
+
 
           
       
