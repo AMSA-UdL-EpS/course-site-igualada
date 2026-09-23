@@ -1,5 +1,5 @@
 ---
-title: "Arrencada (I)"
+title: "Arrencada (I) · BIOS"
 author: "Jordi Mateo Fornés"
 format:
   udl-course-html:

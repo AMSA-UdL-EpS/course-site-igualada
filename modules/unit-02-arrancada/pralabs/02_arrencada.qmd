@@ -1,5 +1,5 @@
 ---
-title: "Laboratori 2: Arrencada (II)"
+title: "Arrencada (II) · UEFI"
 author: "Jordi Mateo Fornés"
 format:
   udl-course-html:
