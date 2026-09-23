@@ -260,6 +260,275 @@
     ]
   },
   {
+    "objectID": "modules/unit-02-arrancada/pralabs/01_arrencada.html",
+    "href": "modules/unit-02-arrancada/pralabs/01_arrencada.html",
+    "title": "Arrencada (I) · BIOS",
+    "section": "",
+    "text": "A la sessió de teoria hem seguit el camí que fa una màquina des del reset fins al primer codi que controlem. En aquest laboratori el recorrerem amb les nostres mans: construirem un bootloader de dues etapes per a BIOS i el veurem funcionar amb un depurador.\nBIOS ──llegeix LBA 0──► 0x7C00   Stage 1\n                             │\n                             │  INT 13h (AH = 0x42)\n                             ▼\nLBA 2048 ─────────────► 0x8000   Stage 2\nTot es fa amb QEMU: no s’arrenca ni es modifica cap ordinador real. Treballem amb un sol fitxer, disk.img, que QEMU presenta al BIOS com si fos un disc.\n\nConcepte — Què emulem: x86 amb BIOS, en mode real\nEn aquest laboratori QEMU emula una màquina x86 amb BIOS. El nostre Stage 1 i Stage 2 s’executen en mode real de 16 bits: no estem fent un programa x86-64. Emularem amb qemu-system-i386.\n\n\nResultat d'Aprenentatge — En acabar aquest laboratori seràs capaç de...\n\nConstruir un boot sector de 512 B amb la signatura 55 AA, escriure’l al sector 0 d’una imatge de disc i comprovar-lo amb hexdump.\nArrencar-lo amb QEMU i observar amb GDB què fa el BIOS: on carrega el codi i com hi transfereix el control.\nImplementar un Stage 1 que carregui un Stage 2 des de LBA 2048 amb INT 13h AH = 0x42 i hi salti.\nDistingir entre carregar i executar codi.\n\n\n\nProgramari Necessari\nnasm (inclou ndisasm), qemu-system-i386, gdb, i les utilitats dd, hexdump i wc.\nInstal·leu els paquets amb el gestor del vostre sistema. A Debian/Ubuntu, l’ordre exacta depèn de si el processador de la vostra màquina (no el de la VM: QEMU emula x86 igualment en tots dos casos) és x86_64 o ARM, perquè el paquet de GDB que necessiteu no és el mateix:\n\nx86_64 (Intel / AMD)ARM (Apple Silicon, Raspberry Pi…)\n\n\nsudo apt-get update\nsudo apt-get install nasm qemu-system-x86 gdb build-essential -y\n\n\nsudo apt-get update\nsudo apt-get install nasm qemu-system-x86 gdb-multiarch build-essential -y\n\n\n\nEl gdb de les distribucions ARM sol incloure suport només per a l’arquitectura del maquinari on corre; gdb-multiarch hi afegeix la resta, incloent-hi x86.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (I) · BIOS"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/pralabs/01_arrencada.html#introducció",
+    "href": "modules/unit-02-arrancada/pralabs/01_arrencada.html#introducció",
+    "title": "Arrencada (I) · BIOS",
+    "section": "",
+    "text": "A la sessió de teoria hem seguit el camí que fa una màquina des del reset fins al primer codi que controlem. En aquest laboratori el recorrerem amb les nostres mans: construirem un bootloader de dues etapes per a BIOS i el veurem funcionar amb un depurador.\nBIOS ──llegeix LBA 0──► 0x7C00   Stage 1\n                             │\n                             │  INT 13h (AH = 0x42)\n                             ▼\nLBA 2048 ─────────────► 0x8000   Stage 2\nTot es fa amb QEMU: no s’arrenca ni es modifica cap ordinador real. Treballem amb un sol fitxer, disk.img, que QEMU presenta al BIOS com si fos un disc.\n\nConcepte — Què emulem: x86 amb BIOS, en mode real\nEn aquest laboratori QEMU emula una màquina x86 amb BIOS. El nostre Stage 1 i Stage 2 s’executen en mode real de 16 bits: no estem fent un programa x86-64. Emularem amb qemu-system-i386.\n\n\nResultat d'Aprenentatge — En acabar aquest laboratori seràs capaç de...\n\nConstruir un boot sector de 512 B amb la signatura 55 AA, escriure’l al sector 0 d’una imatge de disc i comprovar-lo amb hexdump.\nArrencar-lo amb QEMU i observar amb GDB què fa el BIOS: on carrega el codi i com hi transfereix el control.\nImplementar un Stage 1 que carregui un Stage 2 des de LBA 2048 amb INT 13h AH = 0x42 i hi salti.\nDistingir entre carregar i executar codi.\n\n\n\nProgramari Necessari\nnasm (inclou ndisasm), qemu-system-i386, gdb, i les utilitats dd, hexdump i wc.\nInstal·leu els paquets amb el gestor del vostre sistema. A Debian/Ubuntu, l’ordre exacta depèn de si el processador de la vostra màquina (no el de la VM: QEMU emula x86 igualment en tots dos casos) és x86_64 o ARM, perquè el paquet de GDB que necessiteu no és el mateix:\n\nx86_64 (Intel / AMD)ARM (Apple Silicon, Raspberry Pi…)\n\n\nsudo apt-get update\nsudo apt-get install nasm qemu-system-x86 gdb build-essential -y\n\n\nsudo apt-get update\nsudo apt-get install nasm qemu-system-x86 gdb-multiarch build-essential -y\n\n\n\nEl gdb de les distribucions ARM sol incloure suport només per a l’arquitectura del maquinari on corre; gdb-multiarch hi afegeix la resta, incloent-hi x86.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (I) · BIOS"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/pralabs/01_arrencada.html#preparació",
+    "href": "modules/unit-02-arrancada/pralabs/01_arrencada.html#preparació",
+    "title": "Arrencada (I) · BIOS",
+    "section": "Preparació",
+    "text": "Preparació\nCreeu una carpeta de treball i comproveu que teniu les eines:\n\nx86_64 (Intel / AMD)ARM (Apple Silicon, Raspberry Pi…)\n\n\nmkdir -p ~/lab-arrencada\ncd ~/lab-arrencada\n\nnasm --version\nqemu-system-i386 --version\ngdb --version\n\n\nmkdir -p ~/lab-arrencada\ncd ~/lab-arrencada\n\nnasm --version\nqemu-system-i386 --version\ngdb-multiarch --version\n\n\n\n\nBona Pràctica\nFeu tot el laboratori en aquesta carpeta. Cada fitxer que crearem (boot.asm, second_boot.asm, disk.img, …) hi ha de ser.\n\n\nConcepte — Miniguia de NASM\n\n\n\n\n\n\n\nElement\nQuè fa\n\n\n\n\nmov dst, src\ncopia src a dst\n\n\nxor ax, ax\nposa AX a 0\n\n\nlodsb\nAL = [DS:SI] i SI = SI + 1\n\n\ntest al, al + jz etiqueta\nsalta si AL és 0\n\n\nint 0x10 / int 0x13\ncrida un servei del BIOS (vídeo / disc)\n\n\ncall etiqueta / ret\ncrida i retorn d’una subrutina (fa servir la pila)\n\n\ncli / sti\ndesactiva / activa les interrupcions\n\n\nhlt\natura la CPU fins a la propera interrupció\n\n\njmp 0x0000:etiqueta\nsalt far: també fixa CS\n\n\ndb / dw / dq\nreserva 1 / 2 / 8 bytes de dades\n\n\n[org 0x7c00]\nl’adreça que NASM utilitza per calcular les adreces del codi i de les dades (a la teoria, la link address; aquí no hi ha enllaçador: NASM genera directament un binari pla)\n\n\ntimes 510 - ($ - $$) db 0\nomple de zeros fins al byte 510\n\n\n\nRegistres que farem servir: AX (AH/AL), BX, DS, ES, SS, SP, SI i DL.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (I) · BIOS"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/pralabs/01_arrencada.html#part-a-el-disc-i-stage-1",
+    "href": "modules/unit-02-arrancada/pralabs/01_arrencada.html#part-a-el-disc-i-stage-1",
+    "title": "Arrencada (I) · BIOS",
+    "section": "Part A — El disc i Stage 1",
+    "text": "Part A — El disc i Stage 1\n\nEl disc virtual\nPer a QEMU, un disc és un fitxer. Creeu-ne un de 10 MiB ple de zeros:\ndd if=/dev/zero of=disk.img bs=512 count=20480\nls -lh disk.img\nhexdump -C -n 64 disk.img\ndd només és l’eina que copia bytes: el que ens interessa és el resultat, un fitxer de 20480 sectors de 512 bytes.\n\nError Comú\ndd escriu on li digueu. Comproveu sempre que of= és un fitxer (disk.img) i mai un dispositiu com /dev/sda: si us equivoqueu, podeu destruir dades reals.\n\n\nExercici\nQuè hi ha ara al sector 0? Podria arrencar aquest disc? (hexdump substitueix les línies repetides per un *.)\n\n\n\nPots veure el raonament\n\n\nSolució\nNomés zeros. El BIOS necessita que el sector 0 acabi en 55 AA per considerar-lo arrencable; aquest disc no l’arrencaria (ho comprovareu a l’activitat posterior).\n\n\n\n\nStage 1\nAquest és el nostre primer boot sector. Guardeu-lo com a boot.asm:\n[org 0x7c00]\nbits 16\n\n    jmp 0x0000:start            ; far jump: força CS = 0x0000\n\nstart:\n    cli                         ; sense interrupcions mentre canviem SS:SP\n    xor  ax, ax\n    mov  ds, ax                 ; DS = 0\n    mov  es, ax                 ; ES = 0\n    mov  [boot_drive], dl       ; guardem la unitat d'arrencada (DL)\n    mov  ss, ax                 ; SS = 0\n    mov  sp, 0x7c00             ; pila: creix cap a adreces més baixes\n    sti\n\n    mov  si, msg_stage1\n    call print\n\n.halt:\n    hlt                         ; dorm fins a la propera interrupció\n    jmp  .halt\n\n; print: escriu la cadena de DS:SI (acabada en 0) amb INT 10h, AH = 0x0E\nprint:\n.next:\n    lodsb                       ; AL = [DS:SI], SI = SI + 1\n    test al, al                 ; AL == 0 ?\n    jz   .done\n    mov  ah, 0x0e               ; teletype\n    mov  bx, 0x0007             ; pàgina 0, color gris\n    int  0x10\n    jmp  .next\n.done:\n    ret\n\nboot_drive  db 0\nmsg_stage1  db \"Stage 1: hola!\", 13, 10, 0\n\ntimes 510 - ($ - $$) db 0\ndw 0xaa55\nRecordeu la sessió de teoria:\n\njmp 0x0000:start és el far jump que fixa CS = 0.\nInicialitzem DS, ES, SS i SP perquè no podem assumir cap valor, i guardem DL (la unitat d’arrencada).\nprint escriu una cadena amb INT 10h; per poder fer call/ret necessitem la pila que acabem de configurar.\nboot_drive és una dada: va després del codi que s’executa, mai enmig.\n\n\n\nAssemblar i escriure al sector 0\n\nConcepte\nUn boot sector és simplement un binari de 512 bytes que acaba escrit al sector 0 del disc. Assemblem el fitxer i el copiem allà.\n\nnasm -f bin -o boot.bin boot.asm\nwc -c boot.bin\ndd if=boot.bin of=disk.img bs=512 count=1 conv=notrunc\nhexdump -C -s 510 -n 2 disk.img\nSortida esperada:\n512 boot.bin\n000001fe  55 aa                                             |U.|\n\nConcepte — Recepta per escriure en un sector\ndd if=FITXER of=disk.img bs=512 seek=SECTOR conv=notrunc copia FITXER al disc a partir del sector SECTOR (el 0 si no hi ha seek). conv=notrunc evita que dd escurci disk.img. No cal memoritzar-la: la reutilitzarem canviant només FITXER i SECTOR.\n\n\nExercici\nAl codi hem escrit dw 0xaa55, però hexdump mostra 55 aa. Per què?\n\n\n\nPots veure el raonament\n\n\nSolució\nPerquè x86 és little-endian: el byte menys significant (0x55) es guarda primer. La signatura, en memòria i al disc, és la seqüència de bytes 55 AA.\n\n\n\n\nPrimera execució\n\nSistema amb interfície gràficaSistema només per terminal\n\n\nqemu-system-i386 -drive file=disk.img,format=raw\n\n\nqemu-system-i386 -drive file=disk.img,format=raw -nographic\n\nBona Pràctica\nSi treballeu només per terminal, afegiu -nographic: la sortida apareix a la terminal i es surt amb Ctrl+A i després X.\n\n\n\n\nHauríeu de veure, a la finestra de QEMU, el missatge Stage 1: hola!. Tanqueu la finestra per sortir.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (I) · BIOS"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/pralabs/01_arrencada.html#part-b-mirar-larrencada-amb-gdb",
+    "href": "modules/unit-02-arrancada/pralabs/01_arrencada.html#part-b-mirar-larrencada-amb-gdb",
+    "title": "Arrencada (I) · BIOS",
+    "section": "Part B — Mirar l’arrencada amb GDB",
+    "text": "Part B — Mirar l’arrencada amb GDB\n\nPreparació\nCreeu un petit fitxer d’ajuda perquè GDB mostri només els registres que ens interessen:\ncat &gt; lab.gdb &lt;&lt;'EOF'\nset pagination off\ndefine regs\n  info registers cs eip esp edx ds es ss\nend\nEOF\nNecessiteu dues terminals a la carpeta de treball.\nTerminal 1: arrenqueu QEMU aturat i amb un servidor de depuració:\n\nSistema amb interfície gràficaSistema només per terminal\n\n\nqemu-system-i386 -drive file=disk.img,format=raw -S -s\n\n\nqemu-system-i386 -drive file=disk.img,format=raw -nographic -S -s\n\n\n\n\n-S no deixa que la CPU comenci a executar\n-s obre el servidor de GDB al port 1234.\nLa finestra queda negra: la CPU està aturada al reset.\n\nTerminal 2: connecteu GDB.\n\nx86_64 (Intel / AMD)ARM (Apple Silicon, Raspberry Pi…)\n\n\ngdb -q\n\n\ngdb-multiarch -q\n\n\n\nDins de GDB, el mateix en tots dos casos:\nsource lab.gdb\ntarget remote :1234\n\nBona Pràctica\nGDB pot mostrar avisos sobre l’executable o l’OS ABI. Són normals: ignoreu-los. No cal fer set architecture: en connectar amb target remote, GDB (també gdb-multiarch) detecta sol que l’altre extrem és un i386 i ho mostra amb un missatge del tipus The target architecture is set to \"auto\" (currently \"i386\").\n\n\n\nDemostració guiada: el reset\nAbans de deixar córrer la CPU, mirem on és. Dins de GDB:\ninfo registers cs eip\nmonitor info registers\nmonitor envia l’ordre a QEMU; la segona sortida és llarga, busqueu-hi la línia que comença per CS =.\nSortida esperada (extracte):\ncs             0xf000              61440\neip            0xfff0              0xfff0\n...\nCS =f000 ffff0000 0000ffff 00009b00\n\nExercici\nLa CPU ha de llegir la primera instrucció a base de CS + EIP. Quina adreça és? Coincideix amb la diapo del reset vector?\n\n\n\nPots veure el raonament\n\n\nSolució\n0xFFFF0000 + 0xFFF0 = 0xFFFFFFF0, la de la teoria. GDB només mostra el selector (0xf000); la base (0xffff0000) és una part oculta del registre que només veiem amb el monitor de QEMU.\n\n\n\n\nB1. Arribar a 0x7C00\nPosem un punt d’aturada a l’adreça on el BIOS carrega el boot sector i deixem córrer la CPU:\nhbreak *0x7c00\ncontinue\nTrigarà un segon o dos (el BIOS està fent la seva feina) i GDB s’aturarà: Breakpoint 1, 0x00007c00 in ?? ().\n\nExercici\nAbans d’executar regs: quin valor creieu que tenen DL, DS, ES, SS i SP en aquest moment? Podem assumir-los?\n\nregs\nSortida esperada (els valors exactes poden variar):\ncs             0x0                 0\neip            0x7c00              0x7c00\nesp            0x6f08              0x6f08\nedx            0x80                128\nds             0x0                 0\nes             0x0                 0\nss             0x0                 0\n\n\nPots veure el raonament\n\n\nSolució\n\nDL = 0x80: el BIOS ens dona la unitat d’arrencada (el primer disc dur). És una convenció que sí podem fer servir, i per això la guardem a boot_drive.\nDL conté el número de la unitat des d’on la BIOS ha arrencat el programa; en QEMU, si arrenquem des del primer disc dur, normalment DL = 0x80. A més, DL és la part baixa de EDX (els 8 bits menys significatius), per això mov [boot_drive], dl copia aquest valor i el guarda abans que el puguem necessitar més endavant.\nCS = 0, eip = 0x7c00: el BIOS ha saltat a 0x7C00 amb CS = 0.\nDS, ES i SS valen 0, però només perquè QEMU ho fa així: un altre BIOS podria deixar-los amb altres valors. Per això no ho assumim i els inicialitzem.\nSP = 0x6f08, no 0x7c00: la pila inicial no és la nostra. mov sp, 0x7c00 és una elecció d’aquest bootloader, no una regla del BIOS.\n\n\n\n\n\nB2. El codi és a la RAM\nMirem els primers bytes de 0x7C00 i els comparem amb el fitxer boot.bin i amb les seves instruccions:\nx/16bx 0x7c00\nshell hexdump -C -n 16 boot.bin\nshell ndisasm -b 16 -o 0x7c00 boot.bin | head -9\nSortida esperada (extracte):\n0x7c00: 0xea    0x05    0x7c    0x00    0x00    0xfa    0x31    0xc0\n0x7c08: 0x8e    0xd8    0x8e    0xc0    0x88    0x16    0x2e    0x7c\n00000000  ea 05 7c 00 00 fa 31 c0  8e d8 8e c0 88 16 2e 7c  |..|...1........||\n00007C00  EA057C0000        jmp 0x0:0x7c05\n00007C05  FA                cli\n00007C06  31C0              xor ax,ax\n00007C08  8ED8              mov ds,ax\n00007C0A  8EC0              mov es,ax\n00007C0C  88162E7C          mov [0x7c2e],dl\n00007C10  8ED0              mov ss,ax\n00007C12  BC007C            mov sp,0x7c00\n00007C15  FB                sti\n\nExercici\nEls bytes de la RAM coincideixen amb els del fitxer? Què demostra això?\n\n\n\nPots veure el raonament\n\n\nSolució\nCoincideixen: el BIOS ha copiat el sector 0 del disc a 0x7C00 i hi ha transferit el control. El primer byte, 0xEA, és l’opcode del far jump; 05 7c és l’offset (0x7c05, en little-endian) i 00 00 el segment.\n\n\n\nError Comú\nNo feu servir x/i per desassemblar: en aquest mode, GDB pot interpretar el codi de 16 bits com si fos de 32 i mostrar instruccions absurdes. Per veure les instruccions correctes, feu servir ndisasm -b 16 -o &lt;adreça&gt; &lt;fitxer&gt;.\n\n\n\nB3. Quan passa SP a 0x7C00?\nA la sortida de ndisasm trobeu l’adreça de la instrucció mov sp,0x7c00 (0x7c12). Aturem la CPU just abans, mirem la pila, fem una instrucció (si) i tornem a mirar:\nhbreak *0x7c12\ncontinue\nregs\nsi\nregs\n\nExercici\nQuin valor tenia SP abans de mov sp, 0x7c00? I després? Què demostra sobre la pila inicial?\n\n\n\nPots veure el raonament\n\n\nSolució\nAbans, esp = 0x6f08; després, esp = 0x7c00 (i eip = 0x7c15). La pila que ens deixa el BIOS no és la nostra: en construïm una nosaltres, i és el que necessita call/ret.\n\nEIPindica on continua l’execució després de la instrucció mov sp, 0x7c00, i és 0x7c15, que és la següent instrucció (sti).\nESP indica on apunta la pila. Abans de la instrucció, apunta a 0x6f08, que és la pila que ens deixa el BIOS. Després de la instrucció, apunta a 0x7c00, que és la pila que hem creat, coincidint amb l’adreça on tenim el codi. Recorda que la pila en x86 creix cap a adreces més baixes, així que quan fem push, ESP es decrementa.\n\n\n\nDeixeu córrer el programa i tanqueu:\ncontinue\nVeureu el missatge a la finestra de QEMU. Per sortir: quit a GDB (responeu y) i tanqueu la finestra de QEMU (o Ctrl+C a la terminal 1).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (I) · BIOS"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/pralabs/01_arrencada.html#part-c-stage-2-i-int-13h",
+    "href": "modules/unit-02-arrancada/pralabs/01_arrencada.html#part-c-stage-2-i-int-13h",
+    "title": "Arrencada (I) · BIOS",
+    "section": "Part C — Stage 2 i INT 13h",
+    "text": "Part C — Stage 2 i INT 13h\nFins ara el BIOS ha carregat un sector. Volem que el nostre Stage 1 carregui un segon programa, més gran, des d’una altra posició del disc.\n\nConcepte\nStage 2 anirà a LBA 2048 del disc i el carregarem a 0x8000 de la RAM. Recordeu: 0x7C00 és la convenció del BIOS; 0x8000 i LBA 2048 són una elecció nostra. LBA 2048 és el sector 2048 del disc (2048 × 512 B = 1 MiB), no l’adreça 0x2048.\n\n\nStage 2 al disc\nGuardeu-lo com a second_boot.asm:\n[org 0x8000]                ; Programa carregat a 0x8000\nbits 16                     ; Mode real de 16 bits\n\n    mov  si, msg            ; SI apunta al primer caràcter de la cadena\n.next:\n    lodsb                   ; al = [DS:SI], SI++ -&gt; Agafa caràcter i avança\n    test al, al             ; AL == 0 ? -&gt; fi de la cadena? \n    jz   .halt   \n    mov  ah, 0x0e           ; funció per escriure un caràcter a la pantalla\n    mov  bx, 0x0007         ; pàgina 0, color gris\n    int  0x10               ; escriu el caràcter a la pantalla\n    jmp  .next\n\n.halt:\n    hlt\n    jmp  .halt\n\nmsg db \"Stage 2: el control ha arribat aqui!\", 13, 10, 0\nAssembleu-lo i escriviu-lo al sector 2048 (la mateixa recepta d’abans, ara amb seek):\nnasm -f bin -o second_boot.bin second_boot.asm\nwc -c second_boot.bin\ndd if=second_boot.bin of=disk.img bs=512 seek=2048 conv=notrunc\nhexdump -C -s 1048576 -n 32 disk.img\n1048576 és 2048 × 512, el byte del disc on comença el sector 2048.\nSortida esperada:\n59 second_boot.bin\n00100000  be 14 80 ac 84 c0 74 09  b4 0e bb 07 00 cd 10 eb  |......t.........|\n00100010  f2 f4 eb fd 53 74 61 67  65 20 32 3a 20 65 6c 20  |....Stage 2: el |\n\nExercici\nAra Stage 2 és al disc. Si arrenqueu disk.img amb el Stage 1 actual, s’executarà Stage 2? Prediu-ho i comproveu-ho:\n\nSistema amb interfície gràficaSistema només per terminal\n\n\nqemu-system-i386 -drive file=disk.img,format=raw\n\n\nqemu-system-i386 -drive file=disk.img,format=raw -nographic\n\n\n\n\n\n\nPots veure el raonament\n\n\nSolució\nNo: només surt Stage 1: hola!. El BIOS només carrega el sector 0; qui ha de llegir Stage 2 és Stage 1, i el nostre encara no ho fa. Que Stage 2 existeixi al disc no vol dir que estigui carregat.\n\n\n\n\nEl DAP: què li diem al BIOS?\nINT 13h, funció 0x42, llegeix del disc amb LBA. Li hem de passar un Disk Address Packet (DAP), una estructura de 16 bytes:\ndap:                            ; Disk Address Packet (16 bytes)\n    db 0x10, 0                  ; mida del DAP, reservat\n    dw 1                        ; nombre de sectors a llegir\n    dw 0x8000, 0x0000           ; destí: offset, segment\n    dq 2048                     ; LBA inicial\nEls registres: AH = 0x42, DL = unitat d’arrencada, DS:SI apunta al DAP. Si hi ha un error, el BIOS posa CF = 1.\n\nExercici\nSense executar res: què li estem demanant al BIOS amb aquest DAP? Expliqueu-ho amb una frase.\n\n\n\nPots veure el raonament\n\n\nSolució\nLlegeix 1 sector, des de LBA 2048, i deixa’l a 0000:8000. Aquesta és la idea que cal recordar; els camps són només la manera de dir-ho.\n\n\n\n\nStage 1 carrega Stage 2\nSubstituïu boot.asm per aquesta versió. El DAP ja hi és; us falten 3 TODO:\n[org 0x7c00]\nbits 16\n\n    jmp 0x0000:start            ; far jump: força CS = 0x0000\n\nstart:\n    cli                         ; sense interrupcions mentre canviem SS:SP\n    xor  ax, ax\n    mov  ds, ax                 ; DS = 0\n    mov  es, ax                 ; ES = 0\n    mov  [boot_drive], dl       ; guardem la unitat d'arrencada (DL)\n    mov  ss, ax                 ; SS = 0\n    mov  sp, 0x7c00             ; pila: creix cap a adreces més baixes\n    sti\n\n    mov  si, msg_stage1\n    call print\n\n.load_stage2:\n    mov  si, dap                ; DS:SI → DAP\n    ; TODO 1: DL = unitat d'arrencada (variable boot_drive) i AH = funció de lectura\n    int  0x13\n    ; TODO 2: si la lectura ha fallat (CF = 1), salta a .boot_failed\n    ; TODO 3: transfereix el control a Stage 2 (segment 0x0000, offset 0x8000)\n\n.halt:\n    hlt\n    jmp  .halt\n\n.boot_failed:\n    mov  si, msg_fail\n    call print\n    jmp  .halt\n\nprint:\n.next:\n    lodsb\n    test al, al\n    jz   .done\n    mov  ah, 0x0e\n    mov  bx, 0x0007\n    int  0x10\n    jmp  .next\n.done:\n    ret\n\ndap:                            ; Disk Address Packet (16 bytes)\n    db 0x10, 0                  ; mida del DAP, reservat\n    dw 1                        ; nombre de sectors a llegir\n    dw 0x8000, 0x0000           ; destí: offset, segment\n    dq 2048                     ; LBA inicial\n\nboot_drive  db 0\nmsg_stage1  db \"Stage 1: carregant Stage 2...\", 13, 10, 0\nmsg_fail    db \"Error carregant Stage 2!\", 13, 10, 0\n\ntimes 510 - ($ - $$) db 0\ndw 0xaa55\nAjuda per als TODO:\n\n1. DL es carrega des de boot_drive; AH val 0x42.\n2. Després de int 0x13, si CF = 1 la lectura ha fallat (jc).\n3. Un salt far a 0x0000:0x8000.\n\nAneu pas a pas. Ompliu només els TODO 1 i 2, assembleu i escriviu el nou Stage 1 (només el sector 0):\nnasm -f bin -o boot.bin boot.asm\ndd if=boot.bin of=disk.img bs=512 count=1 conv=notrunc\nls -l disk.img\n\nSistema amb interfície gràficaSistema només per terminal\n\n\nqemu-system-i386 -drive file=disk.img,format=raw\n\n\nqemu-system-i386 -drive file=disk.img,format=raw -nographic\n\n\n\n\nExercici\nStage 1 ja llegeix Stage 2 a 0x8000, però encara no hi salta. Què veureu? On és Stage 2 ara mateix? Què falta?\n\n\n\nPots veure el raonament\n\n\nSolució\nNomés surt Stage 1: carregant Stage 2.... Stage 2 ja és a la RAM (a 0x8000), però ningú no hi ha transferit el control: falta el salt. Ho comprovarem amb GDB a la Part D.\n\n\nAra afegiu el TODO 3 i torneu a executar les mateixes ordres (assemblar, escriure el sector 0 i arrencar):\nSortida esperada a QEMU:\nStage 1: carregant Stage 2...\nStage 2: el control ha arribat aqui!\n\nError Comú\nSi ls -l disk.img no mostra 10485760 bytes, heu oblidat conv=notrunc i dd ha escurçat el disc: torneu a la Part A.\n\n\n\nPots veure la solució\n\n\nSolució\n[org 0x7c00]\nbits 16\n\n    jmp 0x0000:start            ; far jump: força CS = 0x0000\n\nstart:\n    cli                         ; sense interrupcions mentre canviem SS:SP\n    xor  ax, ax\n    mov  ds, ax                 ; DS = 0\n    mov  es, ax                 ; ES = 0\n    mov  [boot_drive], dl       ; guardem la unitat d'arrencada (DL)\n    mov  ss, ax                 ; SS = 0\n    mov  sp, 0x7c00             ; pila: creix cap a adreces més baixes\n    sti\n\n    mov  si, msg_stage1\n    call print\n\n.load_stage2:\n    mov  si, dap                ; DS:SI → DAP\n    mov  dl, [boot_drive]       ; DL = unitat d'arrencada\n    mov  ah, 0x42               ; AH = lectura estesa (LBA)\n    int  0x13\n    jc   .boot_failed           ; CF = 1 → error\n\n    jmp  0x0000:0x8000          ; transferim el control a Stage 2\n\n.halt:\n    hlt\n    jmp  .halt\n\n.boot_failed:\n    mov  si, msg_fail\n    call print\n    jmp  .halt\n\nprint:\n.next:\n    lodsb\n    test al, al\n    jz   .done\n    mov  ah, 0x0e\n    mov  bx, 0x0007\n    int  0x10\n    jmp  .next\n.done:\n    ret\n\ndap:                            ; Disk Address Packet (16 bytes)\n    db 0x10, 0                  ; mida del DAP, reservat\n    dw 1                        ; nombre de sectors a llegir\n    dw 0x8000, 0x0000           ; destí: offset, segment\n    dq 2048                     ; LBA inicial\n\nboot_drive  db 0\nmsg_stage1  db \"Stage 1: carregant Stage 2...\", 13, 10, 0\nmsg_fail    db \"Error carregant Stage 2!\", 13, 10, 0\n\ntimes 510 - ($ - $$) db 0\ndw 0xaa55\n\n\n\nExercici\nFixeu-vos que DL es carrega des de boot_drive en lloc d’escriure mov dl, 0x80. Per què és millor?\n\n\n\nPots veure el raonament\n\n\nSolució\nPerquè el BIOS ens dona la unitat d’arrencada a DL: no sempre és 0x80 (podria ser un altre disc). Un bootloader ha de conservar aquesta informació, no suposar-la.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (I) · BIOS"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/pralabs/01_arrencada.html#part-d-carregar-no-és-executar",
+    "href": "modules/unit-02-arrancada/pralabs/01_arrencada.html#part-d-carregar-no-és-executar",
+    "title": "Arrencada (I) · BIOS",
+    "section": "Part D — Carregar no és executar",
+    "text": "Part D — Carregar no és executar\nAra podem veure amb GDB la diferència entre carregar i executar.\n\nTerminal 1: qemu-system-i386 -drive file=disk.img,format=raw -S -so bé qemu-system-i386 -drive file=disk.img,format=raw -nographic -S -s.\nTerminal 2: obriu GDB (gdb -q o gdb-multiarch -q, segons el que hàgiu instal·lat) i, dins de GDB:\n\nsource lab.gdb\ntarget remote :1234\nhbreak *0x7c00\ncontinue\nSom al principi de Stage 1 i encara no ha llegit res.\n\nExercici\nQuè creieu que hi ha a 0x8000 ara mateix? Comproveu-ho:\nx/16bx 0x8000\n\n\n\nPots veure el raonament\n\n\nSolució\nZeros. Stage 2 és al disc, no a la RAM: encara no l’ha carregat ningú. (Que siguin zeros és cert a QEMU; en una màquina real la RAM podria tenir qualsevol valor.)\n\n\nAra deixem que Stage 1 faci la lectura i s’aturi just abans d’executar Stage 2:\nhbreak *0x8000\ncontinue\nregs\nx/16bx 0x8000\nshell hexdump -C -n 16 second_boot.bin\nSortida esperada (extracte):\ncs             0x0                 0\neip            0x8000              0x8000\nesp            0x7c00              0x7c00\nedx            0x80                128\n0x8000: 0xbe    0x14    0x80    0xac    0x84    0xc0    0x74    0x09\n0x8008: 0xb4    0x0e    0xbb    0x07    0x00    0xcd    0x10    0xeb\n00000000  be 14 80 ac 84 c0 74 09  b4 0e bb 07 00 cd 10 eb  |......t.........|\nPer saber quina instrucció hi ha a 0x8000:\nshell ndisasm -b 16 -o 0x8000 second_boot.bin | head -4\n00008000  BE1480            mov si,0x8014\n00008003  AC                lodsb\n00008004  84C0              test al,al\n00008006  7409              jz 0x8011\n\nExercici\nResponeu:\n\nQuin valor tenen CS i IP quan GDB s’atura?\nQuina instrucció s’executarà a 0x8000?\nQuina diferència hi ha entre carregar Stage 2 i executar Stage 2?\nQuin registre conserva la unitat d’arrencada? Com ho sabeu?\n\n\n\n\nPots veure el raonament\n\n\nSolució\n\nCS = 0 i eip = 0x8000: hem arribat amb el far jump jmp 0x0000:0x8000.\nmov si, 0x8014: apunta a la cadena msg de Stage 2.\nCarregar és copiar el codi a la RAM: INT 13h ha portat els bytes de LBA 2048 a 0x8000. Executar és que la CPU comenci a llegir-hi instruccions: només passa amb el jmp. Entre els dos moments el codi és a la RAM però inert.\nDL: continua valent 0x80 a 0x8000; Stage 1 no l’ha trencat.\n\n\n\n\nAmpliació: [org]\nHem vist que mov si, msg s’ha assemblat com mov si, 0x8014: una adreça absoluta que depèn de [org 0x8000]. En aquest laboratori l’org coincideix amb l’adreça on esperem que Stage 1 carregui Stage 2. Comprovem què passa si no hi coincideix.\n\nExercici\nFeu una còpia de Stage 2, canvieu [org 0x8000] per [org 0x0] i assembleu-la a un altre fitxer:\ncp second_boot.asm sb_org0.asm\n# editeu sb_org0.asm: [org 0x8000] → [org 0x0]\nnasm -f bin -o sb_org0.bin sb_org0.asm\nhexdump -C -n 3 sb_org0.bin\nhexdump -C -n 3 second_boot.bin\nQuè canvia als tres primers bytes? Escriviu la versió incorrecta al disc i, abans d’executar, prediu què veureu:\ndd if=sb_org0.bin of=disk.img bs=512 seek=2048 conv=notrunc\nqemu-system-i386 -drive file=disk.img,format=raw\n\n\n\nPots veure el raonament\n\n\nSolució\nEls bytes passen de be 14 80 a be 14 00: la instrucció mov si, imm16 porta l’adreça de msg dins l’instrucció. Amb [org 0x0], SI apunta a 0x0014 (la taula de vectors d’interrupció) i no al missatge: només surt Stage 1: carregant Stage 2... i cap missatge de Stage 2. L’adreça que assumeix NASM (org) ha de coincidir amb l’adreça on es carrega el codi (0x8000).\nPer deixar-ho tot com estava, torneu a escriure la versió bona:\ndd if=second_boot.bin of=disk.img bs=512 seek=2048 conv=notrunc",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (I) · BIOS"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/pralabs/01_arrencada.html#trenca-ho",
+    "href": "modules/unit-02-arrancada/pralabs/01_arrencada.html#trenca-ho",
+    "title": "Arrencada (I) · BIOS",
+    "section": "Trenca-ho",
+    "text": "Trenca-ho\n\nRepte\nTrenqueu l’arrencada de tres maneres i relacioneu cada símptoma amb la diapo de diagnòstic. Per cada cas: prediu, comproveu i digueu en quina etapa ha fallat: el firmware, Stage 1 o Stage 2. Treballeu sobre una còpia de disk.img.\n\n\nE1. Sense signatura\ncp disk.img disk_e1.img\nprintf '\\000\\000' | dd of=disk_e1.img bs=1 seek=510 count=2 conv=notrunc\nhexdump -C -s 510 -n 2 disk_e1.img\nqemu-system-i386 -drive file=disk_e1.img,format=raw\n\n\nQuè veureu\n\n\nSolució\nEl firmware rebutja el sector 0 com a no arrencable i no executa res nostre. El missatge exacte depèn de la implementació de BIOS (a QEMU, Boot failed: not a bootable disk). Falla el firmware: és la família de símptomes de No bootable device de la diapo.\n\n\n\n\nE2. Lectura fallida\nEditeu boot.asm i canvieu l’LBA del DAP (dq 2048) per dq 30000, fora dels 20480 sectors del disc. Assembleu-lo i escriviu-lo en una còpia del disc:\nnasm -f bin -o boot_e2.bin boot.asm\ncp disk.img disk_e2.img\ndd if=boot_e2.bin of=disk_e2.img bs=512 count=1 conv=notrunc\nqemu-system-i386 -drive file=disk_e2.img,format=raw\n\n\nQuè veureu\n\n\nSolució\nStage 1: carregant Stage 2... i Error carregant Stage 2!. INT 13h ha retornat CF = 1, i el nostre jc .boot_failed ho ha detectat. Falla Stage 1 (no pot llegir), i ho sap dir: és el que fa .boot_failed. Recordeu tornar a posar 2048 a boot.asm.\n\n\n\n\nE3. Stage 2 desaparegut\ncp disk.img disk_e3.img\ndd if=/dev/zero of=disk_e3.img bs=512 seek=2048 count=1 conv=notrunc\nqemu-system-i386 -drive file=disk_e3.img,format=raw\n\nExercici\nAra Stage 1 llegeix amb èxit el sector 2048, però el missatge de Stage 2 no surt. On ha fallat? Com ho comprovaríeu amb GDB?\n\n\n\nPots veure el raonament\n\n\nSolució\nNomés veieu Stage 1: carregant Stage 2...: Stage 1 ha funcionat, i el problema és després. Amb GDB: hbreak *0x8000, continue i x/16bx 0x8000: són tot zeros. La lectura ha anat bé, però el que ha carregat és un sector buit; la CPU executa zeros sense imprimir res. Falla Stage 2 (no existeix): un missatge que falta també és una pista sobre l’etapa on som.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (I) · BIOS"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html",
+    "href": "course-info/contributions/contribute.html",
+    "title": "Contribuir als materials",
+    "section": "",
+    "text": "Els materials d’aquesta assignatura es desenvolupen seguint una filosofia de codi obert (open source): els materials poden ser revisats, millorats, ampliats i corregits amb la participació de la comunitat.\nCom a estudiant, pots formar part d’aquest procés i contribuir directament a la millora dels materials que utilitzaran altres estudiants en el futur.\nAquesta activitat també et permet obtenir fins a 0,5 punts addicionals sobre la qualificació final de l’assignatura.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#una-filosofia-basada-en-lopen-source",
+    "href": "course-info/contributions/contribute.html#una-filosofia-basada-en-lopen-source",
+    "title": "Contribuir als materials",
+    "section": "Una filosofia basada en l’Open Source",
+    "text": "Una filosofia basada en l’Open Source\nEl desenvolupament open source es basa en una idea senzilla: els projectes poden millorar gràcies a la participació de diferents persones.\nEn lloc que una única persona sigui responsable de detectar tots els errors, escriure tot el contingut i mantenir-lo actualitzat, altres persones poden proposar millores.\nEn aquesta activitat aplicaràs el mateix model que s’utilitza en molts projectes de programari:\n\nParteixes d’una còpia del projecte (fork).\nTreballes en una branca independent.\nFas i documentes els teus canvis.\nPuges els canvis al teu repositori.\nProposes incorporar-los al projecte original mitjançant un Pull Request.\nEl responsable del projecte revisa la proposta.\nSi la contribució és adequada, es pot incorporar al projecte principal.\n\nAixò permet experimentar i proposar canvis sense modificar directament el repositori original.\n\n\n\nFlux general de contribució al projecte\n\n\n\n\n\n\n\n\nNoteUna contribució és una proposta, no una imposició\n\n\n\nQuan obres un Pull Request, no estàs modificant directament els materials de l’assignatura.\nEstàs fent una proposta de canvi perquè el responsable del projecte la pugui revisar.\nAquesta és una de les idees fonamentals del desenvolupament open source: els canvis es poden proposar, discutir, revisar i, finalment, acceptar o rebutjar.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#fes-un-fork-del-repositori",
+    "href": "course-info/contributions/contribute.html#fes-un-fork-del-repositori",
+    "title": "Contribuir als materials",
+    "section": "1. Fes un fork del repositori",
+    "text": "1. Fes un fork del repositori\nEl primer pas és crear una còpia del repositori de l’assignatura al teu compte de GitHub.\nAquesta còpia s’anomena fork.\nEl fork et permet treballar sobre el projecte sense tenir permisos d’escriptura sobre el repositori original.\nA la pàgina principal del repositori trobaràs el botó Fork.\n\n\n\nBotó Fork del repositori principal\n\n\nSelecciona el teu compte de GitHub com a propietari del nou repositori.\n\n\n\nCreació del fork\n\n\nUn cop creat, disposaràs d’una còpia del projecte dins del teu compte.\n\n\n\n\n\n\nTipPer què fem un fork?\n\n\n\nEl fork separa el teu espai de treball del projecte original.\nPots experimentar, modificar fitxers i provar idees sense afectar els materials que utilitzen la resta d’estudiants.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#clona-el-teu-fork",
+    "href": "course-info/contributions/contribute.html#clona-el-teu-fork",
+    "title": "Contribuir als materials",
+    "section": "2. Clona el teu fork",
+    "text": "2. Clona el teu fork\nAra has de descarregar el teu fork al teu ordinador.\nDes de GitHub, copia l’URL del teu repositori i executa:\ngit clone URL\nPer exemple:\ngit clone https://github.com/el-teu-usuari/amsa.git\nA continuació, entra al directori del projecte:\ncd amsa\nA partir d’aquest moment treballaràs sobre una còpia local del repositori.\n\n\n\n\n\n\nNote\n\n\n\nTambé és possible fer alguns canvis directament des de la interfície web de GitHub. Tanmateix, si vols treballar de manera habitual amb els materials Quarto, és recomanable tenir el repositori clonat localment.\n\n\n\n\n\n\n\n\nWarningMantén el teu fork actualitzat\n\n\n\nEls materials d’aquesta assignatura canvien sovint. Si treballes durant dies o setmanes sobre el mateix fork, sincronitza’l periòdicament amb el repositori original abans de començar una contribució nova:\ngit remote add upstream URL-del-repositori-original\ngit fetch upstream\ngit merge upstream/main\nFer-ho evita conflictes innecessaris quan obris la Pull Request i redueix el risc que la teva contribució es basi en una versió ja desactualitzada dels materials.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#crea-una-branca-per-al-teu-canvi",
+    "href": "course-info/contributions/contribute.html#crea-una-branca-per-al-teu-canvi",
+    "title": "Contribuir als materials",
+    "section": "3. Crea una branca per al teu canvi",
+    "text": "3. Crea una branca per al teu canvi\nAbans de modificar els fitxers, crea una branca (branch) específica per a la teva contribució.\ngit checkout -b nom-de-la-branca\nPer exemple:\ngit checkout -b millora-exercici-processos\nLa branca permet mantenir el teu canvi separat de la resta del projecte.\n\nRepte — Una branca per a una contribució\nSempre que sigui possible, procura que una branca representi una contribució concreta.\nPer exemple:\ncorreccio-enllac-unitat-2\nés preferible a:\ncanvis\nUn nom descriptiu facilita la revisió i permet entendre ràpidament quin és l’objectiu de la branca.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#fes-els-canvis",
+    "href": "course-info/contributions/contribute.html#fes-els-canvis",
+    "title": "Contribuir als materials",
+    "section": "4. Fes els canvis",
+    "text": "4. Fes els canvis\nAra pots modificar els materials.\nPots:\n\ncrear nous continguts;\nmodificar explicacions;\nafegir exemples;\ncrear exercicis;\ncorregir errates;\nactualitzar informació;\nmillorar la documentació.\n\nSi treballes amb els materials Quarto, pots previsualitzar el resultat localment amb:\nquarto preview\nLa previsualització permet comprovar que els canvis es visualitzen correctament abans d’enviar-los.\nTambé pots editar els fitxers .qmd directament des de GitHub mitjançant l’editor web. Aquesta opció permet crear una branca amb els canvis i iniciar posteriorment el procés de Pull Request.\n\n\n\n\n\n\nWarningRevisa els canvis abans de proposar-los\n\n\n\nAbans d’enviar la contribució, comprova que:\n\nel contingut és correcte;\nels exemples funcionen;\nno has introduït errates;\nels enllaços funcionen;\nel format es visualitza correctament (fes quarto preview, no només una lectura del .qmd);\nsi has afegit un bloc de tipus ::: {.classe}, la classe existeix realment a la llista de components admesos — una classe inventada es renderitza sense estil, sense avisar-te de l’error;\nno has pujat fitxers generats en renderitzar (.aux, .log, carpetes _files/, PDFs o HTML exportats) que no formen part del codi font;\nel canvi no modifica accidentalment altres parts dels materials.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#fes-commit-dels-canvis",
+    "href": "course-info/contributions/contribute.html#fes-commit-dels-canvis",
+    "title": "Contribuir als materials",
+    "section": "5. Fes commit dels canvis",
+    "text": "5. Fes commit dels canvis\nQuan els canvis estiguin preparats, registra’ls amb un commit.\ngit add .\nI després:\ngit commit -m \"Descripció clara dels canvis\"\nPer exemple:\ngit commit -m \"Millora l'exemple de processos\"\nUn bon missatge de commit ha de permetre entendre què s’ha modificat.\nEvita missatges poc informatius com:\ncanvis\no:\ncoses",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#puja-la-branca-al-teu-github",
+    "href": "course-info/contributions/contribute.html#puja-la-branca-al-teu-github",
+    "title": "Contribuir als materials",
+    "section": "6. Puja la branca al teu GitHub",
+    "text": "6. Puja la branca al teu GitHub\nAra has de publicar la branca al teu fork:\ngit push origin nom-de-la-branca\nPer exemple:\ngit push origin millora-exercici-processos\nLa branca i els seus commits quedaran disponibles al teu repositori de GitHub.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#obre-un-pull-request",
+    "href": "course-info/contributions/contribute.html#obre-un-pull-request",
+    "title": "Contribuir als materials",
+    "section": "7. Obre un Pull Request",
+    "text": "7. Obre un Pull Request\nAquest és el pas més important del procés.\nUn Pull Request (PR) és una proposta perquè els canvis que has fet al teu fork siguin incorporats al repositori original.\nDes del teu repositori, selecciona la branca on has fet els canvis i inicia un nou Pull Request.\n\n\n\nSelecciona la branca i obre un Pull Request\n\n\nTambé pots seleccionar directament la branca amb els teus canvis i iniciar el Pull Request des de la interfície de GitHub.\n\n\n\nVia alternativa: iniciar el Pull Request des del banner de la branca",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#revisa-lorigen-i-el-destí-dels-canvis",
+    "href": "course-info/contributions/contribute.html#revisa-lorigen-i-el-destí-dels-canvis",
+    "title": "Contribuir als materials",
+    "section": "8. Revisa l’origen i el destí dels canvis",
+    "text": "8. Revisa l’origen i el destí dels canvis\nGitHub mostrarà una comparació entre:\n\nel repositori principal, on vols incorporar els canvis;\nel teu fork, on has desenvolupat la modificació;\nla branca que conté els teus canvis.\n\nComprova especialment que la direcció sigui correcta.\nEn aquest cas:\nRepositori principal\n    ↓\nBranca amb la teva contribució\nGitHub també et mostrarà si els canvis es poden integrar automàticament.\n\n\n\nPantalla de comparació de canvis\n\n\nSi tot és correcte, fes clic a Create pull request.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#explica-bé-la-teva-contribució",
+    "href": "course-info/contributions/contribute.html#explica-bé-la-teva-contribució",
+    "title": "Contribuir als materials",
+    "section": "9. Explica bé la teva contribució",
+    "text": "9. Explica bé la teva contribució\nUn Pull Request no hauria de limitar-se a dir:\n\n“He fet alguns canvis.”\n\nLa descripció ha d’ajudar el professorat a entendre què has fet, per què ho has fet i quin valor aporta.\nUna bona descripció pot seguir aquesta estructura:\nQuè he canviat? Explica breument quins fitxers o materials has modificat.\nPer què ho he canviat? Explica quin problema has detectat o quina necessitat resol el canvi.\nQuin valor aporta? Explica com millora el material per als estudiants.\nCom ho he comprovat? Si és aplicable, explica quines proves has fet o com has verificat que el canvi funciona.\n\nRepte — Exemple de bona descripció\nMillora de l’exemple de processos de la Unitat 2\nHe actualitzat l’exemple perquè utilitzava una comanda que ja no correspon amb la versió actual de Debian.\nHe substituït l’exemple per una alternativa compatible i he actualitzat l’explicació associada.\nHe comprovat el procediment en una màquina virtual amb Debian i he verificat que les comandes funcionen correctament.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#què-passa-després-del-pull-request",
+    "href": "course-info/contributions/contribute.html#què-passa-després-del-pull-request",
+    "title": "Contribuir als materials",
+    "section": "Què passa després del Pull Request?",
+    "text": "Què passa després del Pull Request?\nQuan envies una PR, el professorat revisarà la proposta.\nLa revisió pot incloure:\n\ncorrecció tècnica;\nqualitat del contingut;\nclaredat de l’explicació;\nutilitat pedagògica;\ncoherència amb la resta dels materials;\nqualitat de la documentació;\npossibles efectes sobre altres parts del projecte.\n\nEl professorat pot:\n\nacceptar la contribució;\ndemanar modificacions abans d’acceptar-la;\ncomentar o discutir alguns aspectes;\nrebutjar-la si no és adequada o no aporta prou valor.\n\nAixò forma part del funcionament normal d’un projecte open source.\n\n\n\n\n\n\nNoteUna PR oberta no significa que el canvi s’hagi acceptat\n\n\n\nEl Pull Request és el mecanisme de revisió i proposta.\nLa incorporació definitiva del canvi depèn de la revisió del projecte.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "course-info/contributions/contribute.html#com-savalua-la-contribució",
+    "href": "course-info/contributions/contribute.html#com-savalua-la-contribució",
+    "title": "Contribuir als materials",
+    "section": "Com s’avalua la contribució?",
+    "text": "Com s’avalua la contribució?\nPots obtenir fins a 0,5 punts addicionals sobre la nota final.\nLa puntuació no depèn simplement del nombre de Pull Requests que enviïs. Es valorarà principalment la qualitat i l’impacte de la contribució.\nEntre altres aspectes, es tindrà en compte:\n\n\n\nAspecte\nQuè es valora\n\n\n\n\nRellevància\nEl canvi resol un problema o necessitat real?\n\n\nQualitat\nEl contingut és correcte, clar i ben elaborat?\n\n\nImpacte\nLa millora pot ser útil per a altres estudiants?\n\n\nRigor\nLa informació i els exemples són tècnicament correctes?\n\n\nDocumentació\nEl canvi està prou explicat i justificat?\n\n\nIntegració\nÉs coherent amb l’estructura i l’estil dels materials?\n\n\n\n\nError Comú — No totes les contribucions puntuen\nEnviar un Pull Request no garanteix l’obtenció del bonus.\nNomés es valoraran les contribucions que siguin acceptades pel professorat i que aportin un valor suficient als materials.\nUna modificació purament cosmètica, arbitrària o innecessària pot no ser considerada una contribució avaluable.\n\n\n\nContribueix com si el projecte fos teu\nAbans d’obrir una PR, pregunta’t:\n\nSi un altre estudiant hagués de fer servir aquest material demà, aquesta modificació realment li seria útil?\n\nSi la resposta és sí, probablement tens una bona contribució.",
+    "crumbs": [
+      "Inici",
+      "Contribueix al curs"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Administració i Manteniment de Sistemes i Aplicacions",
+    "section": "",
+    "text": "Aquesta assignatura proporciona una visió integral de l’administració, el manteniment i el desplegament de sistemes i aplicacions, des dels sistemes Linux fins a les infraestructures modernes al núvol. Aprendràs a configurar, gestionar, protegir i supervisar sistemes, aprofundint en l’arrencada i els serveis, l’emmagatzematge, els usuaris, els permisos i els mecanismes d’autenticació i autorització. Treballaràs amb virtualització i contenidors per desplegar aplicacions de manera eficient, reproduïble i segura, entenent els principis que permeten gestionar infraestructures modernes. Finalment, descobriràs les possibilitats de la computació al núvol amb AWS, des de la infraestructura i els serveis d’emmagatzematge fins a la gestió d’identitats i la computació sense servidor, adquirint una visió global del cicle de vida dels sistemes i les aplicacions."
+  },
+  {
+    "objectID": "index.html#professorat",
+    "href": "index.html#professorat",
+    "title": "Administració i Manteniment de Sistemes i Aplicacions",
+    "section": "Professorat",
+    "text": "Professorat\n\nJordi Mateo mailto:jordi.mateo@udl.cat"
+  },
+  {
     "objectID": "course-info/presentation-slides.html#amsa-administració-i-manteniment-de-sistemes-i-aplicacions",
     "href": "course-info/presentation-slides.html#amsa-administració-i-manteniment-de-sistemes-i-aplicacions",
     "title": "Presentació del curs",
@@ -480,160 +749,423 @@
     ]
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Administració i Manteniment de Sistemes i Aplicacions",
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#objectius-daprenentatge",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#objectius-daprenentatge",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Objectius d’aprenentatge",
+    "text": "Objectius d’aprenentatge\n\nResultat d'Aprenentatge — En acabar aquesta sessió seràs capaç...\n\nQuin codi s’executa primer després del reset i com arriba la CPU fins al primer codi del sistema d’arrencada.\nQui carrega el codi següent, on el carrega i com li transfereix el control fins arribar al bootloader.\nEn què difereix el contracte entre el firmware i el primer codi que carrega en BIOS i en UEFI.\nSituar un símptoma d’arrencada (p. ex. No bootable device) en l’etapa on probablement ha fallat.\n\n\n\nDe CPU reset a bootloader",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#què-passa-quan-premem-el-botó-dengegada",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#què-passa-quan-premem-el-botó-dengegada",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Què passa quan premem el botó d’engegada?",
+    "text": "Què passa quan premem el botó d’engegada?\n\n\n\n\n\n\nConcepte — Bootstrap\nEl sistema operatiu no pot carregar-se a si mateix. Algú l’ha de carregar primer.\nCPU reset \\[\\Downarrow\\] firmware \\[\\Downarrow\\] bootloader \\[\\Downarrow\\] kernel",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#la-cpu-després-del-reset-on-comença",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#la-cpu-després-del-reset-on-comença",
+    "title": "Unitat 2 · Arrencada",
+    "section": "La CPU després del reset: on comença?",
+    "text": "La CPU després del reset: on comença?\n\n\n\n\n\nDefinició — Reset vector\nAdreça on la CPU busca la primera instrucció després d’un reset. La fixa l’arquitectura (o la implementació), no el sistema operatiu.\n\n\nx86, estat després del reset:\nCS.selector = 0xF000\nCS.base     = 0xFFFF0000\nEIP         = 0x0000FFF0\n──────────────────────────────────────\n1a instrucció a base + EIP = 0xFFFFFFF0\n\n\nAquesta adreça la serveix el xip flash SPI que conté el firmware: el chipset el mapeja a l’espai d’adreces de la CPU. La primera instrucció sol ser un jmp al codi d’entrada del firmware.\n\n\nLa CPU no comença executant el kernel. Comença executant codi de firmware en una ubicació definida per l’arquitectura.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#firmware-el-primer-programari-que-controla-la-màquina",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#firmware-el-primer-programari-que-controla-la-màquina",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Firmware: el primer programari que controla la màquina",
+    "text": "Firmware: el primer programari que controla la màquina",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#dos-contractes",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#dos-contractes",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Dos contractes",
+    "text": "Dos contractes\n\n\n\n\nEl firmware no és el sistema operatiu: prepara la màquina i cedeix el control al primer codi que carrega.\n\nConcepte — Dos contractes\nBIOS i UEFI són dos models de firmware i d’interfície d’arrencada. Difereixen en:\n\nquè carrega,\non ho carrega,\nen quin estat deixa la CPU,\nquins serveis ofereix després.\n\n\n\nRespondrem aquestes quatre preguntes primer per al BIOS (bloc B) i després per a UEFI (bloc C).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#bios-carregar-un-sector",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#bios-carregar-un-sector",
+    "title": "Unitat 2 · Arrencada",
+    "section": "BIOS: carregar un sector",
+    "text": "BIOS: carregar un sector\n\n\n\n\n\nDefinició — Boot sector\nPrimer sector (512 B, LBA 0) del dispositiu d’arrencada, acabat en la signatura 0x55 0xAA (bytes 510 i 511).\n\n\nLlegeix el sector 0 (LBA 0) del dispositiu triat segons l’ordre d’arrencada.\nComprova la signatura 55 AA.\nCarrega els 512 B a 0x7C00–0x7DFF.\nSalta a 0x7C00: transfereix el control al codi carregat.\n\n\n\nLoad address = 0x7C00\n\n0x7C00 és una convenció del BIOS de l’IBM PC, no una propietat de la CPU.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#el-problema-dels-512-bytes",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#el-problema-dels-512-bytes",
+    "title": "Unitat 2 · Arrencada",
+    "section": "El problema dels 512 bytes",
+    "text": "El problema dels 512 bytes\n\n\n\n    ; ... codi del boot sector ...\n\n    times 510 - ($-$$) db 0   ; omple fins al byte 510\n    dw 0xaa55                 ; signatura: bytes 55 AA\n\n\n$ = posició actual,\n$$ = inici de la secció.\ndw 0xaa55 es guarda en little-endian: primer 55, després AA.\n\n\n\nError Comú — MBR ≠ els primers 512 bytes\nEn el model BIOS, el primer sector és el boot sector. Només quan el disc té taula de particions MBR, aquest sector és també l’MBR.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#mapa-de-memòria-en-mode-real",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#mapa-de-memòria-en-mode-real",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Mapa de memòria en mode real",
+    "text": "Mapa de memòria en mode real\n\n\n\n\nNomés tres adreces ens importen ara mateix:\n\n0x7C00 → Stage 1 (on el carrega el BIOS)\n0x8000 → Stage 2 (on el carregarem nosaltres)\n0xA0000 → vídeo (no hi escriurem per error)\n\n\n\nConcepte — Zona disponible\nLa regió entre el boot sector i l’EBDA és convencionalment disponible per al bootloader, subjecta a les regions reservades del sistema.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#mode-real-segmentoffset",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#mode-real-segmentoffset",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Mode real: segment:offset",
+    "text": "Mode real: segment:offset\n\n\n\n\n\nConcepte — Adreça física\nfísic = segment × 16 + offset\n\n0000:7C00  →  0x00000 + 0x7C00 = 0x07C00\n07C0:0000  →  0x07C00 + 0x00000 = 0x07C00\n\n\nError Comú — El BIOS pot arribar-hi de dues maneres\nLes dues formes apunten a la mateixa adreça física, però el BIOS no garanteix quina d’elles fa servir. Amb org 0x7c00, els salts absoluts pressuposen CS = 0.\n\n\n\nSolució: un far jump que fixa CS:\n    jmp 0x0000:start   ; CS = 0x0000\nstart:\n    ; ... a partir d'aquí, CS = 0",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#load-address-vs.-link-address",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#load-address-vs.-link-address",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Load address vs. link address",
+    "text": "Load address vs. link address\n\n\n\n\n\nReflexió — Pregunta a l'aula\nQuè passa si el programa assumeix 0x8000 però el firmware el carrega a 0x7C00?\n\n\n\nError Comú — Link address ≠ load address\nLes referències absolutes (dades, salts far) apunten a un altre lloc. Els salts relatius segueixen funcionant, per això l’error pot ser subtil.\nEl programa s’ha de construir assumint l’adreça on serà carregat.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#què-podem-assumir-quan-el-bios-ens-dona-el-control",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#què-podem-assumir-quan-el-bios-ens-dona-el-control",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Què podem assumir quan el BIOS ens dona el control?",
+    "text": "Què podem assumir quan el BIOS ens dona el control?\n\n\n\nConcepte — Sabem\n\n✓ el boot sector s’ha carregat a 0x7C00\n✓ la CPU està en mode real (model BIOS)\n✓ DL = número de la unitat d’arrencada (convenció)\n\n\n\n\n\nError Comú — No assumim\n\n✗ un CS:IP concret (0000:7C00 o 07C0:0000)\n✗ DS i ES correctes per al nostre programa\n✗ SS/SP útils\n✗ valors concrets als registres generals\n\n\n\n\n\n\nLa primera feina de Stage 1 és construir un entorn mínim conegut.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#inicialitzar-lentorn-mínim",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#inicialitzar-lentorn-mínim",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Inicialitzar l’entorn mínim",
+    "text": "Inicialitzar l’entorn mínim",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#stage-1-una-feina-molt-concreta",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#stage-1-una-feina-molt-concreta",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Stage 1: una feina molt concreta",
+    "text": "Stage 1: una feina molt concreta\n\n\n\n\nStage 1:\n\ninicialitza l’entorn mínim,\npot utilitzar serveis del BIOS,\nlocalitza més codi,\ntransfereix el control.\n\n\n\nConcepte — Bootloader en dues etapes\n512 B no són suficients per a controladors de sistemes de fitxers, menús, etc. Stage 1 només carrega la següent etapa, no el sistema operatiu.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#lba-i-adreça-de-memòria-són-coses-diferents",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#lba-i-adreça-de-memòria-són-coses-diferents",
+    "title": "Unitat 2 · Arrencada",
+    "section": "LBA i adreça de memòria són coses diferents",
+    "text": "LBA i adreça de memòria són coses diferents\n\n\n\n\n\n\nLBA 2048 no és l’adreça 0x2048: és el sector número 2048 del disc (2048 × 512 B = 1 MiB).\n\n\nReflexió\n0x7C00 és la convenció del BIOS i 0x8000 i LBA 2048 són una elecció nostra. El BIOS només carrega el sector 0.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#el-firmware-encara-ens-ofereix-serveis",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#el-firmware-encara-ens-ofereix-serveis",
+    "title": "Unitat 2 · Arrencada",
+    "section": "El firmware encara ens ofereix serveis",
+    "text": "El firmware encara ens ofereix serveis\n\n\n\n\nINT 13h, AH = 0x42 — lectura de disc estesa (LBA):\ndap:                   ; Disk Address Packet\n    db 0x10, 0         ; mida (16 B), reservat\n    dw 1               ; nombre de sectors\n    dw 0x8000, 0x0000  ; destí: offset, segment\n    dq 2048            ; LBA inicial (64 bits)\n\n    mov  si, dap       ; DS:SI → DAP\n    mov  dl, [boot_drive]\n    mov  ah, 0x42\n    int  0x13\n    jc   disk_error    ; CF = 1 → error\n\nINT 10h, AH = 0x0E — escriure un caràcter:\n    mov  ah, 0x0e     ; teletype\n    mov  al, 'A'      ; caràcter\n    int  0x10",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#stage-1-stage-2",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#stage-1-stage-2",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Stage 1 → Stage 2",
+    "text": "Stage 1 → Stage 2\n\n\n\n\n\n\nStage 1 carrega Stage 2 i li transfereix el control. Cada etapa s’assembla amb l’org de la seva adreça de càrrega: Stage 1 → 0x7C00, Stage 2 → 0x8000.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#diagnòstic-on-sha-trencat-larrencada",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#diagnòstic-on-sha-trencat-larrencada",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Diagnòstic: on s’ha trencat l’arrencada?",
+    "text": "Diagnòstic: on s’ha trencat l’arrencada?\n\n\n\nError Comú — Són indicacions, no diagnòstics exactes\nUn missatge apunta al punt on probablement ha fallat l’arrencada, però no determina una única etapa. Per exemple, No bootable device pot ser: (a) sense signatura 55 AA vàlida al sector 0, (b) ordre d’arrencada apuntant a un altre dispositiu, o (c) mode BIOS/UEFI incompatible amb el disc.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#uefi-un-altre-contracte",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#uefi-un-altre-contracte",
+    "title": "Unitat 2 · Arrencada",
+    "section": "UEFI: un altre contracte",
+    "text": "UEFI: un altre contracte\n\n\n\n\n\n\nEn el model BIOS que estudiem, el firmware carrega directament un sector. En UEFI, el firmware disposa d’una interfície de sistema de fitxers i pot carregar una aplicació EFI, que en x86-64 s’executa en long mode (64 bits).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#uefi-on-és-el-bootloader",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#uefi-on-és-el-bootloader",
+    "title": "Unitat 2 · Arrencada",
+    "section": "UEFI: on és el bootloader?",
+    "text": "UEFI: on és el bootloader?\n\n\n\n\n\nESP: EFI System Partition, identificada per un GUID de tipus de partició.\nFAT: el sistema de fitxers que el firmware sap llegir.\n.EFI: executable en format PE/COFF.\nBOOTX64.EFI: ruta de fallback per a x86-64.\n\n\nEn Linux, l’ESP sol muntar-se a /boot/efi. Les entrades de NVRAM (Part 2) tenen prioritat sobre la ruta de fallback.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#una-aplicació-efi-és-un-executable",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#una-aplicació-efi-és-un-executable",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Una aplicació EFI és un executable",
+    "text": "Una aplicació EFI és un executable\n\n\n\n\n\nConcepte — Aplicació EFI = PE/COFF\nUna aplicació EFI és un executable PE/COFF. El format conté la informació perquè el loader pugui carregar-la en memòria i aplicar relocacions quan calgui.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#el-firmware-ofereix-serveis-la-systemtable",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#el-firmware-ofereix-serveis-la-systemtable",
+    "title": "Unitat 2 · Arrencada",
+    "section": "El firmware ofereix serveis: la SystemTable",
+    "text": "El firmware ofereix serveis: la SystemTable\n\n\n\n\n\n\nEl firmware ofereix serveis mitjançant una taula de punters, no interrupcions.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#dos-contractes-de-boot",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#dos-contractes-de-boot",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Dos contractes de boot",
+    "text": "Dos contractes de boot\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMateix problema. Diferent contracte.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#resum",
+    "href": "modules/unit-02-arrancada/theory/01-arrancada.html#resum",
+    "title": "Unitat 2 · Arrencada",
+    "section": "Resum",
+    "text": "Resum\n\nResum — Les tres preguntes\n\nQuin codi s’executa primer i com hi arriba la CPU? El de firmware: la CPU comença a l’adreça de reset definida per l’arquitectura (x86: 0xFFFFFFF0), on el chipset mapeja el xip flash que el conté, no la RAM.\nQuè, on i com?\n\nBIOS: un boot sector de 512 B (signatura 55 AA) carregat a 0x7C00, en mode real, amb DL = unitat.\nUEFI: una aplicació EFI (PE/COFF) llegida de l’ESP, carregada en una adreça triada pel firmware i cridada amb SystemTable.\n\nQuè hem de recordar?\n\nLoad address ≠ link address.\nLBA ≠ adreça de memòria.\nBoot sector ≠ MBR.\nUn missatge d’error és una indicació, no un diagnòstic exacte.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/pralabs/02_arrencada.html",
+    "href": "modules/unit-02-arrancada/pralabs/02_arrencada.html",
+    "title": "Arrencada (II) · UEFI",
     "section": "",
-    "text": "Aquesta assignatura proporciona una visió integral de l’administració, el manteniment i el desplegament de sistemes i aplicacions, des dels sistemes Linux fins a les infraestructures modernes al núvol. Aprendràs a configurar, gestionar, protegir i supervisar sistemes, aprofundint en l’arrencada i els serveis, l’emmagatzematge, els usuaris, els permisos i els mecanismes d’autenticació i autorització. Treballaràs amb virtualització i contenidors per desplegar aplicacions de manera eficient, reproduïble i segura, entenent els principis que permeten gestionar infraestructures modernes. Finalment, descobriràs les possibilitats de la computació al núvol amb AWS, des de la infraestructura i els serveis d’emmagatzematge fins a la gestió d’identitats i la computació sense servidor, adquirint una visió global del cicle de vida dels sistemes i les aplicacions."
+    "text": "Al Laboratori 1 vam construir un bootloader per a BIOS: un binari pla, carregat a 0x7C00 per convenció, on nosaltres havíem de resoldre a mà tot el que el firmware no ens garantia. En aquest laboratori fem el mateix recorregut, però amb l’altre contracte que vam veure a teoria: UEFI.\n\nObjectius d'Aprenentatge\nArrencar un joc de Tetris amb QEMU, sense passar per cap sistema operatiu.\nUEFI firmware\n     │\n     ├── localitza una EFI System Partition (ESP)\n     ├── hi accedeix (FAT32)\n     ├── carrega una aplicació EFI (tetris.efi)\n     └── l'executa amb les seves pròpies interfícies\n\nFarem servir dos mètodes. El primer és ràpid i ens deixa veure l’ESP, des de la UEFI Shell. El segon construeix una imatge de disc completa amb taula de particions GPT, tal com trobaríeu en un ordinador real.\n\nResultat d'Aprenentatge — En acabar aquest laboratori seràs capaç de...\n\nDistingir, amb un exemple real a les mans, el contracte UEFI del contracte BIOS del Laboratori 1.\nExplicar què és l’ESP, per què ha de ser FAT32, i per què \\EFI\\BOOT\\BOOTX64.EFI és una ruta de fallback i no l’única manera d’arrencar.\nCrear una taula de particions GPT i una partició ESP, i escriure-hi un executable EFI sense necessitat de muntar cap sistema de fitxers.\nArrencar la mateixa aplicació EFI de dues maneres diferents (UEFI Shell i imatge de disc completa) i reconèixer què tenen en comú.\n\n\n\nPrerequisits\n\nPralab 1 (Arrencada I, amb BIOS).\nUnitat 2 · Arrencada.\nÚs bàsic de la terminal.\n\n\n\nProgramari Necessari\nUna màquina virtual amb Debian i entorn gràfic (la UEFI, per defecte, necessita una pantalla). qemu-system-x86, qemu-utils (per a qemu-img), ovmf, make, gnu-efi, gdisk, mtools, dosfstools, git, i un compilador de C per a x86_64:\n\nx86_64 (Intel / AMD)ARM (Apple Silicon, Raspberry Pi…)\n\n\ngcc normal: com que el vostre processador ja és x86_64, compila nadiu per a l’objectiu que necessitem.\n\n\ngcc-x86-64-linux-gnu: el vostre processador és ARM, així que necessiteu un compilador encreuat (cross-compiler), que genera codi per a x86_64 tot i executar-se sobre ARM.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (II) · UEFI"
+    ]
   },
   {
-    "objectID": "index.html#professorat",
-    "href": "index.html#professorat",
-    "title": "Administració i Manteniment de Sistemes i Aplicacions",
-    "section": "Professorat",
-    "text": "Professorat\n\nJordi Mateo mailto:jordi.mateo@udl.cat"
-  },
-  {
-    "objectID": "course-info/contributions/contribute.html",
-    "href": "course-info/contributions/contribute.html",
-    "title": "Contribuir als materials",
+    "objectID": "modules/unit-02-arrancada/pralabs/02_arrencada.html#introducció",
+    "href": "modules/unit-02-arrancada/pralabs/02_arrencada.html#introducció",
+    "title": "Arrencada (II) · UEFI",
     "section": "",
-    "text": "Els materials d’aquesta assignatura es desenvolupen seguint una filosofia de codi obert (open source): els materials poden ser revisats, millorats, ampliats i corregits amb la participació de la comunitat.\nCom a estudiant, pots formar part d’aquest procés i contribuir directament a la millora dels materials que utilitzaran altres estudiants en el futur.\nAquesta activitat també et permet obtenir fins a 0,5 punts addicionals sobre la qualificació final de l’assignatura.",
+    "text": "Al Laboratori 1 vam construir un bootloader per a BIOS: un binari pla, carregat a 0x7C00 per convenció, on nosaltres havíem de resoldre a mà tot el que el firmware no ens garantia. En aquest laboratori fem el mateix recorregut, però amb l’altre contracte que vam veure a teoria: UEFI.\n\nObjectius d'Aprenentatge\nArrencar un joc de Tetris amb QEMU, sense passar per cap sistema operatiu.\nUEFI firmware\n     │\n     ├── localitza una EFI System Partition (ESP)\n     ├── hi accedeix (FAT32)\n     ├── carrega una aplicació EFI (tetris.efi)\n     └── l'executa amb les seves pròpies interfícies\n\nFarem servir dos mètodes. El primer és ràpid i ens deixa veure l’ESP, des de la UEFI Shell. El segon construeix una imatge de disc completa amb taula de particions GPT, tal com trobaríeu en un ordinador real.\n\nResultat d'Aprenentatge — En acabar aquest laboratori seràs capaç de...\n\nDistingir, amb un exemple real a les mans, el contracte UEFI del contracte BIOS del Laboratori 1.\nExplicar què és l’ESP, per què ha de ser FAT32, i per què \\EFI\\BOOT\\BOOTX64.EFI és una ruta de fallback i no l’única manera d’arrencar.\nCrear una taula de particions GPT i una partició ESP, i escriure-hi un executable EFI sense necessitat de muntar cap sistema de fitxers.\nArrencar la mateixa aplicació EFI de dues maneres diferents (UEFI Shell i imatge de disc completa) i reconèixer què tenen en comú.\n\n\n\nPrerequisits\n\nPralab 1 (Arrencada I, amb BIOS).\nUnitat 2 · Arrencada.\nÚs bàsic de la terminal.\n\n\n\nProgramari Necessari\nUna màquina virtual amb Debian i entorn gràfic (la UEFI, per defecte, necessita una pantalla). qemu-system-x86, qemu-utils (per a qemu-img), ovmf, make, gnu-efi, gdisk, mtools, dosfstools, git, i un compilador de C per a x86_64:\n\nx86_64 (Intel / AMD)ARM (Apple Silicon, Raspberry Pi…)\n\n\ngcc normal: com que el vostre processador ja és x86_64, compila nadiu per a l’objectiu que necessitem.\n\n\ngcc-x86-64-linux-gnu: el vostre processador és ARM, així que necessiteu un compilador encreuat (cross-compiler), que genera codi per a x86_64 tot i executar-se sobre ARM.",
     "crumbs": [
       "Inici",
-      "Contribueix al curs"
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (II) · UEFI"
     ]
   },
   {
-    "objectID": "course-info/contributions/contribute.html#una-filosofia-basada-en-lopen-source",
-    "href": "course-info/contributions/contribute.html#una-filosofia-basada-en-lopen-source",
-    "title": "Contribuir als materials",
-    "section": "Una filosofia basada en l’Open Source",
-    "text": "Una filosofia basada en l’Open Source\nEl desenvolupament open source es basa en una idea senzilla: els projectes poden millorar gràcies a la participació de diferents persones.\nEn lloc que una única persona sigui responsable de detectar tots els errors, escriure tot el contingut i mantenir-lo actualitzat, altres persones poden proposar millores.\nEn aquesta activitat aplicaràs el mateix model que s’utilitza en molts projectes de programari:\n\nParteixes d’una còpia del projecte (fork).\nTreballes en una branca independent.\nFas i documentes els teus canvis.\nPuges els canvis al teu repositori.\nProposes incorporar-los al projecte original mitjançant un Pull Request.\nEl responsable del projecte revisa la proposta.\nSi la contribució és adequada, es pot incorporar al projecte principal.\n\nAixò permet experimentar i proposar canvis sense modificar directament el repositori original.\n\n\n\nFlux general de contribució al projecte\n\n\n\n\n\n\n\n\nNoteUna contribució és una proposta, no una imposició\n\n\n\nQuan obres un Pull Request, no estàs modificant directament els materials de l’assignatura.\nEstàs fent una proposta de canvi perquè el responsable del projecte la pugui revisar.\nAquesta és una de les idees fonamentals del desenvolupament open source: els canvis es poden proposar, discutir, revisar i, finalment, acceptar o rebutjar.",
+    "objectID": "modules/unit-02-arrancada/pralabs/02_arrencada.html#preparació",
+    "href": "modules/unit-02-arrancada/pralabs/02_arrencada.html#preparació",
+    "title": "Arrencada (II) · UEFI",
+    "section": "Preparació",
+    "text": "Preparació\n\nEntorn gràfic\nLa UEFI Shell i el joc necessiten pantalla. Si la vostra VM de Debian no en té:\nsu -c \"apt install task-gnome-desktop -y\"\n\nBona Pràctica\nUn cop instal·lat l’entorn d’escriptori, reinicieu la VM i inicieu sessió abans de continuar. I, molt important: feu tot aquest laboratori des de la terminal de la VM, no per SSH. QEMU necessita una finestra gràfica pròpia, i sobre SSH dona problemes.\n\n\n\nInstal·lar les eines\n\nx86_64 (Intel / AMD)ARM (Apple Silicon, Raspberry Pi…)\n\n\nsu -c \"apt install qemu-system-x86 qemu-utils ovmf gcc make gnu-efi gdisk mtools dosfstools git -y\"\n\n\nsu -c \"apt install qemu-system-x86 qemu-utils ovmf gcc-x86-64-linux-gnu make gnu-efi gdisk mtools dosfstools git -y\"\n\n\n\n\nError Comú\nAl Laboratori 1 potser vau instal·lar nasm: aquí no el necessitem, perquè el codi de Tetris és en C, no en assemblador. En canvi, no oblideu qemu-utils: és el paquet que porta qemu-img, i sense ell la creació de la imatge de disc (mètode 2) fallarà amb un command not found que no diu res sobre la causa real.\n\n\n\nClonar el codi\ngit clone https://github.com/a1ive/uefi-tetris.git\ncd uefi-tetris\nls\nHi trobareu tetris.c (el codi font), un Makefile, i ja hi ha un tetris.efi precompilat. Guardeu-ho a la memòria: si en algun moment la compilació us falla (per exemple, en una VM amb processador ARM), sempre podeu fer servir directament aquest fitxer i continuar amb els mètodes 1 i 2 igualment.",
     "crumbs": [
       "Inici",
-      "Contribueix al curs"
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (II) · UEFI"
     ]
   },
   {
-    "objectID": "course-info/contributions/contribute.html#fes-un-fork-del-repositori",
-    "href": "course-info/contributions/contribute.html#fes-un-fork-del-repositori",
-    "title": "Contribuir als materials",
-    "section": "1. Fes un fork del repositori",
-    "text": "1. Fes un fork del repositori\nEl primer pas és crear una còpia del repositori de l’assignatura al teu compte de GitHub.\nAquesta còpia s’anomena fork.\nEl fork et permet treballar sobre el projecte sense tenir permisos d’escriptura sobre el repositori original.\nA la pàgina principal del repositori trobaràs el botó Fork.\n\n\n\nBotó Fork del repositori principal\n\n\nSelecciona el teu compte de GitHub com a propietari del nou repositori.\n\n\n\nCreació del fork\n\n\nUn cop creat, disposaràs d’una còpia del projecte dins del teu compte.\n\n\n\n\n\n\nTipPer què fem un fork?\n\n\n\nEl fork separa el teu espai de treball del projecte original.\nPots experimentar, modificar fitxers i provar idees sense afectar els materials que utilitzen la resta d’estudiants.",
+    "objectID": "modules/unit-02-arrancada/pralabs/02_arrencada.html#compilar-tetris.efi",
+    "href": "modules/unit-02-arrancada/pralabs/02_arrencada.html#compilar-tetris.efi",
+    "title": "Arrencada (II) · UEFI",
+    "section": "Compilar tetris.efi",
+    "text": "Compilar tetris.efi\nCompilar-lo no és obligatori (ja en teniu un a la carpeta), però val la pena fer-ho una vegada: és la millor manera d’entendre, amb les mans, què vol dir que una aplicació EFI és un executable PE/COFF.\n\nx86_64 (Intel / AMD)ARM (Apple Silicon, Raspberry Pi…)\n\n\nmake\nfile tetris.efi\nSortida esperada (la mida pot variar lleugerament):\ncc ... -c -o tetris.o tetris.c\nld -nostdlib ... -o tetris.so tetris.o -lefi -lgnuefi\nobjcopy -j .text -j .sdata ... --target=efi-app-x86_64 tetris.so tetris.efi\ntetris.efi: PE32+ executable (EFI application) x86-64 ..., for MS Windows, 6 sections\n\n\nEl Makefile fa servir cc i les biblioteques de gnu-efi de /usr/lib. En un host ARM, aquestes biblioteques són les d’ARM, no les d’x86_64: no n’hi ha prou amb canviar el compilador per gcc-x86-64-linux-gnu, perquè encara enllaçaríeu contra crt0-efi-x86_64.o i les .a equivocades (o, més probablement, ni existiran). Podeu provar-ho igualment:\nmake ARCH=x86_64 CC=x86_64-linux-gnu-gcc\n\nBona Pràctica\nSi falla (és l’escenari més probable), no és un error vostre: és un problema real d’encreuar arquitectures amb aquest Makefile concret. No hi perdeu més temps: feu servir directament el tetris.efi que ja porta el repositori i continueu amb els mètodes 1 i 2, que no depenen de com s’ha generat el fitxer.\n\n\n\n\n\nExercici\nTres eines, tres passos. cc compila tetris.c a codi objecte; ld l’enllaça amb les biblioteques gnu-efi, seguint un .lds especial per a EFI; objcopy n’extreu només les seccions necessàries i les etiqueta com a efi-app-x86_64. La línia de file diu PE32+ executable... for MS Windows. Per què un executable pensat per a UEFI s’identifica com per a MS Windows?\n\n\n\nPots veure el raonament\n\n\nSolució\nPerquè PE/COFF és el mateix format que fan servir els executables de Windows (.exe, .dll). UEFI el va adoptar tal qual, en lloc d’inventar-se’n un de propi. file no sap distingir un .exe normal d’una aplicació EFI perquè, al nivell del format de fitxer, són el mateix: la diferència és a la capçalera (el subsistema PE que declara) i a on s’executa.",
     "crumbs": [
       "Inici",
-      "Contribueix al curs"
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (II) · UEFI"
     ]
   },
   {
-    "objectID": "course-info/contributions/contribute.html#clona-el-teu-fork",
-    "href": "course-info/contributions/contribute.html#clona-el-teu-fork",
-    "title": "Contribuir als materials",
-    "section": "2. Clona el teu fork",
-    "text": "2. Clona el teu fork\nAra has de descarregar el teu fork al teu ordinador.\nDes de GitHub, copia l’URL del teu repositori i executa:\ngit clone URL\nPer exemple:\ngit clone https://github.com/el-teu-usuari/amsa.git\nA continuació, entra al directori del projecte:\ncd amsa\nA partir d’aquest moment treballaràs sobre una còpia local del repositori.\n\n\n\n\n\n\nNote\n\n\n\nTambé és possible fer alguns canvis directament des de la interfície web de GitHub. Tanmateix, si vols treballar de manera habitual amb els materials Quarto, és recomanable tenir el repositori clonat localment.\n\n\n\n\n\n\n\n\nWarningMantén el teu fork actualitzat\n\n\n\nEls materials d’aquesta assignatura canvien sovint. Si treballes durant dies o setmanes sobre el mateix fork, sincronitza’l periòdicament amb el repositori original abans de començar una contribució nova:\ngit remote add upstream URL-del-repositori-original\ngit fetch upstream\ngit merge upstream/main\nFer-ho evita conflictes innecessaris quan obris la Pull Request i redueix el risc que la teva contribució es basi en una versió ja desactualitzada dels materials.",
+    "objectID": "modules/unit-02-arrancada/pralabs/02_arrencada.html#mètode-1-la-uefi-shell-ràpid",
+    "href": "modules/unit-02-arrancada/pralabs/02_arrencada.html#mètode-1-la-uefi-shell-ràpid",
+    "title": "Arrencada (II) · UEFI",
+    "section": "Mètode 1 — La UEFI Shell (ràpid)",
+    "text": "Mètode 1 — La UEFI Shell (ràpid)\nAquest mètode no necessita cap imatge de disc: QEMU pot presentar un directori normal del vostre sistema com si fos una unitat FAT.\nqemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd \\\n  -drive format=raw,file=fat:rw:./ -net none\n\n-bios /usr/share/qemu/OVMF.fd: carrega OVMF, la implementació d’UEFI per a QEMU (l’equivalent, en aquest laboratori, del BIOS/SeaBIOS del Laboratori 1).\n-drive format=raw,file=fat:rw:./: munta el directori actual com si fos una unitat FAT.\n\n\nError Comú — El teclat dins la UEFI Shell\nPer escriure els dos punts (:) de fs0: en un teclat físic espanyol, la tecla que heu de prémer és Shift + Ñ, no Shift + .. No és cap error del teclat ni falta cap opció de QEMU: amb la finestra gràfica normal (GTK/SDL), QEMU envia al firmware la posició física de la tecla, i la UEFI Shell interpreta aquesta posició com si el teclat fos nord-americà, sigui quin sigui el sistema operatiu amfitrió. La tecla física que en un teclat US produeix : és, en un teclat espanyol, la de la Ñ.\nSi cap tecla us funciona, obriu el monitor de QEMU (Ctrl+Alt+2 dins la finestra, o Ctrl+Alt+1 per tornar-hi) i escriviu sendkey shift-semicolon: injecta els dos punts directament, sense passar pel teclat físic.\n\nCom que no hi ha cap sistema operatiu ni cap partició arrencable, el firmware no troba res a executar automàticament i cau a la UEFI Shell, una línia d’ordres pròpia d’UEFI.\n\nReflexió\nAbans de continuar: relacioneu això amb la diapositiva de diagnòstic del Lab 1. Quan el BIOS no trobava un sector arrencable, dèiem No bootable device. Aquí, quan UEFI no en troba cap, no s’atura: cau a una interfície pròpia, la Shell. És un altre exemple de “mateix problema, diferent contracte”.\n\n\nNavegar i executar\nfs0:\n# Utilitzeu ls i cd per veure el contingut del directori i entrar-hi, aneu a la carpeta on hi ha `tetris.efi`, i executeu-lo amb\ntetris.efi\nfs0: és el nom que la Shell dona a la primera unitat FAT que troba (el vostre directori actual).\n\nBona Pràctica\nSi fs0: no funciona, escriviu map per veure totes les unitats disponibles i proveu amb fs1:, etc.\n\n\nReflexió\nNo cal respondre-ho per poder continuar, però penseu-hi mentre navegueu: quan feu fs0:, esteu dins d’una unitat FAT que QEMU ha muntat des del vostre directori. A la teoria, quina partició del disc fa aquest mateix paper (contenir un sistema de fitxers FAT que el firmware sap llegir directament)?\n\n\n\nPots veure la resposta\n\n\nSolució\nL’ESP, l’EFI System Partition. Aquí no n’hi ha cap de veritat (és només un directori), però el firmware es comporta exactament igual que si hi accedís: llegeix un sistema de fitxers FAT, sense necessitar cap sistema operatiu.\n\n\n\n\nJugar-hi\nEn executar tetris.efi, el joc arrenca directament. Els controls:\n\n\n\nTecla\nAcció\n\n\n\n\n← / →\nMoure la peça\n\n\n↑\nGirar\n\n\n↓\nCaiguda suau\n\n\nEnter\nCaiguda ràpida\n\n\nP\nPausa\n\n\nS\nMostrar estadístiques\n\n\nD\nInformació de depuració\n\n\nH\nAjuda\n\n\nEsc\nSortir\n\n\n\nPer tancar QEMU del tot: tanqueu la finestra, o premeu Esc dins del joc i després tanqueu la finestra.",
     "crumbs": [
       "Inici",
-      "Contribueix al curs"
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (II) · UEFI"
     ]
   },
   {
-    "objectID": "course-info/contributions/contribute.html#crea-una-branca-per-al-teu-canvi",
-    "href": "course-info/contributions/contribute.html#crea-una-branca-per-al-teu-canvi",
-    "title": "Contribuir als materials",
-    "section": "3. Crea una branca per al teu canvi",
-    "text": "3. Crea una branca per al teu canvi\nAbans de modificar els fitxers, crea una branca (branch) específica per a la teva contribució.\ngit checkout -b nom-de-la-branca\nPer exemple:\ngit checkout -b millora-exercici-processos\nLa branca permet mantenir el teu canvi separat de la resta del projecte.\n\nRepte — Una branca per a una contribució\nSempre que sigui possible, procura que una branca representi una contribució concreta.\nPer exemple:\ncorreccio-enllac-unitat-2\nés preferible a:\ncanvis\nUn nom descriptiu facilita la revisió i permet entendre ràpidament quin és l’objectiu de la branca.",
+    "objectID": "modules/unit-02-arrancada/pralabs/02_arrencada.html#mètode-2-una-imatge-de-disc-amb-partició-esp-realista",
+    "href": "modules/unit-02-arrancada/pralabs/02_arrencada.html#mètode-2-una-imatge-de-disc-amb-partició-esp-realista",
+    "title": "Arrencada (II) · UEFI",
+    "section": "Mètode 2 — Una imatge de disc amb partició ESP (realista)",
+    "text": "Mètode 2 — Una imatge de disc amb partició ESP (realista)\nEl mètode 1 és ràpid, però fa trampa: QEMU crea la unitat FAT per nosaltres. Ara ho farem tal com ho trobaríeu en un ordinador real: una imatge de disc amb la seva pròpia taula de particions GPT i una partició ESP de veritat.\n\nCrear el disc virtual\nqemu-img create -f raw tetris.img 64M\nUn disc de 64 MiB és de sobres per a un executable de menys de 100 KiB.\n\n\nCrear la taula de particions GPT i l’ESP\n# Aquesta comanda cal executar-la com a root, o amb sudo, perquè gdisk necessita permisos per escriure la taula de particions dins del fitxer.\ngdisk tetris.img\nDins de gdisk, en aquest ordre:\n\no — crear una taula GPT nova.\nY — confirmar. gdisk sempre demana confirmació abans de destruir la taula anterior; si no premeu Y aquí, el següent pas no funcionarà com espereu.\nn — afegir una partició nova.\n1 ↵ — número de partició (per defecte).\n↵ — sector inicial (per defecte).\n↵ — sector final, és a dir, fins al final del disc (per defecte).\nef00 ↵ — tipus de partició: EFI System Partition.\nw — escriure els canvis.\nY — confirmar (gdisk torna a preguntar, perquè escriure la taula és irreversible).\n\n\nError Comú\nEl pas 2 és el que sol saltar-se, perquè gdisk no torna a mostrar el menú després de prémer o: sembla que no ha passat res. Si continueu prement n, 1… sense confirmar abans, aquestes tecles es interpreten com a respostes a la pregunta de confirmació, i acabareu amb una taula GPT buida, sense cap partició, tot i que al final gdisk digui operation completed successfully. Comproveu-ho sempre amb el pas següent.\n\nComproveu que la partició existeix i que té el tipus correcte:\ngdisk -l tetris.img\nSortida esperada (heu de veure una fila, amb el codi EF00):\nNumber  Start (sector)    End (sector)  Size       Code  Name\n   1            2048          129023   62.0 MiB    EF00  EFI system partition\n\nExercici\nSi aquesta llista surt buida, torneu a fer gdisk tetris.img i repetiu els nou passos, fixant-vos especialment en el pas 2.\n\n\n\nFormatar i escriure-hi el fitxer, sense muntar res\nAquí ve una diferència importants respecte de com es fa normalment (i respecte del que potser heu vist en altres tutorials): no cal losetup, ni mount, ni ser root. Podem formatar i escriure dins d’una partició concreta d’un fitxer d’imatge exactament amb el mateix esperit amb què vau fer servir hexdump al Laboratori 1: accedint-hi directament, sense passar pel sistema de fitxers de la VM.\nLa partició ESP comença al sector 2048 (ho hem vist amb gdisk -l), és a dir, al byte 2048 × 512 = 1.048.576:\n# Reviseu els paths i actualitzeu-los si cal.\nmkfs.fat -F 32 -n ESP --offset 2048 tetris.img\n\nmmd   -i tetris.img@@1048576 ::EFI\nmmd   -i tetris.img@@1048576 ::EFI/BOOT\nmcopy -i tetris.img@@1048576 tetris.efi ::EFI/BOOT/BOOTX64.EFI\n\nmdir  -i tetris.img@@1048576 ::EFI/BOOT\nmkfs.fat --offset formata en FAT32 exactament a partir d’aquell sector, sense tocar la resta del fitxer. mmd/mcopy, de mtools, creen carpetes i hi copien fitxers directament dins d’aquell tros de FAT32, amb la mateixa sintaxi imatge@@byte per indicar on comença. Sortida esperada del mdir:\nDirectory for ::/EFI/BOOT\n\n.            &lt;DIR&gt;\n..           &lt;DIR&gt;\nBOOTX64  EFI     62587\n\nBona Pràctica\n\\EFI\\BOOT\\BOOTX64.EFI, amb barres invertides, és com ho escriu la documentació d’UEFI; EFI/BOOT/BOOTX64.EFI, amb barres normals, és el mateix camí escrit a la manera de Linux. És exactament la ruta de fallback de la diapositiva UEFI: on és el bootloader?.\n\n\n\nArrencar la imatge\nqemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd \\\n  -drive format=raw,file=tetris.img -net none\nSi tot ha anat bé, el Tetris arrenca directament, sense passar per la Shell.\n\nExercici\nAl mètode 1 vau haver de fer fs0:, cd i tetris.efi. Aquí no cal escriure res: el joc arrenca sol. Per què? Pista: on hem posat el fitxer.\n\n\n\nPots veure el raonament\n\n\nSolució\nPerquè l’hem posat exactament a EFI/BOOT/BOOTX64.EFI de l’ESP, que és la ruta que UEFI executa automàticament quan no hi ha cap altra entrada d’arrencada configurada (a la NVRAM, que veurem a la Part 2). Al mètode 1, el directori era una unitat FAT qualsevol, sense aquesta estructura, i per això calia navegar-hi i executar-lo a mà.",
     "crumbs": [
       "Inici",
-      "Contribueix al curs"
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (II) · UEFI"
     ]
   },
   {
-    "objectID": "course-info/contributions/contribute.html#fes-els-canvis",
-    "href": "course-info/contributions/contribute.html#fes-els-canvis",
-    "title": "Contribuir als materials",
-    "section": "4. Fes els canvis",
-    "text": "4. Fes els canvis\nAra pots modificar els materials.\nPots:\n\ncrear nous continguts;\nmodificar explicacions;\nafegir exemples;\ncrear exercicis;\ncorregir errates;\nactualitzar informació;\nmillorar la documentació.\n\nSi treballes amb els materials Quarto, pots previsualitzar el resultat localment amb:\nquarto preview\nLa previsualització permet comprovar que els canvis es visualitzen correctament abans d’enviar-los.\nTambé pots editar els fitxers .qmd directament des de GitHub mitjançant l’editor web. Aquesta opció permet crear una branca amb els canvis i iniciar posteriorment el procés de Pull Request.\n\n\n\n\n\n\nWarningRevisa els canvis abans de proposar-los\n\n\n\nAbans d’enviar la contribució, comprova que:\n\nel contingut és correcte;\nels exemples funcionen;\nno has introduït errates;\nels enllaços funcionen;\nel format es visualitza correctament (fes quarto preview, no només una lectura del .qmd);\nsi has afegit un bloc de tipus ::: {.classe}, la classe existeix realment a la llista de components admesos — una classe inventada es renderitza sense estil, sense avisar-te de l’error;\nno has pujat fitxers generats en renderitzar (.aux, .log, carpetes _files/, PDFs o HTML exportats) que no formen part del codi font;\nel canvi no modifica accidentalment altres parts dels materials.",
+    "objectID": "modules/unit-02-arrancada/pralabs/02_arrencada.html#trenca-ho-veure-el-fallback-en-acció",
+    "href": "modules/unit-02-arrancada/pralabs/02_arrencada.html#trenca-ho-veure-el-fallback-en-acció",
+    "title": "Arrencada (II) · UEFI",
+    "section": "Trenca-ho: veure el fallback en acció",
+    "text": "Trenca-ho: veure el fallback en acció\nAquesta petita prova connecta directament amb la diapositiva de diagnòstic del Lab 1, ara aplicada a UEFI.\ncp tetris.img tetris_trencat.img\nmren -i tetris_trencat.img@@1048576 ::EFI/BOOT/BOOTX64.EFI ::EFI/BOOT/BOOTX64.OLD\n\nqemu-system-x86_64 -bios /usr/share/qemu/OVMF.fd \\\n  -drive format=raw,file=tetris_trencat.img -net none\n\nExercici\nPrediu-ho abans d’executar: si UEFI no troba BOOTX64.EFI a la seva ruta per defecte, què creieu que farà?\n\n\n\nPots veure el raonament\n\n\nSolució\nCau a la UEFI Shell, exactament com al principi del mètode 1. La partició ESP existeix, té sistema de fitxers FAT vàlid, però no hi ha res a EFI/BOOT/BOOTX64.EFI: el firmware no té cap ruta d’arrencada més a provar (no hem configurat cap entrada de NVRAM), i el seu últim recurs és oferir-nos una línia d’ordres. És el mateix comportament de fons que un grub rescue&gt;: el firmware o el bootloader arriba fins on pot, i quan no troba el codi següent, ens dona alguna cosa amb què seguir nosaltres.",
     "crumbs": [
       "Inici",
-      "Contribueix al curs"
-    ]
-  },
-  {
-    "objectID": "course-info/contributions/contribute.html#fes-commit-dels-canvis",
-    "href": "course-info/contributions/contribute.html#fes-commit-dels-canvis",
-    "title": "Contribuir als materials",
-    "section": "5. Fes commit dels canvis",
-    "text": "5. Fes commit dels canvis\nQuan els canvis estiguin preparats, registra’ls amb un commit.\ngit add .\nI després:\ngit commit -m \"Descripció clara dels canvis\"\nPer exemple:\ngit commit -m \"Millora l'exemple de processos\"\nUn bon missatge de commit ha de permetre entendre què s’ha modificat.\nEvita missatges poc informatius com:\ncanvis\no:\ncoses",
-    "crumbs": [
-      "Inici",
-      "Contribueix al curs"
-    ]
-  },
-  {
-    "objectID": "course-info/contributions/contribute.html#puja-la-branca-al-teu-github",
-    "href": "course-info/contributions/contribute.html#puja-la-branca-al-teu-github",
-    "title": "Contribuir als materials",
-    "section": "6. Puja la branca al teu GitHub",
-    "text": "6. Puja la branca al teu GitHub\nAra has de publicar la branca al teu fork:\ngit push origin nom-de-la-branca\nPer exemple:\ngit push origin millora-exercici-processos\nLa branca i els seus commits quedaran disponibles al teu repositori de GitHub.",
-    "crumbs": [
-      "Inici",
-      "Contribueix al curs"
-    ]
-  },
-  {
-    "objectID": "course-info/contributions/contribute.html#obre-un-pull-request",
-    "href": "course-info/contributions/contribute.html#obre-un-pull-request",
-    "title": "Contribuir als materials",
-    "section": "7. Obre un Pull Request",
-    "text": "7. Obre un Pull Request\nAquest és el pas més important del procés.\nUn Pull Request (PR) és una proposta perquè els canvis que has fet al teu fork siguin incorporats al repositori original.\nDes del teu repositori, selecciona la branca on has fet els canvis i inicia un nou Pull Request.\n\n\n\nSelecciona la branca i obre un Pull Request\n\n\nTambé pots seleccionar directament la branca amb els teus canvis i iniciar el Pull Request des de la interfície de GitHub.\n\n\n\nVia alternativa: iniciar el Pull Request des del banner de la branca",
-    "crumbs": [
-      "Inici",
-      "Contribueix al curs"
-    ]
-  },
-  {
-    "objectID": "course-info/contributions/contribute.html#revisa-lorigen-i-el-destí-dels-canvis",
-    "href": "course-info/contributions/contribute.html#revisa-lorigen-i-el-destí-dels-canvis",
-    "title": "Contribuir als materials",
-    "section": "8. Revisa l’origen i el destí dels canvis",
-    "text": "8. Revisa l’origen i el destí dels canvis\nGitHub mostrarà una comparació entre:\n\nel repositori principal, on vols incorporar els canvis;\nel teu fork, on has desenvolupat la modificació;\nla branca que conté els teus canvis.\n\nComprova especialment que la direcció sigui correcta.\nEn aquest cas:\nRepositori principal\n    ↓\nBranca amb la teva contribució\nGitHub també et mostrarà si els canvis es poden integrar automàticament.\n\n\n\nPantalla de comparació de canvis\n\n\nSi tot és correcte, fes clic a Create pull request.",
-    "crumbs": [
-      "Inici",
-      "Contribueix al curs"
-    ]
-  },
-  {
-    "objectID": "course-info/contributions/contribute.html#explica-bé-la-teva-contribució",
-    "href": "course-info/contributions/contribute.html#explica-bé-la-teva-contribució",
-    "title": "Contribuir als materials",
-    "section": "9. Explica bé la teva contribució",
-    "text": "9. Explica bé la teva contribució\nUn Pull Request no hauria de limitar-se a dir:\n\n“He fet alguns canvis.”\n\nLa descripció ha d’ajudar el professorat a entendre què has fet, per què ho has fet i quin valor aporta.\nUna bona descripció pot seguir aquesta estructura:\nQuè he canviat? Explica breument quins fitxers o materials has modificat.\nPer què ho he canviat? Explica quin problema has detectat o quina necessitat resol el canvi.\nQuin valor aporta? Explica com millora el material per als estudiants.\nCom ho he comprovat? Si és aplicable, explica quines proves has fet o com has verificat que el canvi funciona.\n\nRepte — Exemple de bona descripció\nMillora de l’exemple de processos de la Unitat 2\nHe actualitzat l’exemple perquè utilitzava una comanda que ja no correspon amb la versió actual de Debian.\nHe substituït l’exemple per una alternativa compatible i he actualitzat l’explicació associada.\nHe comprovat el procediment en una màquina virtual amb Debian i he verificat que les comandes funcionen correctament.",
-    "crumbs": [
-      "Inici",
-      "Contribueix al curs"
-    ]
-  },
-  {
-    "objectID": "course-info/contributions/contribute.html#què-passa-després-del-pull-request",
-    "href": "course-info/contributions/contribute.html#què-passa-després-del-pull-request",
-    "title": "Contribuir als materials",
-    "section": "Què passa després del Pull Request?",
-    "text": "Què passa després del Pull Request?\nQuan envies una PR, el professorat revisarà la proposta.\nLa revisió pot incloure:\n\ncorrecció tècnica;\nqualitat del contingut;\nclaredat de l’explicació;\nutilitat pedagògica;\ncoherència amb la resta dels materials;\nqualitat de la documentació;\npossibles efectes sobre altres parts del projecte.\n\nEl professorat pot:\n\nacceptar la contribució;\ndemanar modificacions abans d’acceptar-la;\ncomentar o discutir alguns aspectes;\nrebutjar-la si no és adequada o no aporta prou valor.\n\nAixò forma part del funcionament normal d’un projecte open source.\n\n\n\n\n\n\nNoteUna PR oberta no significa que el canvi s’hagi acceptat\n\n\n\nEl Pull Request és el mecanisme de revisió i proposta.\nLa incorporació definitiva del canvi depèn de la revisió del projecte.",
-    "crumbs": [
-      "Inici",
-      "Contribueix al curs"
-    ]
-  },
-  {
-    "objectID": "course-info/contributions/contribute.html#com-savalua-la-contribució",
-    "href": "course-info/contributions/contribute.html#com-savalua-la-contribució",
-    "title": "Contribuir als materials",
-    "section": "Com s’avalua la contribució?",
-    "text": "Com s’avalua la contribució?\nPots obtenir fins a 0,5 punts addicionals sobre la nota final.\nLa puntuació no depèn simplement del nombre de Pull Requests que enviïs. Es valorarà principalment la qualitat i l’impacte de la contribució.\nEntre altres aspectes, es tindrà en compte:\n\n\n\nAspecte\nQuè es valora\n\n\n\n\nRellevància\nEl canvi resol un problema o necessitat real?\n\n\nQualitat\nEl contingut és correcte, clar i ben elaborat?\n\n\nImpacte\nLa millora pot ser útil per a altres estudiants?\n\n\nRigor\nLa informació i els exemples són tècnicament correctes?\n\n\nDocumentació\nEl canvi està prou explicat i justificat?\n\n\nIntegració\nÉs coherent amb l’estructura i l’estil dels materials?\n\n\n\n\nError Comú — No totes les contribucions puntuen\nEnviar un Pull Request no garanteix l’obtenció del bonus.\nNomés es valoraran les contribucions que siguin acceptades pel professorat i que aportin un valor suficient als materials.\nUna modificació purament cosmètica, arbitrària o innecessària pot no ser considerada una contribució avaluable.\n\n\n\nContribueix com si el projecte fos teu\nAbans d’obrir una PR, pregunta’t:\n\nSi un altre estudiant hagués de fer servir aquest material demà, aquesta modificació realment li seria útil?\n\nSi la resposta és sí, probablement tens una bona contribució.",
-    "crumbs": [
-      "Inici",
-      "Contribueix al curs"
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Pralabs",
+      "Arrencada (II) · UEFI"
     ]
   },
   {

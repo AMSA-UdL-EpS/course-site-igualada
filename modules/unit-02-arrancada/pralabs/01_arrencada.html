@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jordi Mateo Fornés">
+
+<title>Arrencada (I) · BIOS – Administració i Manteniment de Sistemes i Aplicacions</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" rel="next">
+<link href="../../../modules/unit-02-arrancada/theory/01-arrancada.html" rel="prev">
+<link href="../../../assets/logo.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-b9e697b59370f47497522b7983a7c1dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-81cc67d4ae614c4e3e0031abe30b645a.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-b9e697b59370f47497522b7983a7c1dc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">AMSA</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html"> 
+<span class="menu-text">Inici</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-temari" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Temari</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-temari">    
+        <li>
+    <a class="dropdown-item" href="../../../modules/unit-01-fonaments/index.html">
+ <span class="dropdown-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="https://guiadocent.udl.cat/html/2026-27_105013"> 
+<span class="menu-text">Guia docent</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/amsa-gei-udl-2526-105013"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 2 · Arrancada</li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html">Pralabs</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html">Arrencada (I) · BIOS</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="../../../index.html" class="sidebar-logo-link">
+      <img src="../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../course-info/presentation-slides.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentació del curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../course-info/contributions/contribute.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contribueix al curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Temari</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fitxa de la unitat</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/theory/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/activities/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activitats tèoriques · Unitat 1</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/pralab/01-aws-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Laboratori de preparació i comandes bàsiques d’administració</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/pralab/02-aws-wordpress.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Desplegament d’una aplicació web amb AWS</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 2 · Arrancada</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/theory/01-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <span class="sidebar-item-text sidebar-link text-start">
+ <span class="menu-text">Activitats</span></span>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth3 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Arrencada (I) · BIOS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (II) · UEFI</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 2 · Arrancada</li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html">Pralabs</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html">Arrencada (I) · BIOS</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Arrencada (I) · BIOS</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jordi Mateo Fornés </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introducció" class="level2">
+<h2 class="anchored" data-anchor-id="introducció">Introducció</h2>
+<p>A la sessió de teoria hem seguit el camí que fa una màquina des del <em>reset</em> fins al primer codi que controlem. En aquest laboratori el recorrerem amb les nostres mans: construirem un <em>bootloader</em> de dues etapes per a BIOS i el veurem funcionar amb un depurador.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">BIOS</span> ──llegeix LBA 0──► 0x7C00   Stage 1</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">│</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">│</span>  INT 13h <span class="er">(</span><span class="ex">AH</span> = 0x42<span class="kw">)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">▼</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">LBA</span> 2048 ─────────────► 0x8000   Stage 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Tot es fa amb <strong>QEMU</strong>: no s’arrenca ni es modifica cap ordinador real. Treballem amb un sol fitxer, <code>disk.img</code>, que QEMU presenta al BIOS com si fos un disc.</p>
+<div class="concepte udl-component udl-concepte" title="Què emulem: x86 amb BIOS, en mode real">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte — Què emulem: x86 amb BIOS, en mode real</span></div>
+<p>En aquest laboratori QEMU emula una màquina <strong>x86 amb BIOS</strong>. El nostre Stage 1 i Stage 2 s’executen en <strong>mode real de 16 bits</strong>: <strong>no</strong> estem fent un programa x86-64. Emularem amb <code>qemu-system-i386</code>.</p>
+</div>
+<div class="resultat udl-component udl-resultat" title="En acabar aquest laboratori seràs capaç de...">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-resultat"></use></svg><span>Resultat d'Aprenentatge — En acabar aquest laboratori seràs capaç de...</span></div>
+<ul>
+<li>Construir un <em>boot sector</em> de 512 B amb la signatura <code>55 AA</code>, escriure’l al sector 0 d’una imatge de disc i comprovar-lo amb <code>hexdump</code>.</li>
+<li>Arrencar-lo amb QEMU i <strong>observar amb GDB</strong> què fa el BIOS: on carrega el codi i com hi transfereix el control.</li>
+<li>Implementar un Stage 1 que carregui un Stage 2 des de <code>LBA 2048</code> amb <code>INT 13h AH = 0x42</code> i hi salti.</li>
+<li>Distingir entre <strong>carregar</strong> i <strong>executar</strong> codi.</li>
+</ul>
+</div>
+<div class="programari udl-component udl-programari">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-programari"></use></svg><span>Programari Necessari</span></div>
+<p><code>nasm</code> (inclou <code>ndisasm</code>), <code>qemu-system-i386</code>, <code>gdb</code>, i les utilitats <code>dd</code>, <code>hexdump</code> i <code>wc</code>.</p>
+<p>Instal·leu els paquets amb el gestor del vostre sistema. A Debian/Ubuntu, l’ordre exacta depèn de si el <strong>processador de la vostra màquina</strong> (no el de la VM: QEMU emula x86 igualment en tots dos casos) és x86_64 o ARM, perquè el paquet de GDB que necessiteu no és el mateix:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">x86_64 (Intel / AMD)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">ARM (Apple Silicon, Raspberry Pi…)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get update</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install nasm qemu-system-x86 gdb build-essential <span class="at">-y</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get update</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install nasm qemu-system-x86 gdb-multiarch build-essential <span class="at">-y</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>El <code>gdb</code> de les distribucions ARM sol incloure suport només per a l’arquitectura del maquinari on corre; <code>gdb-multiarch</code> hi afegeix la resta, incloent-hi x86.</p>
+</div>
+<hr>
+</section>
+<section id="preparació" class="level2">
+<h2 class="anchored" data-anchor-id="preparació">Preparació</h2>
+<p>Creeu una carpeta de treball i comproveu que teniu les eines:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">x86_64 (Intel / AMD)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">ARM (Apple Silicon, Raspberry Pi…)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/lab-arrencada</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/lab-arrencada</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">nasm</span> <span class="at">--version</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">--version</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">gdb</span> <span class="at">--version</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/lab-arrencada</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/lab-arrencada</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">nasm</span> <span class="at">--version</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">--version</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">gdb-multiarch</span> <span class="at">--version</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="bonapractica udl-component udl-bonapractica">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-bonapractica"></use></svg><span>Bona Pràctica</span></div>
+<p>Feu tot el laboratori en aquesta carpeta. Cada fitxer que crearem (<code>boot.asm</code>, <code>second_boot.asm</code>, <code>disk.img</code>, …) hi ha de ser.</p>
+</div>
+<div class="concepte udl-component udl-concepte" title="Miniguia de NASM">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte — Miniguia de NASM</span></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Element</th>
+<th style="text-align: left;">Què fa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>mov dst, src</code></td>
+<td style="text-align: left;">copia <code>src</code> a <code>dst</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>xor ax, ax</code></td>
+<td style="text-align: left;">posa <code>AX</code> a 0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>lodsb</code></td>
+<td style="text-align: left;"><code>AL = [DS:SI]</code> i <code>SI = SI + 1</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>test al, al</code> + <code>jz etiqueta</code></td>
+<td style="text-align: left;">salta si <code>AL</code> és 0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>int 0x10</code> / <code>int 0x13</code></td>
+<td style="text-align: left;">crida un servei del BIOS (vídeo / disc)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>call etiqueta</code> / <code>ret</code></td>
+<td style="text-align: left;">crida i retorn d’una subrutina (fa servir la pila)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>cli</code> / <code>sti</code></td>
+<td style="text-align: left;">desactiva / activa les interrupcions</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>hlt</code></td>
+<td style="text-align: left;">atura la CPU fins a la propera interrupció</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>jmp 0x0000:etiqueta</code></td>
+<td style="text-align: left;">salt <em>far</em>: també fixa <code>CS</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>db</code> / <code>dw</code> / <code>dq</code></td>
+<td style="text-align: left;">reserva 1 / 2 / 8 bytes de dades</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>[org 0x7c00]</code></td>
+<td style="text-align: left;">l’adreça que NASM utilitza per calcular les adreces del codi i de les dades (a la teoria, la <em>link address</em>; aquí no hi ha enllaçador: NASM genera directament un binari pla)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>times 510 - ($ - $$) db 0</code></td>
+<td style="text-align: left;">omple de zeros fins al byte 510</td>
+</tr>
+</tbody>
+</table>
+<p>Registres que farem servir: <code>AX</code> (<code>AH</code>/<code>AL</code>), <code>BX</code>, <code>DS</code>, <code>ES</code>, <code>SS</code>, <code>SP</code>, <code>SI</code> i <code>DL</code>.</p>
+</div>
+<hr>
+</section>
+<section id="part-a-el-disc-i-stage-1" class="level2">
+<h2 class="anchored" data-anchor-id="part-a-el-disc-i-stage-1">Part A — El disc i Stage 1</h2>
+<section id="el-disc-virtual" class="level3">
+<h3 class="anchored" data-anchor-id="el-disc-virtual">El disc virtual</h3>
+<p>Per a QEMU, un disc és un fitxer. Creeu-ne un de <em>10 MiB</em> ple de zeros:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=/dev/zero of=disk.img bs=512 count=20480</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> disk.img</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">hexdump</span> <span class="at">-C</span> <span class="at">-n</span> 64 disk.img</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>dd</code> només és l’eina que copia bytes: el que ens interessa és el resultat, un fitxer de 20480 sectors de 512 bytes.</p>
+<div class="errorcomu udl-component udl-errorcomu">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-errorcomu"></use></svg><span>Error Comú</span></div>
+<p><code>dd</code> escriu <strong>on li digueu</strong>. Comproveu sempre que <code>of=</code> és un fitxer (<code>disk.img</code>) i <strong>mai</strong> un dispositiu com <code>/dev/sda</code>: si us equivoqueu, podeu destruir dades reals.</p>
+</div>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Què hi ha ara al sector 0? Podria arrencar aquest disc? (<code>hexdump</code> substitueix les línies repetides per un <code>*</code>.)</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Només zeros. El BIOS necessita que el sector 0 acabi en <code>55 AA</code> per considerar-lo arrencable; aquest disc no l’arrencaria (ho comprovareu a l’activitat posterior).</p>
+</div>
+</details>
+</section>
+<section id="stage-1" class="level3">
+<h3 class="anchored" data-anchor-id="stage-1">Stage 1</h3>
+<p>Aquest és el nostre primer <em>boot sector</em>. Guardeu-lo com a <code>boot.asm</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode nasm code-with-copy"><code class="sourceCode nasm"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>[<span class="kw">org</span> <span class="bn">0x7c00</span><span class="op">]</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">bits</span> <span class="dv">16</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span> <span class="bn">0x0000</span><span class="op">:</span>start            <span class="co">; far jump: força CS = 0x0000</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">start:</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">cli</span>                         <span class="co">; sense interrupcions mentre canviem SS:SP</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">xor</span>  <span class="kw">ax</span><span class="op">,</span> <span class="kw">ax</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ds</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; DS = 0</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">es</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; ES = 0</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="op">[</span>boot_drive<span class="op">],</span> <span class="kw">dl</span>       <span class="co">; guardem la unitat d'arrencada (DL)</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ss</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; SS = 0</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">sp</span><span class="op">,</span> <span class="bn">0x7c00</span>             <span class="co">; pila: creix cap a adreces més baixes</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">sti</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">si</span><span class="op">,</span> msg_stage1</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span> print</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="fu">.halt:</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">hlt</span>                         <span class="co">; dorm fins a la propera interrupció</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.halt</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="co">; print: escriu la cadena de DS:SI (acabada en 0) amb INT 10h, AH = 0x0E</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="fu">print:</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="fu">.next:</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lodsb</span>                       <span class="co">; AL = [DS:SI], SI = SI + 1</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">test</span> <span class="kw">al</span><span class="op">,</span> <span class="kw">al</span>                 <span class="co">; AL == 0 ?</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jz</span>   <span class="fu">.done</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ah</span><span class="op">,</span> <span class="bn">0x0e</span>               <span class="co">; teletype</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">bx</span><span class="op">,</span> <span class="bn">0x0007</span>             <span class="co">; pàgina 0, color gris</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">int</span>  <span class="bn">0x10</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.next</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="fu">.done:</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">ret</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>boot_drive  <span class="dt">db</span> <span class="dv">0</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>msg_stage1  <span class="dt">db</span> <span class="st">"Stage 1: hola!"</span><span class="op">,</span> <span class="dv">13</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="dt">times</span> <span class="dv">510</span> <span class="op">-</span> <span class="op">($</span> <span class="op">-</span> <span class="op">$$)</span> <span class="dt">db</span> <span class="dv">0</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="dt">dw</span> <span class="bn">0xaa55</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Recordeu la sessió de teoria:</p>
+<ul>
+<li><code>jmp 0x0000:start</code> és el <em>far jump</em> que fixa <code>CS = 0</code>.</li>
+<li>Inicialitzem <code>DS</code>, <code>ES</code>, <code>SS</code> i <code>SP</code> perquè <strong>no podem assumir</strong> cap valor, i guardem <code>DL</code> (la unitat d’arrencada).</li>
+<li><code>print</code> escriu una cadena amb <code>INT 10h</code>; per poder fer <code>call</code>/<code>ret</code> necessitem la pila que acabem de configurar.</li>
+<li><code>boot_drive</code> és una dada: va <strong>després</strong> del codi que s’executa, mai enmig.</li>
+</ul>
+</section>
+<section id="assemblar-i-escriure-al-sector-0" class="level3">
+<h3 class="anchored" data-anchor-id="assemblar-i-escriure-al-sector-0">Assemblar i escriure al sector 0</h3>
+<div class="concepte udl-component udl-concepte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
+<p>Un <em>boot sector</em> és simplement <strong>un binari de 512 bytes que acaba escrit al sector 0 del disc</strong>. Assemblem el fitxer i el copiem allà.</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nasm</span> <span class="at">-f</span> bin <span class="at">-o</span> boot.bin boot.asm</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-c</span> boot.bin</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=boot.bin of=disk.img bs=512 count=1 conv=notrunc</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">hexdump</span> <span class="at">-C</span> <span class="at">-s</span> 510 <span class="at">-n</span> 2 disk.img</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Sortida esperada:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">512</span> boot.bin</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">000001fe</span>  55 aa                                             <span class="kw">|</span><span class="ex">U.</span><span class="kw">|</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="concepte udl-component udl-concepte" title="Recepta per escriure en un sector">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte — Recepta per escriure en un sector</span></div>
+<p><code>dd if=FITXER of=disk.img bs=512 seek=SECTOR conv=notrunc</code> copia <code>FITXER</code> al disc a partir del sector <code>SECTOR</code> (el 0 si no hi ha <code>seek</code>). <code>conv=notrunc</code> evita que <code>dd</code> <strong>escurci</strong> <code>disk.img</code>. No cal memoritzar-la: la reutilitzarem canviant només <code>FITXER</code> i <code>SECTOR</code>.</p>
+</div>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Al codi hem escrit <code>dw 0xaa55</code>, però <code>hexdump</code> mostra <code>55 aa</code>. Per què?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Perquè x86 és <em>little-endian</em>: el byte menys significant (<code>0x55</code>) es guarda primer. La signatura, en memòria i al disc, és la seqüència de bytes <code>55 AA</code>.</p>
+</div>
+</details>
+</section>
+<section id="primera-execució" class="level3">
+<h3 class="anchored" data-anchor-id="primera-execució">Primera execució</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Sistema amb interfície gràfica</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Sistema només per terminal</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw <span class="at">-nographic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="bonapractica udl-component udl-bonapractica">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-bonapractica"></use></svg><span>Bona Pràctica</span></div>
+<p>Si treballeu només per terminal, afegiu <code>-nographic</code>: la sortida apareix a la terminal i es surt amb <code>Ctrl+A</code> i després <code>X</code>.</p>
+</div>
+</div>
+</div>
+</div>
+<p>Hauríeu de veure, a la finestra de QEMU, el missatge <code>Stage 1: hola!</code>. Tanqueu la finestra per sortir.</p>
+<hr>
+</section>
+</section>
+<section id="part-b-mirar-larrencada-amb-gdb" class="level2">
+<h2 class="anchored" data-anchor-id="part-b-mirar-larrencada-amb-gdb">Part B — Mirar l’arrencada amb GDB</h2>
+<section id="preparació-1" class="level3">
+<h3 class="anchored" data-anchor-id="preparació-1">Preparació</h3>
+<p>Creeu un petit fitxer d’ajuda perquè GDB mostri només els registres que ens interessen:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> lab.gdb <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="st">set pagination off</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="st">define regs</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="st">  info registers cs eip esp edx ds es ss</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="st">end</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Necessiteu <strong>dues terminals</strong> a la carpeta de treball.</p>
+<p>Terminal 1: arrenqueu QEMU <strong>aturat</strong> i amb un servidor de depuració:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">Sistema amb interfície gràfica</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Sistema només per terminal</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw <span class="at">-S</span> <span class="at">-s</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw <span class="at">-nographic</span> <span class="at">-S</span> <span class="at">-s</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<ul>
+<li><code>-S</code> no deixa que la CPU comenci a executar</li>
+<li><code>-s</code> obre el servidor de GDB al port 1234.</li>
+<li>La finestra queda negra: la CPU està aturada al <em>reset</em>.</li>
+</ul>
+<p>Terminal 2: connecteu GDB.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">x86_64 (Intel / AMD)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">ARM (Apple Silicon, Raspberry Pi…)</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gdb</span> <span class="at">-q</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gdb-multiarch</span> <span class="at">-q</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>Dins de GDB, <strong>el mateix en tots dos casos</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> lab.gdb</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">target</span> remote :1234</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="bonapractica udl-component udl-bonapractica">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-bonapractica"></use></svg><span>Bona Pràctica</span></div>
+<p>GDB pot mostrar avisos sobre l’<em>executable</em> o l’<em>OS ABI</em>. Són normals: ignoreu-los. No cal fer <code>set architecture</code>: en connectar amb <code>target remote</code>, GDB (també <code>gdb-multiarch</code>) detecta sol que l’altre extrem és un <code>i386</code> i ho mostra amb un missatge del tipus <code>The target architecture is set to "auto" (currently "i386")</code>.</p>
+</div>
+</section>
+<section id="demostració-guiada-el-reset" class="level3">
+<h3 class="anchored" data-anchor-id="demostració-guiada-el-reset">Demostració guiada: el <em>reset</em></h3>
+<p>Abans de deixar córrer la CPU, mirem on és. Dins de GDB:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">info</span> registers cs eip</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">monitor</span> info registers</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>monitor</code> envia l’ordre a QEMU; la segona sortida és llarga, busqueu-hi la línia que comença per <code>CS =</code>.</p>
+<p>Sortida esperada (extracte):</p>
+<pre><code>cs             0xf000              61440
+eip            0xfff0              0xfff0
+...
+CS =f000 ffff0000 0000ffff 00009b00</code></pre>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>La CPU ha de llegir la primera instrucció a <code>base de CS + EIP</code>. Quina adreça és? Coincideix amb la diapo del <em>reset vector</em>?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p><code>0xFFFF0000 + 0xFFF0 = 0xFFFFFFF0</code>, la de la teoria. GDB només mostra el <strong>selector</strong> (<code>0xf000</code>); la <strong>base</strong> (<code>0xffff0000</code>) és una part oculta del registre que només veiem amb el monitor de QEMU.</p>
+</div>
+</details>
+</section>
+<section id="b1.-arribar-a-0x7c00" class="level3">
+<h3 class="anchored" data-anchor-id="b1.-arribar-a-0x7c00">B1. Arribar a <code>0x7C00</code></h3>
+<p>Posem un punt d’aturada a l’adreça on el BIOS carrega el <em>boot sector</em> i deixem córrer la CPU:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">hbreak</span> <span class="pp">*</span>0x7c00</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="cf">continue</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Trigarà un segon o dos (el BIOS està fent la seva feina) i GDB s’aturarà: <code>Breakpoint 1, 0x00007c00 in ?? ()</code>.</p>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Abans d’executar <code>regs</code>: quin valor creieu que tenen <code>DL</code>, <code>DS</code>, <code>ES</code>, <code>SS</code> i <code>SP</code> en aquest moment? Podem assumir-los?</p>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">regs</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Sortida esperada (els valors exactes poden variar):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cs</span>             0x0                 0</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ex">eip</span>            0x7c00              0x7c00</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="ex">esp</span>            0x6f08              0x6f08</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="ex">edx</span>            0x80                128</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ds</span>             0x0                 0</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="ex">es</span>             0x0                 0</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span>             0x0                 0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ul>
+<li><code>DL = 0x80</code>: el BIOS ens dona la unitat d’arrencada (el primer disc dur). És una <strong>convenció</strong> que sí podem fer servir, i per això la guardem a <code>boot_drive</code>.</li>
+<li><code>DL</code> conté el número de la unitat des d’on la BIOS ha arrencat el programa; en QEMU, si arrenquem des del primer disc dur, normalment <code>DL = 0x80</code>. A més, <code>DL</code> és la part baixa de EDX (els 8 bits menys significatius), per això <code>mov [boot_drive], dl</code> copia aquest valor i el guarda abans que el puguem necessitar més endavant.</li>
+<li><code>CS = 0</code>, <code>eip = 0x7c00</code>: el BIOS ha saltat a <code>0x7C00</code> amb <code>CS = 0</code>.</li>
+<li><code>DS</code>, <code>ES</code> i <code>SS</code> valen 0, però <strong>només perquè QEMU ho fa així</strong>: un altre BIOS podria deixar-los amb altres valors. Per això no ho assumim i els inicialitzem.</li>
+<li><code>SP = 0x6f08</code>, no <code>0x7c00</code>: la pila inicial <strong>no</strong> és la nostra. <code>mov sp, 0x7c00</code> és una elecció d’aquest <em>bootloader</em>, no una regla del BIOS.</li>
+</ul>
+</div>
+</details>
+</section>
+<section id="b2.-el-codi-és-a-la-ram" class="level3">
+<h3 class="anchored" data-anchor-id="b2.-el-codi-és-a-la-ram">B2. El codi és a la RAM</h3>
+<p>Mirem els primers bytes de <code>0x7C00</code> i els comparem amb el fitxer <code>boot.bin</code> i amb les seves instruccions:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">x/16bx</span> 0x7c00</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="ex">shell</span> hexdump <span class="at">-C</span> <span class="at">-n</span> 16 boot.bin</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="ex">shell</span> ndisasm <span class="at">-b</span> 16 <span class="at">-o</span> 0x7c00 boot.bin <span class="kw">|</span> <span class="fu">head</span> <span class="at">-9</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Sortida esperada (extracte):</p>
+<pre><code>0x7c00: 0xea    0x05    0x7c    0x00    0x00    0xfa    0x31    0xc0
+0x7c08: 0x8e    0xd8    0x8e    0xc0    0x88    0x16    0x2e    0x7c
+00000000  ea 05 7c 00 00 fa 31 c0  8e d8 8e c0 88 16 2e 7c  |..|...1........||
+00007C00  EA057C0000        jmp 0x0:0x7c05
+00007C05  FA                cli
+00007C06  31C0              xor ax,ax
+00007C08  8ED8              mov ds,ax
+00007C0A  8EC0              mov es,ax
+00007C0C  88162E7C          mov [0x7c2e],dl
+00007C10  8ED0              mov ss,ax
+00007C12  BC007C            mov sp,0x7c00
+00007C15  FB                sti</code></pre>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Els bytes de la RAM coincideixen amb els del fitxer? <strong>Què demostra això?</strong></p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Coincideixen: el BIOS ha <strong>copiat</strong> el sector 0 del disc a <code>0x7C00</code> i hi ha <strong>transferit el control</strong>. El primer byte, <code>0xEA</code>, és l’opcode del <em>far jump</em>; <code>05 7c</code> és l’<em>offset</em> (<code>0x7c05</code>, en <em>little-endian</em>) i <code>00 00</code> el segment.</p>
+</div>
+</details>
+<div class="errorcomu udl-component udl-errorcomu">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-errorcomu"></use></svg><span>Error Comú</span></div>
+<p>No feu servir <code>x/i</code> per desassemblar: en aquest mode, GDB pot interpretar el codi de 16 bits com si fos de 32 i mostrar instruccions absurdes. Per veure les instruccions correctes, feu servir <code>ndisasm -b 16 -o &lt;adreça&gt; &lt;fitxer&gt;</code>.</p>
+</div>
+</section>
+<section id="b3.-quan-passa-sp-a-0x7c00" class="level3">
+<h3 class="anchored" data-anchor-id="b3.-quan-passa-sp-a-0x7c00">B3. Quan passa <code>SP</code> a <code>0x7C00</code>?</h3>
+<p>A la sortida de <code>ndisasm</code> trobeu l’adreça de la instrucció <code>mov sp,0x7c00</code> (<code>0x7c12</code>). Aturem la CPU just abans, mirem la pila, fem <strong>una</strong> instrucció (<code>si</code>) i tornem a mirar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">hbreak</span> <span class="pp">*</span>0x7c12</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="cf">continue</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="ex">regs</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="ex">si</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="ex">regs</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Quin valor tenia <code>SP</code> abans de <code>mov sp, 0x7c00</code>? I després? Què demostra sobre la pila inicial?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Abans, <code>esp = 0x6f08</code>; després, <code>esp = 0x7c00</code> (i <code>eip = 0x7c15</code>). La pila que ens deixa el BIOS <strong>no</strong> és la nostra: en construïm una nosaltres, i és el que necessita <code>call</code>/<code>ret</code>.</p>
+<ul>
+<li><code>EIP</code>indica on continua l’execució després de la instrucció <code>mov sp, 0x7c00</code>, i és <code>0x7c15</code>, que és la següent instrucció (<code>sti</code>).</li>
+<li><code>ESP</code> indica on apunta la pila. Abans de la instrucció, apunta a <code>0x6f08</code>, que és la pila que ens deixa el BIOS. Després de la instrucció, apunta a <code>0x7c00</code>, que és la pila que hem creat, coincidint amb l’adreça on tenim el codi. Recorda que la pila en x86 creix cap a adreces més baixes, així que quan fem <code>push</code>, <code>ESP</code> es decrementa.</li>
+</ul>
+</div>
+</details>
+<p>Deixeu córrer el programa i tanqueu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="cf">continue</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Veureu el missatge a la finestra de QEMU. Per sortir: <code>quit</code> a GDB (responeu <code>y</code>) i tanqueu la finestra de QEMU (o <code>Ctrl+C</code> a la terminal 1).</p>
+<hr>
+</section>
+</section>
+<section id="part-c-stage-2-i-int-13h" class="level2">
+<h2 class="anchored" data-anchor-id="part-c-stage-2-i-int-13h">Part C — Stage 2 i <code>INT 13h</code></h2>
+<p>Fins ara el BIOS ha carregat <strong>un</strong> sector. Volem que el nostre Stage 1 carregui un segon programa, més gran, des d’una altra posició del disc.</p>
+<div class="concepte udl-component udl-concepte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
+<p>Stage 2 anirà a <code>LBA 2048</code> del disc i el carregarem a <code>0x8000</code> de la RAM. Recordeu: <code>0x7C00</code> és la convenció del BIOS; <strong><code>0x8000</code> i <code>LBA 2048</code> són una elecció nostra</strong>. <code>LBA 2048</code> és el sector 2048 del disc (<code>2048 × 512 B = 1 MiB</code>), <strong>no</strong> l’adreça <code>0x2048</code>.</p>
+</div>
+<section id="stage-2-al-disc" class="level3">
+<h3 class="anchored" data-anchor-id="stage-2-al-disc">Stage 2 al disc</h3>
+<p>Guardeu-lo com a <code>second_boot.asm</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode nasm code-with-copy"><code class="sourceCode nasm"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>[<span class="kw">org</span> <span class="bn">0x8000</span><span class="op">]</span>                <span class="co">; Programa carregat a 0x8000</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">bits</span> <span class="dv">16</span>                     <span class="co">; Mode real de 16 bits</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">si</span><span class="op">,</span> msg            <span class="co">; SI apunta al primer caràcter de la cadena</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="fu">.next:</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lodsb</span>                   <span class="co">; al = [DS:SI], SI++ -&gt; Agafa caràcter i avança</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">test</span> <span class="kw">al</span><span class="op">,</span> <span class="kw">al</span>             <span class="co">; AL == 0 ? -&gt; fi de la cadena? </span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jz</span>   <span class="fu">.halt</span>   </span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ah</span><span class="op">,</span> <span class="bn">0x0e</span>           <span class="co">; funció per escriure un caràcter a la pantalla</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">bx</span><span class="op">,</span> <span class="bn">0x0007</span>         <span class="co">; pàgina 0, color gris</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">int</span>  <span class="bn">0x10</span>               <span class="co">; escriu el caràcter a la pantalla</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.next</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="fu">.halt:</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">hlt</span></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.halt</span></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>msg <span class="dt">db</span> <span class="st">"Stage 2: el control ha arribat aqui!"</span><span class="op">,</span> <span class="dv">13</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Assembleu-lo i escriviu-lo al sector 2048 (la mateixa recepta d’abans, ara amb <code>seek</code>):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nasm</span> <span class="at">-f</span> bin <span class="at">-o</span> second_boot.bin second_boot.asm</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-c</span> second_boot.bin</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=second_boot.bin of=disk.img bs=512 seek=2048 conv=notrunc</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">hexdump</span> <span class="at">-C</span> <span class="at">-s</span> 1048576 <span class="at">-n</span> 32 disk.img</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>1048576</code> és <code>2048 × 512</code>, el byte del disc on comença el sector 2048.</p>
+<p>Sortida esperada:</p>
+<pre><code>59 second_boot.bin
+00100000  be 14 80 ac 84 c0 74 09  b4 0e bb 07 00 cd 10 eb  |......t.........|
+00100010  f2 f4 eb fd 53 74 61 67  65 20 32 3a 20 65 6c 20  |....Stage 2: el |</code></pre>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Ara Stage 2 és al disc. Si arrenqueu <code>disk.img</code> amb el Stage 1 actual, s’executarà Stage 2? Prediu-ho i comproveu-ho:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">Sistema amb interfície gràfica</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Sistema només per terminal</a></li></ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw <span class="at">-nographic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>No: només surt <code>Stage 1: hola!</code>. El BIOS <strong>només carrega el sector 0</strong>; qui ha de llegir Stage 2 és Stage 1, i el nostre encara no ho fa. Que Stage 2 <strong>existeixi al disc</strong> no vol dir que estigui <strong>carregat</strong>.</p>
+</div>
+</details>
+</section>
+<section id="el-dap-què-li-diem-al-bios" class="level3">
+<h3 class="anchored" data-anchor-id="el-dap-què-li-diem-al-bios">El DAP: què li diem al BIOS?</h3>
+<p><code>INT 13h</code>, funció <code>0x42</code>, llegeix del disc amb LBA. Li hem de passar un <em>Disk Address Packet</em> (DAP), una estructura de 16 bytes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode nasm code-with-copy"><code class="sourceCode nasm"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dap:</span>                            <span class="co">; Disk Address Packet (16 bytes)</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">db</span> <span class="bn">0x10</span><span class="op">,</span> <span class="dv">0</span>                  <span class="co">; mida del DAP, reservat</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dw</span> <span class="dv">1</span>                        <span class="co">; nombre de sectors a llegir</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dw</span> <span class="bn">0x8000</span><span class="op">,</span> <span class="bn">0x0000</span>           <span class="co">; destí: offset, segment</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dq</span> <span class="dv">2048</span>                     <span class="co">; LBA inicial</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Els registres: <code>AH = 0x42</code>, <code>DL</code> = unitat d’arrencada, <code>DS:SI</code> apunta al DAP. Si hi ha un error, el BIOS posa <code>CF = 1</code>.</p>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Sense executar res: <strong>què li estem demanant al BIOS</strong> amb aquest DAP? Expliqueu-ho amb una frase.</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Llegeix <strong>1 sector</strong>, des de <strong><code>LBA 2048</code></strong>, i deixa’l a <strong><code>0000:8000</code></strong>. Aquesta és la idea que cal recordar; els camps són només la manera de dir-ho.</p>
+</div>
+</details>
+</section>
+<section id="stage-1-carrega-stage-2" class="level3">
+<h3 class="anchored" data-anchor-id="stage-1-carrega-stage-2">Stage 1 carrega Stage 2</h3>
+<p>Substituïu <code>boot.asm</code> per aquesta versió. El DAP ja hi és; us falten <strong>3 <code>TODO</code></strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode nasm code-with-copy"><code class="sourceCode nasm"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>[<span class="kw">org</span> <span class="bn">0x7c00</span><span class="op">]</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">bits</span> <span class="dv">16</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span> <span class="bn">0x0000</span><span class="op">:</span>start            <span class="co">; far jump: força CS = 0x0000</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="fu">start:</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">cli</span>                         <span class="co">; sense interrupcions mentre canviem SS:SP</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">xor</span>  <span class="kw">ax</span><span class="op">,</span> <span class="kw">ax</span></span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ds</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; DS = 0</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">es</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; ES = 0</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="op">[</span>boot_drive<span class="op">],</span> <span class="kw">dl</span>       <span class="co">; guardem la unitat d'arrencada (DL)</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ss</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; SS = 0</span></span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">sp</span><span class="op">,</span> <span class="bn">0x7c00</span>             <span class="co">; pila: creix cap a adreces més baixes</span></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">sti</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">si</span><span class="op">,</span> msg_stage1</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span> print</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a><span class="fu">.load_stage2:</span></span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">si</span><span class="op">,</span> dap                <span class="co">; DS:SI → DAP</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">; </span><span class="al">TODO</span><span class="co"> 1: DL = unitat d'arrencada (variable boot_drive) i AH = funció de lectura</span></span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">int</span>  <span class="bn">0x13</span></span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">; </span><span class="al">TODO</span><span class="co"> 2: si la lectura ha fallat (CF = 1), salta a .boot_failed</span></span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">; </span><span class="al">TODO</span><span class="co"> 3: transfereix el control a Stage 2 (segment 0x0000, offset 0x8000)</span></span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a><span class="fu">.halt:</span></span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">hlt</span></span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.halt</span></span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a><span class="fu">.boot_failed:</span></span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">si</span><span class="op">,</span> msg_fail</span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span> print</span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.halt</span></span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a><span class="fu">print:</span></span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a><span class="fu">.next:</span></span>
+<span id="cb33-37"><a href="#cb33-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lodsb</span></span>
+<span id="cb33-38"><a href="#cb33-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">test</span> <span class="kw">al</span><span class="op">,</span> <span class="kw">al</span></span>
+<span id="cb33-39"><a href="#cb33-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jz</span>   <span class="fu">.done</span></span>
+<span id="cb33-40"><a href="#cb33-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ah</span><span class="op">,</span> <span class="bn">0x0e</span></span>
+<span id="cb33-41"><a href="#cb33-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">bx</span><span class="op">,</span> <span class="bn">0x0007</span></span>
+<span id="cb33-42"><a href="#cb33-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">int</span>  <span class="bn">0x10</span></span>
+<span id="cb33-43"><a href="#cb33-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.next</span></span>
+<span id="cb33-44"><a href="#cb33-44" aria-hidden="true" tabindex="-1"></a><span class="fu">.done:</span></span>
+<span id="cb33-45"><a href="#cb33-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">ret</span></span>
+<span id="cb33-46"><a href="#cb33-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-47"><a href="#cb33-47" aria-hidden="true" tabindex="-1"></a><span class="fu">dap:</span>                            <span class="co">; Disk Address Packet (16 bytes)</span></span>
+<span id="cb33-48"><a href="#cb33-48" aria-hidden="true" tabindex="-1"></a>    <span class="dt">db</span> <span class="bn">0x10</span><span class="op">,</span> <span class="dv">0</span>                  <span class="co">; mida del DAP, reservat</span></span>
+<span id="cb33-49"><a href="#cb33-49" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dw</span> <span class="dv">1</span>                        <span class="co">; nombre de sectors a llegir</span></span>
+<span id="cb33-50"><a href="#cb33-50" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dw</span> <span class="bn">0x8000</span><span class="op">,</span> <span class="bn">0x0000</span>           <span class="co">; destí: offset, segment</span></span>
+<span id="cb33-51"><a href="#cb33-51" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dq</span> <span class="dv">2048</span>                     <span class="co">; LBA inicial</span></span>
+<span id="cb33-52"><a href="#cb33-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-53"><a href="#cb33-53" aria-hidden="true" tabindex="-1"></a>boot_drive  <span class="dt">db</span> <span class="dv">0</span></span>
+<span id="cb33-54"><a href="#cb33-54" aria-hidden="true" tabindex="-1"></a>msg_stage1  <span class="dt">db</span> <span class="st">"Stage 1: carregant Stage 2..."</span><span class="op">,</span> <span class="dv">13</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb33-55"><a href="#cb33-55" aria-hidden="true" tabindex="-1"></a>msg_fail    <span class="dt">db</span> <span class="st">"Error carregant Stage 2!"</span><span class="op">,</span> <span class="dv">13</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb33-56"><a href="#cb33-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-57"><a href="#cb33-57" aria-hidden="true" tabindex="-1"></a><span class="dt">times</span> <span class="dv">510</span> <span class="op">-</span> <span class="op">($</span> <span class="op">-</span> <span class="op">$$)</span> <span class="dt">db</span> <span class="dv">0</span></span>
+<span id="cb33-58"><a href="#cb33-58" aria-hidden="true" tabindex="-1"></a><span class="dt">dw</span> <span class="bn">0xaa55</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ajuda per als <code>TODO</code>:</p>
+<ul>
+<li><strong>1.</strong> <code>DL</code> es carrega des de <code>boot_drive</code>; <code>AH</code> val <code>0x42</code>.</li>
+<li><strong>2.</strong> Després de <code>int 0x13</code>, si <code>CF = 1</code> la lectura ha fallat (<code>jc</code>).</li>
+<li><strong>3.</strong> Un salt <em>far</em> a <code>0x0000:0x8000</code>.</li>
+</ul>
+<p>Aneu pas a pas. Ompliu <strong>només els <code>TODO</code> 1 i 2</strong>, assembleu i escriviu el nou Stage 1 (<strong>només</strong> el sector 0):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nasm</span> <span class="at">-f</span> bin <span class="at">-o</span> boot.bin boot.asm</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=boot.bin of=disk.img bs=512 count=1 conv=notrunc</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> disk.img</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">Sistema amb interfície gràfica</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Sistema només per terminal</a></li></ul>
+<div class="tab-content">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw <span class="at">-nographic</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Stage 1 ja <strong>llegeix</strong> Stage 2 a <code>0x8000</code>, però encara no hi salta. Què veureu? On és Stage 2 ara mateix? Què falta?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Només surt <code>Stage 1: carregant Stage 2...</code>. Stage 2 <strong>ja és a la RAM</strong> (a <code>0x8000</code>), però ningú no hi ha transferit el control: falta el salt. Ho comprovarem amb GDB a la Part D.</p>
+</div>
+</details>
+<p>Ara afegiu el <strong><code>TODO</code> 3</strong> i torneu a executar les mateixes ordres (assemblar, escriure el sector 0 i arrencar):</p>
+<p>Sortida esperada a QEMU:</p>
+<pre><code>Stage 1: carregant Stage 2...
+Stage 2: el control ha arribat aqui!</code></pre>
+<div class="errorcomu udl-component udl-errorcomu">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-errorcomu"></use></svg><span>Error Comú</span></div>
+<p>Si <code>ls -l disk.img</code> no mostra <code>10485760</code> bytes, heu oblidat <code>conv=notrunc</code> i <code>dd</code> ha escurçat el disc: torneu a la Part A.</p>
+</div>
+<details>
+<summary>
+<b>Pots veure la solució</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode nasm code-with-copy"><code class="sourceCode nasm"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>[<span class="kw">org</span> <span class="bn">0x7c00</span><span class="op">]</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">bits</span> <span class="dv">16</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span> <span class="bn">0x0000</span><span class="op">:</span>start            <span class="co">; far jump: força CS = 0x0000</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="fu">start:</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">cli</span>                         <span class="co">; sense interrupcions mentre canviem SS:SP</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">xor</span>  <span class="kw">ax</span><span class="op">,</span> <span class="kw">ax</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ds</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; DS = 0</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">es</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; ES = 0</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="op">[</span>boot_drive<span class="op">],</span> <span class="kw">dl</span>       <span class="co">; guardem la unitat d'arrencada (DL)</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ss</span><span class="op">,</span> <span class="kw">ax</span>                 <span class="co">; SS = 0</span></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">sp</span><span class="op">,</span> <span class="bn">0x7c00</span>             <span class="co">; pila: creix cap a adreces més baixes</span></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">sti</span></span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">si</span><span class="op">,</span> msg_stage1</span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span> print</span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a><span class="fu">.load_stage2:</span></span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">si</span><span class="op">,</span> dap                <span class="co">; DS:SI → DAP</span></span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">dl</span><span class="op">,</span> <span class="op">[</span>boot_drive<span class="op">]</span>       <span class="co">; DL = unitat d'arrencada</span></span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ah</span><span class="op">,</span> <span class="bn">0x42</span>               <span class="co">; AH = lectura estesa (LBA)</span></span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">int</span>  <span class="bn">0x13</span></span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jc</span>   <span class="fu">.boot_failed</span>           <span class="co">; CF = 1 → error</span></span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="bn">0x0000</span><span class="op">:</span><span class="bn">0x8000</span>          <span class="co">; transferim el control a Stage 2</span></span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a><span class="fu">.halt:</span></span>
+<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">hlt</span></span>
+<span id="cb38-30"><a href="#cb38-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.halt</span></span>
+<span id="cb38-31"><a href="#cb38-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-32"><a href="#cb38-32" aria-hidden="true" tabindex="-1"></a><span class="fu">.boot_failed:</span></span>
+<span id="cb38-33"><a href="#cb38-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">si</span><span class="op">,</span> msg_fail</span>
+<span id="cb38-34"><a href="#cb38-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">call</span> print</span>
+<span id="cb38-35"><a href="#cb38-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.halt</span></span>
+<span id="cb38-36"><a href="#cb38-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-37"><a href="#cb38-37" aria-hidden="true" tabindex="-1"></a><span class="fu">print:</span></span>
+<span id="cb38-38"><a href="#cb38-38" aria-hidden="true" tabindex="-1"></a><span class="fu">.next:</span></span>
+<span id="cb38-39"><a href="#cb38-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lodsb</span></span>
+<span id="cb38-40"><a href="#cb38-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">test</span> <span class="kw">al</span><span class="op">,</span> <span class="kw">al</span></span>
+<span id="cb38-41"><a href="#cb38-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jz</span>   <span class="fu">.done</span></span>
+<span id="cb38-42"><a href="#cb38-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">ah</span><span class="op">,</span> <span class="bn">0x0e</span></span>
+<span id="cb38-43"><a href="#cb38-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">mov</span>  <span class="kw">bx</span><span class="op">,</span> <span class="bn">0x0007</span></span>
+<span id="cb38-44"><a href="#cb38-44" aria-hidden="true" tabindex="-1"></a>    <span class="kw">int</span>  <span class="bn">0x10</span></span>
+<span id="cb38-45"><a href="#cb38-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">jmp</span>  <span class="fu">.next</span></span>
+<span id="cb38-46"><a href="#cb38-46" aria-hidden="true" tabindex="-1"></a><span class="fu">.done:</span></span>
+<span id="cb38-47"><a href="#cb38-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">ret</span></span>
+<span id="cb38-48"><a href="#cb38-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-49"><a href="#cb38-49" aria-hidden="true" tabindex="-1"></a><span class="fu">dap:</span>                            <span class="co">; Disk Address Packet (16 bytes)</span></span>
+<span id="cb38-50"><a href="#cb38-50" aria-hidden="true" tabindex="-1"></a>    <span class="dt">db</span> <span class="bn">0x10</span><span class="op">,</span> <span class="dv">0</span>                  <span class="co">; mida del DAP, reservat</span></span>
+<span id="cb38-51"><a href="#cb38-51" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dw</span> <span class="dv">1</span>                        <span class="co">; nombre de sectors a llegir</span></span>
+<span id="cb38-52"><a href="#cb38-52" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dw</span> <span class="bn">0x8000</span><span class="op">,</span> <span class="bn">0x0000</span>           <span class="co">; destí: offset, segment</span></span>
+<span id="cb38-53"><a href="#cb38-53" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dq</span> <span class="dv">2048</span>                     <span class="co">; LBA inicial</span></span>
+<span id="cb38-54"><a href="#cb38-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-55"><a href="#cb38-55" aria-hidden="true" tabindex="-1"></a>boot_drive  <span class="dt">db</span> <span class="dv">0</span></span>
+<span id="cb38-56"><a href="#cb38-56" aria-hidden="true" tabindex="-1"></a>msg_stage1  <span class="dt">db</span> <span class="st">"Stage 1: carregant Stage 2..."</span><span class="op">,</span> <span class="dv">13</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb38-57"><a href="#cb38-57" aria-hidden="true" tabindex="-1"></a>msg_fail    <span class="dt">db</span> <span class="st">"Error carregant Stage 2!"</span><span class="op">,</span> <span class="dv">13</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">0</span></span>
+<span id="cb38-58"><a href="#cb38-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-59"><a href="#cb38-59" aria-hidden="true" tabindex="-1"></a><span class="dt">times</span> <span class="dv">510</span> <span class="op">-</span> <span class="op">($</span> <span class="op">-</span> <span class="op">$$)</span> <span class="dt">db</span> <span class="dv">0</span></span>
+<span id="cb38-60"><a href="#cb38-60" aria-hidden="true" tabindex="-1"></a><span class="dt">dw</span> <span class="bn">0xaa55</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</details>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Fixeu-vos que <code>DL</code> es carrega des de <code>boot_drive</code> en lloc d’escriure <code>mov dl, 0x80</code>. Per què és millor?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Perquè el BIOS ens dona la unitat d’arrencada a <code>DL</code>: no sempre és <code>0x80</code> (podria ser un altre disc). Un <em>bootloader</em> ha de conservar aquesta informació, no suposar-la.</p>
+</div>
+</details>
+<hr>
+</section>
+</section>
+<section id="part-d-carregar-no-és-executar" class="level2">
+<h2 class="anchored" data-anchor-id="part-d-carregar-no-és-executar">Part D — Carregar no és executar</h2>
+<p>Ara podem veure amb GDB la diferència entre <strong>carregar</strong> i <strong>executar</strong>.</p>
+<ul>
+<li><p>Terminal 1: <code>qemu-system-i386 -drive file=disk.img,format=raw -S -s</code>o bé <code>qemu-system-i386 -drive file=disk.img,format=raw -nographic -S -s</code>.</p></li>
+<li><p>Terminal 2: obriu GDB (<code>gdb -q</code> o <code>gdb-multiarch -q</code>, segons el que hàgiu instal·lat) i, dins de GDB:</p></li>
+</ul>
+<pre><code>source lab.gdb
+target remote :1234
+hbreak *0x7c00
+continue</code></pre>
+<p>Som al principi de Stage 1 i encara no ha llegit res.</p>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Què creieu que hi ha a <code>0x8000</code> ara mateix? Comproveu-ho:</p>
+<pre><code>x/16bx 0x8000</code></pre>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Zeros. Stage 2 és al <strong>disc</strong>, no a la RAM: encara no l’ha carregat ningú. (Que siguin zeros és cert a QEMU; en una màquina real la RAM podria tenir qualsevol valor.)</p>
+</div>
+</details>
+<p>Ara deixem que Stage 1 faci la lectura i s’aturi just abans d’executar Stage 2:</p>
+<pre><code>hbreak *0x8000
+continue
+regs
+x/16bx 0x8000
+shell hexdump -C -n 16 second_boot.bin</code></pre>
+<p>Sortida esperada (extracte):</p>
+<pre><code>cs             0x0                 0
+eip            0x8000              0x8000
+esp            0x7c00              0x7c00
+edx            0x80                128
+0x8000: 0xbe    0x14    0x80    0xac    0x84    0xc0    0x74    0x09
+0x8008: 0xb4    0x0e    0xbb    0x07    0x00    0xcd    0x10    0xeb
+00000000  be 14 80 ac 84 c0 74 09  b4 0e bb 07 00 cd 10 eb  |......t.........|</code></pre>
+<p>Per saber quina instrucció hi ha a <code>0x8000</code>:</p>
+<pre><code>shell ndisasm -b 16 -o 0x8000 second_boot.bin | head -4</code></pre>
+<pre><code>00008000  BE1480            mov si,0x8014
+00008003  AC                lodsb
+00008004  84C0              test al,al
+00008006  7409              jz 0x8011</code></pre>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Responeu:</p>
+<ol type="1">
+<li>Quin valor tenen <code>CS</code> i <code>IP</code> quan GDB s’atura?</li>
+<li>Quina instrucció s’executarà a <code>0x8000</code>?</li>
+<li>Quina diferència hi ha entre <strong>carregar</strong> Stage 2 i <strong>executar</strong> Stage 2?</li>
+<li>Quin registre conserva la unitat d’arrencada? Com ho sabeu?</li>
+</ol>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><code>CS = 0</code> i <code>eip = 0x8000</code>: hem arribat amb el <em>far jump</em> <code>jmp 0x0000:0x8000</code>.</li>
+<li><code>mov si, 0x8014</code>: apunta a la cadena <code>msg</code> de Stage 2.</li>
+<li><strong>Carregar</strong> és copiar el codi a la RAM: <code>INT 13h</code> ha portat els bytes de <code>LBA 2048</code> a <code>0x8000</code>. <strong>Executar</strong> és que la CPU comenci a llegir-hi instruccions: només passa amb el <code>jmp</code>. Entre els dos moments el codi és a la RAM però <strong>inert</strong>.</li>
+<li><code>DL</code>: continua valent <code>0x80</code> a <code>0x8000</code>; Stage 1 no l’ha trencat.</li>
+</ol>
+</div>
+</details>
+<section id="ampliació-org" class="level3">
+<h3 class="anchored" data-anchor-id="ampliació-org">Ampliació: <code>[org]</code></h3>
+<p>Hem vist que <code>mov si, msg</code> s’ha assemblat com <code>mov si, 0x8014</code>: una adreça <strong>absoluta</strong> que depèn de <code>[org 0x8000]</code>. En aquest laboratori l’<code>org</code> coincideix amb l’adreça on esperem que Stage 1 carregui Stage 2. Comprovem què passa si no hi coincideix.</p>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Feu una còpia de Stage 2, canvieu <code>[org 0x8000]</code> per <code>[org 0x0]</code> i assembleu-la a un altre fitxer:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> second_boot.asm sb_org0.asm</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="co"># editeu sb_org0.asm: [org 0x8000] → [org 0x0]</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="fu">nasm</span> <span class="at">-f</span> bin <span class="at">-o</span> sb_org0.bin sb_org0.asm</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="fu">hexdump</span> <span class="at">-C</span> <span class="at">-n</span> 3 sb_org0.bin</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="fu">hexdump</span> <span class="at">-C</span> <span class="at">-n</span> 3 second_boot.bin</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Què canvia als tres primers bytes? Escriviu la versió incorrecta al disc i, <strong>abans d’executar</strong>, prediu què veureu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=sb_org0.bin of=disk.img bs=512 seek=2048 conv=notrunc</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk.img,format=raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Els bytes passen de <code>be 14 80</code> a <code>be 14 00</code>: la instrucció <code>mov si, imm16</code> porta l’adreça de <code>msg</code> <strong>dins</strong> l’instrucció. Amb <code>[org 0x0]</code>, <code>SI</code> apunta a <code>0x0014</code> (la taula de vectors d’interrupció) i no al missatge: només surt <code>Stage 1: carregant Stage 2...</code> i <strong>cap missatge de Stage 2</strong>. L’adreça que assumeix NASM (<code>org</code>) ha de coincidir amb l’adreça on es carrega el codi (<code>0x8000</code>).</p>
+<p>Per deixar-ho tot com estava, torneu a escriure la versió bona:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=second_boot.bin of=disk.img bs=512 seek=2048 conv=notrunc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</details>
+<hr>
+</section>
+</section>
+<section id="trenca-ho" class="level2">
+<h2 class="anchored" data-anchor-id="trenca-ho">Trenca-ho</h2>
+<div class="repte udl-component udl-repte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-repte"></use></svg><span>Repte</span></div>
+<p>Trenqueu l’arrencada de tres maneres i relacioneu cada símptoma amb la diapo de diagnòstic. Per cada cas: <strong>prediu</strong>, comproveu i digueu <strong>en quina etapa ha fallat</strong>: el firmware, Stage 1 o Stage 2. Treballeu sobre una <strong>còpia</strong> de <code>disk.img</code>.</p>
+</div>
+<section id="e1.-sense-signatura" class="level3">
+<h3 class="anchored" data-anchor-id="e1.-sense-signatura">E1. Sense signatura</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> disk.img disk_e1.img</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">'\000\000'</span> <span class="kw">|</span> <span class="fu">dd</span> of=disk_e1.img bs=1 seek=510 count=2 conv=notrunc</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">hexdump</span> <span class="at">-C</span> <span class="at">-s</span> 510 <span class="at">-n</span> 2 disk_e1.img</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk_e1.img,format=raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details>
+<summary>
+<b>Què veureu</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>El firmware rebutja el sector 0 com a no arrencable i <strong>no executa res nostre</strong>. El missatge exacte depèn de la implementació de BIOS (a QEMU, <code>Boot failed: not a bootable disk</code>). Falla <strong>el firmware</strong>: és la família de símptomes de <code>No bootable device</code> de la diapo.</p>
+</div>
+</details>
+</section>
+<section id="e2.-lectura-fallida" class="level3">
+<h3 class="anchored" data-anchor-id="e2.-lectura-fallida">E2. Lectura fallida</h3>
+<p>Editeu <code>boot.asm</code> i canvieu l’LBA del DAP (<code>dq 2048</code>) per <code>dq 30000</code>, fora dels 20480 sectors del disc. Assembleu-lo i escriviu-lo en una còpia del disc:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nasm</span> <span class="at">-f</span> bin <span class="at">-o</span> boot_e2.bin boot.asm</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> disk.img disk_e2.img</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=boot_e2.bin of=disk_e2.img bs=512 count=1 conv=notrunc</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk_e2.img,format=raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details>
+<summary>
+<b>Què veureu</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p><code>Stage 1: carregant Stage 2...</code> i <code>Error carregant Stage 2!</code>. <code>INT 13h</code> ha retornat <code>CF = 1</code>, i el nostre <code>jc .boot_failed</code> ho ha detectat. Falla <strong>Stage 1</strong> (no pot llegir), i ho sap dir: és el que fa <code>.boot_failed</code>. Recordeu tornar a posar <code>2048</code> a <code>boot.asm</code>.</p>
+</div>
+</details>
+</section>
+<section id="e3.-stage-2-desaparegut" class="level3">
+<h3 class="anchored" data-anchor-id="e3.-stage-2-desaparegut">E3. Stage 2 desaparegut</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> disk.img disk_e3.img</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dd</span> if=/dev/zero of=disk_e3.img bs=512 seek=2048 count=1 conv=notrunc</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-i386</span> <span class="at">-drive</span> file=disk_e3.img,format=raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Ara Stage 1 llegeix <strong>amb èxit</strong> el sector 2048, però el missatge de Stage 2 no surt. On ha fallat? Com ho comprovaríeu amb GDB?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Només veieu <code>Stage 1: carregant Stage 2...</code>: Stage 1 ha funcionat, i el problema és <strong>després</strong>. Amb GDB: <code>hbreak *0x8000</code>, <code>continue</code> i <code>x/16bx 0x8000</code>: són tot zeros. La lectura ha anat bé, però el que ha carregat és un sector buit; la CPU executa zeros sense imprimir res. Falla <strong>Stage 2</strong> (no existeix): un missatge que <strong>falta</strong> també és una pista sobre l’etapa on som.</p>
+</div>
+</details>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/igualada\.amsa\.udl\.cat");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../modules/unit-02-arrancada/theory/01-arrancada.html" class="pagination-link" aria-label="Unitat 2 · Arrencada">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Unitat 2 · Arrencada</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" class="pagination-link" aria-label="Arrencada (II) · UEFI">
+        <span class="nav-page-text">Arrencada (II) · UEFI</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
