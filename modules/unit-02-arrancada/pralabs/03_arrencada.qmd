@@ -1,0 +1,354 @@
+---
+title: "Arrencada (III) · De GRUB a Linux"
+author: "Jordi Mateo Fornés"
+format:
+  udl-course-html:
+    toc: false
+    number-sections: false
+---
+
+## Introducció
+
+A la Part 2 de la teoria hem seguit la cadena sencera: 
+
+$$ \text{firmware} \rightarrow \text{GRUB} \rightarrow \text{kernel} \rightarrow \text{initramfs} \rightarrow \text{ arrel } \rightarrow \text{systemd} $$
+
+En aquest laboratori la explorarem sobre una **Debian real amb GRUB de veritat**.
+
+
+::: {.resultat title="En acabar aquest laboratori seràs capaç de..."}
+-   Verificar, amb ordres reals, cada etapa de la cadena d'arrencada d'una Debian: firmware, GRUB, kernel, initramfs, `systemd`.
+-   Distingir la **configuració** de GRUB (`grub.cfg`) de l'**estat observable** del sistema en marxa (`/proc/cmdline`).
+-   Explicar per què eines com `cryptsetup` o `lvm` poden viure dins de l'initramfs encara que ja estiguin instal·lades al sistema.
+-   Editar temporalment la línia del kernel des de GRUB.
+-   Argumentar per què l'accés físic a la consola d'arrencada és un vector d'atac real, i què el mitiga (i què no).
+:::
+
+::: {.programari}
+- `qemu-system-x86_64` instal·lat al teu amfitrió.
+- [Imatge de la VM](https://drive.google.com/file/d/1amFpyJElxsG7yofvrUSK25U5_Kn1Fvqp/view?usp=drive_link)
+:::
+
+
+---
+
+## Preparació
+
+A diferència dels laboratoris anteriors, aquí necessitem un sistema operatiu **complet i real**, amb GRUB instal·lat pel seu propi instal·lador. En lloc que cadascú instal·li una Debian pel seu compte (llarg, i cadascú n'obtindria una lleugerament diferent), el professor us dona una **VM ja instal·lada**, idèntica per a tothom.
+
+### Comprova que tens QEMU
+
+```{.bash}
+qemu-system-x86_64 --version
+```
+
+Si no hi és (Debian/Ubuntu):
+
+```{.bash}
+sudo apt update
+sudo apt install qemu-system-x86
+```
+
+### Descomprimeix el paquet de la VM
+
+El professor us farà arribar un fitxer comprimit amb aquesta estructura:
+
+:::{.terminal title="`tree` "}
+```
+debian-amsa/
+├── run.sh
+├── debian-amsa.qcow2
+└── firmware/
+    ├── OVMF_CODE.fd
+    └── OVMF_VARS_TEMPLATE.fd
+```
+:::
+
+::: {.concepte}
+`OVMF_CODE.fd` és el **codi** del firmware UEFI: idèntic per a tothom, i el script el munta només de lectura. `OVMF_VARS_TEMPLATE.fd` és una **plantilla** de la NVRAM (on GRUB escriu les seves entrades de `Boot####`); cadascú n'obtindrà la seva pròpia còpia, perquè és l'estat que la vostra VM anirà modificant. Exactament la mateixa separació codi/NVRAM que hem vist a teoria.
+:::
+
+### Arrenca-la
+
+```{.bash}
+cd debian-amsa
+chmod +x run.sh
+./run.sh
+```
+
+La primera vegada, `run.sh` detecta que no teniu `OVMF_VARS.fd` propi i el crea a partir de la plantilla. A partir d'aquí, ja és la **vostra** NVRAM: les execucions següents no la tornaran a tocar.
+
+::: {.panel-tabset}
+## Amfitrió x86_64 (Intel / AMD)
+
+El *script* no fa servir acceleració per hardware (`-enable-kvm`), a propòsit: així funciona igual en qualsevol amfitrió, sense dependre de tenir accés a `/dev/kvm`. Si voleu més velocitat i sabeu que teniu KVM disponible, podeu editar `run.sh` i afegir-hi la línia `-enable-kvm \` (no n'hi ha prou amb passar-la per línia d'ordres: el *script* no reenvia arguments extra a QEMU).
+
+## Amfitrió ARM (Apple Silicon, Raspberry Pi...)
+
+No toqueu res: `run.sh` ja està pensat perquè funcioni igual a tothom, sense KVM. Un amfitrió ARM, a més, no podria accelerar per hardware una VM x86_64 encara que ho intentéssiu (l'acceleració només funciona quan l'arquitectura convidada coincideix amb la de l'amfitrió).
+:::
+
+::: {.errorcomu}
+Si QEMU es queixa de memòria en arrencar, editeu `run.sh` i baixeu `-m 4096` a un valor que la vostra màquina pugui oferir (per exemple, `-m 2048`).
+:::
+
+Un cop dins de Debian, comproveu que heu arrencat en UEFI i instal·leu l'eina que ens falta:
+
+```{.bash}
+test -d /sys/firmware/efi && echo UEFI
+su -c "apt install efibootmgr -y"
+```
+
+---
+
+## Part A · Reconstruir la cadena d'arrencada
+
+Arrenqueu la vostra Debian amb normalitat i obriu una terminal. Anirem verificant, ordre per ordre, cada peça de la cadena.
+
+### El disc i les particions
+
+```{.bash}
+lsblk -o NAME,SIZE,FSTYPE,PARTTYPE,PARTLABEL,MOUNTPOINTS
+```
+
+::: {.exercici}
+Localitzeu-hi les vostres particions d'arrencada i d'arrel. Quin tipus de partició és cadascuna? Quin sistema de fitxers hi ha a cada una? Quin és el *PARTTYPE* de la partició d'arrencada?
+:::
+
+
+### La NVRAM i l'ESP
+
+```{.bash}
+efibootmgr -v
+sudo find /boot/efi/EFI -type f
+```
+
+::: {.reflexio}
+A quina entrada de `efibootmgr` correspon el fitxer `.efi` que heu trobat amb `find`? És la ruta de *fallback* (`BOOTX64.EFI`) o una entrada pròpia de la distribució (per exemple, `EFI/debian/grubx64.efi`)?
+:::
+
+### Kernel i initramfs al disc
+
+```{.bash}
+ls -lh /boot/vmlinuz*
+ls -lh /boot/initrd*
+```
+
+### El kernel en marxa
+
+```{.bash}
+cat /proc/cmdline
+```
+
+### `systemd`
+
+```{.bash}
+ps -p 1 -o pid,comm,args
+systemd-analyze
+```
+
+::: {.exercici}
+`ps -p 1` hauria de mostrar `systemd` a la columna `COMMAND`. Si `systemd-analyze` falla amb un missatge sobre **PID 1**, què estaria indicant?
+:::
+
+<details>
+<summary>Pots veure el raonament</summary>
+
+::: {.solucio}
+`systemd-analyze` necessita parlar amb `systemd` com a PID 1 a través del bus de D-Bus. Si falla amb un missatge del tipus *System has not been booted with systemd as init system*, vol dir que el procés 1 **no és** `systemd` (per exemple, en alguns contenidors o entorns molt restringits). En una Debian normal arrencada amb GRUB, no hauria de passar.
+:::
+
+</details>
+
+---
+
+## Part B · Investigar l'entrada de GRUB
+
+```{.bash}
+sudo grep -E '^(menuentry|linux|initrd)' /boot/grub/grub.cfg
+```
+
+Una entrada de `grub.cfg` té sempre aquesta forma:
+
+:::{.terminal}
+```
+menuentry
+   │
+   ├── linux
+   │     ├── kernel
+   │     └── paràmetres
+   │
+   └── initrd
+         └── initramfs
+```
+:::
+
+Compareu-ho amb el que el kernel diu que ha rebut de debò:
+
+```{.bash}
+cat /proc/cmdline
+```
+
+::: {.reflexio}
+Què ha **escrit** GRUB a `grub.cfg`, i què ha **rebut realment** el kernel? Els paràmetres coincideixen exactament amb la línia `linux` de l'entrada, o n'hi ha algun que `grub-mkconfig` ha afegit automàticament (per exemple, algun UUID)?
+:::
+
+---
+
+## Part C · Inspeccionar l'initramfs
+
+```{.bash}
+lsinitramfs /boot/initrd.img-$(uname -r) | less
+```
+
+I, més concret:
+
+```{.bash}
+lsinitramfs /boot/initrd.img-$(uname -r) | \
+  grep -E '(^|/)(init|cryptsetup|lvm|scripts/)'
+```
+
+::: {.exercici}
+Abans d'executar-ho: la vostra instal·lació **no** té LUKS ni LVM. Prediu: hi trobareu `cryptsetup` o `lvm` dins de l'initramfs? I què hi hauria de ser igualment?
+:::
+
+<details>
+<summary>Pots veure el raonament</summary>
+
+::: {.solucio}
+No hi hauria d'haver `cryptsetup` ni `lvm`: `initramfs-tools` només hi inclou les eines que la **vostra** configuració necessita (llegides de `/etc/crypttab` i de si l'arrel és un volum lògic), i cap de les dues coses és certa aquí. Però l'initramfs **no és buit**: hi trobareu igualment `/init`, els mòduls del controlador de disc i el suport per a `ext4`, perquè **això** sí que fa falta sempre per arribar a `/`, encara que no hi hagi xifratge ni volums lògics.
+:::
+
+</details>
+
+::: {.reflexio}
+Si aquesta mateixa VM tingués l'arrel sobre LUKS+LVM (l'esquema per defecte de l'instal·lador de Debian que vam veure a teoria), `cryptsetup` i `lvm` **sí** que hi haurien de ser. És exactament el mateix mecanisme: l'initramfs s'adapta a la configuració real del sistema, no porta mai «totes les eines possibles per si de cas».
+:::
+
+---
+
+## Part D · Recuperació amb GRUB
+
+::: {.errorcomu title="Abans de començar"}
+Reinicieu la VM des d'una **còpia**, no des de l'original. Aquesta part edita paràmetres d'arrencada i canvia una contrasenya.
+:::
+
+1.  Reinicieu la VM i, al menú de GRUB, premeu `e` per editar l'entrada.
+2.  Localitzeu la línia que comença per `linux` i acaba en `ro`. Afegiu-hi, al final: `init=/bin/bash`
+3.  Premeu `Ctrl+X` (o `F10`) per arrencar amb aquesta edició.
+
+::: {.concepte}
+`init=/bin/bash` **no** és una ordre de GRUB: és un paràmetre que GRUB passa a la línia d'ordres del **kernel**.
+
+$$
+\text{GRUB} \xrightarrow{\text{paràmetre}} \text{kernel} \xrightarrow{\text{interpreta init=}} /bin/bash
+$$
+:::
+
+::: {.errorcomu title="Per què no cal `chroot`"}
+`init=` no li diu al kernel **salta't l'initramfs**: l'initramfs fa tota la seva feina normal (mòduls, desxifrar, activar LVM, muntar l'arrel) exactament igual que sempre. L'única cosa que canvia és **què s'executa després del `switch_root`**: en lloc de `/sbin/init` (que arrencaria `systemd`), s'executa `/bin/bash`. Quan veieu el *prompt*, el `switch_root` **ja ha passat**: ja sou a l'arrel real.
+:::
+
+4.  Munteu l'arrel en lectura-escriptura (el kernel l'ha muntada `ro`, per la línia original):
+
+    ```{.bash}
+    mount -o remount,rw /
+    ```
+
+5.  Canvieu la contrasenya **d'un usuari del laboratori, no de `root`**:
+
+    ```{.bash}
+    passwd nom_usuari
+    ```
+
+6.  Sincronitzeu i reinicieu:
+
+    ```{.bash}
+    sync
+    reboot -f
+    ```
+
+7.  Inicieu sessió amb l'usuari i la contrasenya nova.
+
+::: {.reflexio}
+No hem tocat cap contrasenya de `root`, ni hem hagut d'introduir-ne cap enlloc. Què demostra això sobre la relació entre **accés físic a la consola d'arrencada** i **autenticació normal del sistema operatiu**?
+:::
+
+<details>
+<summary>Pots veure el raonament</summary>
+
+::: {.solucio}
+Que **no hi ha cap relació**: qui té accés físic (o a la consola de la VM) al moment del `boot` pot saltar-se completament l'autenticació normal, perquè encara no s'ha arribat al punt on aquesta autenticació existeix (`systemd` ni tan sols ha arrencat). No cal **trencar** cap contrasenya: només cal triar quin programa s'executa com a PID 1.
+:::
+
+</details>
+
+---
+
+## Part E · Protegir GRUB amb contrasenya
+
+Genereu un hash de contrasenya:
+
+```{.bash}
+grub-mkpasswd-pbkdf2
+```
+
+Sortida esperada (la línia que conté `pbkdf2` és la que copiareu):
+
+```
+Enter password:
+Reenter password:
+PBKDF2 hash of your password is grub.pbkdf2.sha512.10000.XXXXXX...
+```
+
+Editeu `/etc/grub.d/40_custom` (com a `root`) i afegiu-hi:
+
+```
+set superusers="root"
+password_pbkdf2 root grub.pbkdf2.sha512.10000.XXXXXX...
+```
+
+Regenereu la configuració i reinicieu:
+
+```{.bash}
+update-grub
+reboot
+```
+
+Torneu a provar de prémer `e` al menú: ara us hauria de demanar credencials.
+
+::: {.errorcomu title="Secure Boot no és el mateix mecanisme"}
+No confongueu les dues coses. La **contrasenya de GRUB** és el que impedeix editar la línia del kernel (el que acabeu de fer a la Part D). El **Secure Boot** és una cosa diferent: verifica la **signatura** del binari de GRUB/kernel abans d'executar-lo, no restringeix què escriviu un cop GRUB ja s'executa. Amb Secure Boot activat però **sense** contrasenya de GRUB, l'atac `init=/bin/bash` de la Part D **continua funcionant igual**. Són dues capes independents, i cal totes dues (a més del control físic de la màquina) per tancar aquest vector.
+:::
+
+::: {.reflexio}
+Amb la contrasenya de GRUB activada, encara podríeu recuperar l'accés arrencant des d'un USB en viu. Quina mesura, de les tres (contrasenya de GRUB, Secure Boot, seguretat física), tanca **aquesta** via concreta?
+:::
+
+<details>
+<summary>Pots veure el raonament</summary>
+
+::: {.solucio}
+Cap de les dues primeres: un USB en viu arrenca el **seu propi** GRUB, no el del disc, així que la contrasenya que heu configurat no hi intervé, i Secure Boot només verificaria la signatura d'aquest altre GRUB (que podria estar igualment signat si és una distribució normal). L'única mesura que ho tanca és la **seguretat física**: restringir l'ordre d'arrencada al firmware (o protegir-lo també amb contrasenya) perquè no arrenqui mai de dispositius externs.
+:::
+
+</details>
+
+---
+
+## Resum
+
+:::{.resum}
+**Què hem fet.** Hem recorregut la mateixa cadena de la teoria (firmware → GRUB → kernel → initramfs → arrel real → `systemd`), però verificant cada etapa amb ordres reals sobre una Debian de veritat, i després l'hem fet servir per intervenir-hi amb `init=/bin/bash`.
+
+| Teoria (Part 2) | Laboratori |
+|:--|:--|
+| ESP, BIOS boot partition | `lsblk`, `PARTTYPE` |
+| NVRAM, `Boot####` | `efibootmgr -v` |
+| `grub.cfg` generat, no editat | `grep` a `grub.cfg` vs. `/proc/cmdline` |
+| GRUB carrega kernel + initramfs | `ls /boot/vmlinuz*` / `initrd*` |
+| Per què existeix l'initramfs | `lsinitramfs` + `grep cryptsetup/lvm` |
+| `init=` i `switch_root` | Part D: `init=/bin/bash` sense `chroot` |
+| `systemd`, PID 1 | `ps -p 1`, `systemd-analyze` |
+| Secure Boot ≠ contrasenya de GRUB | Part E |
+:::

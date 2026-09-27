@@ -36,6 +36,7 @@ local components = {
   programari    = { label = "Programari Necessari",     icon = "programari" },
   lliurament    = { label = "Lliurament",               icon = "lliurament" },
   rubrica       = { label = "Rúbrica",                  icon = "rubrica" },
+  terminal      = { label = "Terminal",                  icon = "terminal" },
 }
 
 local function icon_svg(name)
