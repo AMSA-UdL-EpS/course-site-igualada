@@ -11,7 +11,7 @@
   <meta name="generator" content="quarto-1.10.18">
 
   <meta name="author" content="Jordi Mateo Fornés">
-  <title>Administració i Manteniment de Sistemes i Aplicacions – Unitat 2 · Arrencada</title>
+  <title>Administració i Manteniment de Sistemes i Aplicacions – Unitat 2 · Arrencada (Part 1)</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -200,7 +200,7 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Unitat 2 · Arrencada</h1>
+  <h1 class="title">Unitat 2 · Arrencada (Part 1)</h1>
   <p class="subtitle">Administració i Manteniment de Sistemes i Aplicacions (AMSA)</p>
 
 <div class="quarto-title-authors">
@@ -231,7 +231,7 @@ Jordi Mateo Fornés
 <h2>Què passa quan premem el botó d’engegada?</h2>
 <div class="columns">
 <div class="column" style="width:80%;">
-<p><img data-src="figures/power-to-os.png" style="width:100.0%" alt="Cadena POWER, CPU RESET, dues etapes desconegudes marcades amb un interrogant i SISTEMA OPERATIU. La primera pregunta és què s'executa primer i on és el codi; la segona, qui carrega el sistema operatiu, des d'on i com es fa la transició."></p>
+<p><img data-src="figures/01/power-to-os.png" style="width:100.0%" alt="Cadena POWER, CPU RESET, dues etapes desconegudes marcades amb un interrogant i SISTEMA OPERATIU. La primera pregunta és què s'executa primer i on és el codi; la segona, qui carrega el sistema operatiu, des d'on i com es fa la transició."></p>
 </div><div class="column" style="width:20%;">
 <div class="fragment">
 <div class="concepte udl-component udl-concepte" title="Bootstrap" style="text-align: center;">
@@ -246,7 +246,7 @@ Jordi Mateo Fornés
 <h2>La CPU després del <em>reset</em>: on comença?</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
-<p><img data-src="figures/reset-vector.png" alt="Cadena vertical: RESET, estat inicial de la CPU definit per l'arquitectura, primera lectura d'instrucció a l'adreça 0xFFFFFFF0 (x86), xip flash SPI amb el firmware mapejat pel chipset, salt (jmp) al codi d'entrada del firmware." height="800"></p>
+<p><img data-src="figures/01/reset-vector.png" alt="Cadena vertical: RESET, estat inicial de la CPU definit per l'arquitectura, primera lectura d'instrucció a l'adreça 0xFFFFFFF0 (x86), xip flash SPI amb el firmware mapejat pel chipset, salt (jmp) al codi d'entrada del firmware." height="800"></p>
 </div><div class="column" style="width:50%;">
 <div class="definicio udl-component udl-definicio" title="Reset vector">
 <div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-definicio"></use></svg><span>Definició — Reset vector</span></div>
@@ -272,7 +272,7 @@ EIP         = 0x0000FFF0
 <h2>Firmware: el primer programari que controla la màquina</h2>
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/firmware-tasks.png" class="quarto-figure quarto-figure-center" alt="Esquema: la CPU executa el firmware, que fa tres tasques en ordre: 1) inicialitza el maquinari, 2) determina el dispositiu d'arrencada i 3) carrega el primer codi d'arrencada (boot sector o aplicació EFI) i li cedeix el control." height="640"></p>
+<p><img data-src="figures/01/firmware-tasks.png" class="quarto-figure quarto-figure-center" alt="Esquema: la CPU executa el firmware, que fa tres tasques en ordre: 1) inicialitza el maquinari, 2) determina el dispositiu d'arrencada i 3) carrega el primer codi d'arrencada (boot sector o aplicació EFI) i li cedeix el control." height="640"></p>
 </figure>
 </div>
 </section>
@@ -280,7 +280,7 @@ EIP         = 0x0000FFF0
 <h2>Dos contractes</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
-<p><img data-src="figures/dos-contractes.png" style="width:100.0%" alt="Esquema: el firmware, a la placa base, ofereix dos contractes, el del BIOS i el d'UEFI, que convergeixen en el primer codi que carrega: un boot sector o una aplicació EFI."></p>
+<p><img data-src="figures/01/dos-contractes.png" style="width:100.0%" alt="Esquema: el firmware, a la placa base, ofereix dos contractes, el del BIOS i el d'UEFI, que convergeixen en el primer codi que carrega: un boot sector o una aplicació EFI."></p>
 </div><div class="column" style="width:50%;">
 <p>El firmware <strong>no</strong> és el sistema operatiu: prepara la màquina i cedeix el control al primer codi que carrega.</p>
 <div class="concepte udl-component udl-concepte" title="Dos contractes">
@@ -302,7 +302,7 @@ EIP         = 0x0000FFF0
 <h2>BIOS: carregar un sector</h2>
 <div class="columns">
 <div class="column" style="width:60%;">
-<p><img data-src="figures/sector0-to-ram.png" style="width:100.0%" alt="Esquema: el BIOS llegeix el sector 0 del disc (LBA 0, 512 bytes, acabat en els bytes 55 i AA), en comprova la signatura, el carrega a la RAM a l'adreça 0x7C00 com a boot sector i hi salta (fletxa discontínua)."></p>
+<p><img data-src="figures/01/sector0-to-ram.png" style="width:100.0%" alt="Esquema: el BIOS llegeix el sector 0 del disc (LBA 0, 512 bytes, acabat en els bytes 55 i AA), en comprova la signatura, el carrega a la RAM a l'adreça 0x7C00 com a boot sector i hi salta (fletxa discontínua)."></p>
 </div><div class="column" style="width:40%;">
 <div class="definicio udl-component udl-definicio" title="Boot sector">
 <div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-definicio"></use></svg><span>Definició — Boot sector</span></div>
@@ -326,7 +326,7 @@ EIP         = 0x0000FFF0
 <h2>El problema dels 512 bytes</h2>
 <div class="columns">
 <div class="column" style="width:65%;">
-<p><img data-src="figures/512-bytes.png" style="width:100.0%" alt="Dos esquemes de 512 bytes. Dalt, el sector 0 com a boot sector: 510 bytes de codi d'arrencada i dades més 2 bytes de signatura 55 AA. A baix, el mateix sector com a MBR: 446 bytes de codi, 64 bytes de taula de particions (4 entrades de 16 bytes) i 2 bytes de signatura."></p>
+<p><img data-src="figures/01/512-bytes.png" style="width:100.0%" alt="Dos esquemes de 512 bytes. Dalt, el sector 0 com a boot sector: 510 bytes de codi d'arrencada i dades més 2 bytes de signatura 55 AA. A baix, el mateix sector com a MBR: 446 bytes de codi, 64 bytes de taula de particions (4 entrades de 16 bytes) i 2 bytes de signatura."></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode nasm code-with-copy"><code class="sourceCode nasm"><span id="cb2-1"><a aria-hidden="true" tabindex="-1"></a>    <span class="co">; ... codi del boot sector ...</span></span>
 <span id="cb2-2"><a aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a aria-hidden="true" tabindex="-1"></a>    <span class="dt">times</span> <span class="dv">510</span> <span class="op">-</span> <span class="op">($-</span>$$<span class="op">)</span> <span class="dt">db</span> <span class="dv">0</span>   <span class="co">; omple fins al byte 510</span></span>
@@ -349,7 +349,7 @@ EIP         = 0x0000FFF0
 <h2>Mapa de memòria en mode real</h2>
 <div class="columns">
 <div class="column" style="width:42%;">
-<p><img data-src="figures/real-mode-map.png" alt="Mapa de memòria en mode real x86, adreces baixes a dalt: IVT i BDA (0x00000–0x004FF), zona disponible per al bootloader amb la pila de Stage 1, boot sector de Stage 1 a 0x07C00, memòria convencional disponible, Stage 2 a 0x08000, EBDA de posició variable, memòria de vídeo a 0xA0000 (128 KB) i dispositius i ROM del BIOS fins a 0xFFFFF." height="650"></p>
+<p><img data-src="figures/01/real-mode-map.png" alt="Mapa de memòria en mode real x86, adreces baixes a dalt: IVT i BDA (0x00000–0x004FF), zona disponible per al bootloader amb la pila de Stage 1, boot sector de Stage 1 a 0x07C00, memòria convencional disponible, Stage 2 a 0x08000, EBDA de posició variable, memòria de vídeo a 0xA0000 (128 KB) i dispositius i ROM del BIOS fins a 0xFFFFF." height="650"></p>
 </div><div class="column" style="width:58%;">
 <p>Només tres adreces ens importen ara mateix:</p>
 <ul>
@@ -369,7 +369,7 @@ EIP         = 0x0000FFF0
 <h2>Mode real: <code>segment:offset</code></h2>
 <div class="columns">
 <div class="column" style="width:58%;">
-<p><img data-src="figures/real-mode.png" style="width:100.0%" alt="Esquema: el BIOS (firmware) llegeix el sector 0, comprova la signatura 55 AA i el carrega a 0x7C00, i cedeix el control a 0x7C00. El boot sector és Stage 1: primer codi d'arrencada de 512 bytes que s'executa a partir de 0x7C00. La CPU està en mode real de 16 bits durant tota l'execució."></p>
+<p><img data-src="figures/01/real-mode.png" style="width:100.0%" alt="Esquema: el BIOS (firmware) llegeix el sector 0, comprova la signatura 55 AA i el carrega a 0x7C00, i cedeix el control a 0x7C00. El boot sector és Stage 1: primer codi d'arrencada de 512 bytes que s'executa a partir de 0x7C00. La CPU està en mode real de 16 bits durant tota l'execució."></p>
 </div><div class="column" style="width:42%;">
 <div class="concepte udl-component udl-concepte" title="Adreça física">
 <div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte — Adreça física</span></div>
@@ -395,7 +395,7 @@ EIP         = 0x0000FFF0
 <h2><em>Load address</em> vs.&nbsp;<em>link address</em></h2>
 <div class="columns">
 <div class="column" style="width:60%;">
-<p><img data-src="figures/load-vs-link.png" style="width:100.0%" alt="A dalt, configuració correcta: el codi NASM porta [org 0x7C00] (link address), s'assembla a un .bin, el BIOS el carrega a 0x7C00 (load address) i les etiquetes calculades coincideixen amb l'adreça de càrrega. A sota, configuració incorrecta: el codi NASM porta [org 0x8000], però el BIOS continua carregant el boot sector a 0x7C00. Les etiquetes s'han calculat amb base 0x8000, de manera que mov si, msg apunta a 0x8000 més un desplaçament, una zona de la RAM fora del boot sector que no conté el missatge (fletxa vermella discontínua). Els salts relatius no es veuen afectats."></p>
+<p><img data-src="figures/01/load-vs-link.png" style="width:100.0%" alt="A dalt, configuració correcta: el codi NASM porta [org 0x7C00] (link address), s'assembla a un .bin, el BIOS el carrega a 0x7C00 (load address) i les etiquetes calculades coincideixen amb l'adreça de càrrega. A sota, configuració incorrecta: el codi NASM porta [org 0x8000], però el BIOS continua carregant el boot sector a 0x7C00. Les etiquetes s'han calculat amb base 0x8000, de manera que mov si, msg apunta a 0x8000 més un desplaçament, una zona de la RAM fora del boot sector que no conté el missatge (fletxa vermella discontínua). Els salts relatius no es veuen afectats."></p>
 </div><div class="column" style="width:40%;">
 <div class="reflexio udl-component udl-reflexio" title="Pregunta a l'aula">
 <div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió — Pregunta a l'aula</span></div>
@@ -445,7 +445,7 @@ EIP         = 0x0000FFF0
 <h2>Inicialitzar l’entorn mínim</h2>
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/fig10.png" class="quarto-figure quarto-figure-center" alt="Codi NASM d'inicialització del boot sector, instrucció per instrucció: cli, xor ax ax, mov ds ax, mov es ax, mov [boot_drive] dl, mov ss ax (marcada amb una advertència: convé fer-ho amb interrupcions deshabilitades), mov sp 0x7c00, sti i la variable boot_drive al final del fitxer. Als costats: per què cli abans de canviar SS:SP, l'advertència sobre mov ss amb interrupcions habilitades, la pila a 0x7C00 com a elecció nostra i no una regla del BIOS, i un mini-mapa de memòria amb adreces baixes a dalt on la pila creix cap a adreces més baixes, per sobre del boot sector." height="650"></p>
+<p><img data-src="figures/01/fig10.png" class="quarto-figure quarto-figure-center" alt="Codi NASM d'inicialització del boot sector, instrucció per instrucció: cli, xor ax ax, mov ds ax, mov es ax, mov [boot_drive] dl, mov ss ax (marcada amb una advertència: convé fer-ho amb interrupcions deshabilitades), mov sp 0x7c00, sti i la variable boot_drive al final del fitxer. Als costats: per què cli abans de canviar SS:SP, l'advertència sobre mov ss amb interrupcions habilitades, la pila a 0x7C00 com a elecció nostra i no una regla del BIOS, i un mini-mapa de memòria amb adreces baixes a dalt on la pila creix cap a adreces més baixes, per sobre del boot sector." height="650"></p>
 </figure>
 </div>
 </section>
@@ -453,7 +453,7 @@ EIP         = 0x0000FFF0
 <h2>Stage 1: una feina molt concreta</h2>
 <div class="columns">
 <div class="column" style="width:48%;">
-<p><img data-src="figures/two-stage.png" style="width:100.0%" alt="Cadena vertical: el BIOS (firmware) llegeix el sector 0 (LBA 0) i el carrega com a Stage 1 (boot sector, com a màxim 510 bytes a 0x7C00). Stage 1 llegeix més sectors del disc i carrega Stage 2 (més espai per a codi i dades). Stage 1 i Stage 2 formen el bootloader. Stage 2 carrega el kernel, que és el sistema operatiu. El disc d'arrencada, a la dreta, alimenta Stage 1 (LBA 0) i Stage 2 (LBA 1, 2…)."></p>
+<p><img data-src="figures/01/two-stage.png" style="width:100.0%" alt="Cadena vertical: el BIOS (firmware) llegeix el sector 0 (LBA 0) i el carrega com a Stage 1 (boot sector, com a màxim 510 bytes a 0x7C00). Stage 1 llegeix més sectors del disc i carrega Stage 2 (més espai per a codi i dades). Stage 1 i Stage 2 formen el bootloader. Stage 2 carrega el kernel, que és el sistema operatiu. El disc d'arrencada, a la dreta, alimenta Stage 1 (LBA 0) i Stage 2 (LBA 1, 2…)."></p>
 </div><div class="column" style="width:52%;">
 <p><strong>Stage 1:</strong></p>
 <ul>
@@ -474,7 +474,7 @@ EIP         = 0x0000FFF0
 <h2>LBA i adreça de memòria són coses diferents</h2>
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/lba-vs-ram.png" class="quarto-figure quarto-figure-center" alt="Dos espais d'adreces. A l'esquerra, el disc d'arrencada amb sectors de 512 bytes: LBA 0 és el boot sector (Stage 1) i LBA 2048 és Stage 2. A la dreta, la RAM amb adreces baixes a dalt: el BIOS llegeix LBA 0 i el carrega a 0x7C00 (fletxa taronja), i Stage 1 llegeix des de LBA 2048 i carrega Stage 2 a 0x8000 (fletxa vermella)." height="540"></p>
+<p><img data-src="figures/01/lba-vs-ram.png" class="quarto-figure quarto-figure-center" alt="Dos espais d'adreces. A l'esquerra, el disc d'arrencada amb sectors de 512 bytes: LBA 0 és el boot sector (Stage 1) i LBA 2048 és Stage 2. A la dreta, la RAM amb adreces baixes a dalt: el BIOS llegeix LBA 0 i el carrega a 0x7C00 (fletxa taronja), i Stage 1 llegeix des de LBA 2048 i carrega Stage 2 a 0x8000 (fletxa vermella)." height="540"></p>
 </figure>
 </div>
 <div class="fragment" style="text-align: center;">
@@ -489,7 +489,7 @@ EIP         = 0x0000FFF0
 <h2>El firmware encara ens ofereix serveis</h2>
 <div class="columns">
 <div class="column" style="width:56%;">
-<p><img data-src="figures/bios-services.png" style="width:100.0%" alt="Stage 1 (boot sector, mode real) utilitza les interrupcions del BIOS: INT 10h per als serveis de vídeo (funcions d'interès: AH 0x0E escriure un caràcter en mode teletip, marcada com la que usem, i AH 0x00 establir el mode de vídeo) i INT 13h per als serveis de disc (AH 0x42 lectura estesa de sectors amb LBA, marcada com la que usem, i AH 0x41 comprovar les extensions de disc)."></p>
+<p><img data-src="figures/01/bios-services.png" style="width:100.0%" alt="Stage 1 (boot sector, mode real) utilitza les interrupcions del BIOS: INT 10h per als serveis de vídeo (funcions d'interès: AH 0x0E escriure un caràcter en mode teletip, marcada com la que usem, i AH 0x00 establir el mode de vídeo) i INT 13h per als serveis de disc (AH 0x42 lectura estesa de sectors amb LBA, marcada com la que usem, i AH 0x41 comprovar les extensions de disc)."></p>
 </div><div class="column" style="width:44%;">
 <p><strong><code>INT 13h</code>, <code>AH = 0x42</code></strong> — lectura de disc estesa (LBA):</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode nasm code-with-copy"><code class="sourceCode nasm"><span id="cb5-1"><a aria-hidden="true" tabindex="-1"></a><span class="fu">dap:</span>                   <span class="co">; Disk Address Packet</span></span>
@@ -513,7 +513,7 @@ EIP         = 0x0000FFF0
 <h2>Stage 1 → Stage 2</h2>
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/stage1-stage2.png" class="quarto-figure quarto-figure-center" alt="Esquema numerat de la càrrega en dues etapes. 1) El BIOS llegeix el sector 0 (LBA 0) del disc i el carrega a la RAM a 0x7C00 com a Stage 1 (fletxa taronja). 2) Stage 1 utilitza INT 13h amb AH 0x42 per llegir més sectors des de LBA 2048 i carregar Stage 2 a 0x8000 (fletxa vermella). 3) Dins la RAM, Stage 1 salta a 0x0000:0x8000 amb jmp (fletxa vermella discontínua) i s'executa Stage 2." height="550"></p>
+<p><img data-src="figures/01/stage1-stage2.png" class="quarto-figure quarto-figure-center" alt="Esquema numerat de la càrrega en dues etapes. 1) El BIOS llegeix el sector 0 (LBA 0) del disc i el carrega a la RAM a 0x7C00 com a Stage 1 (fletxa taronja). 2) Stage 1 utilitza INT 13h amb AH 0x42 per llegir més sectors des de LBA 2048 i carregar Stage 2 a 0x8000 (fletxa vermella). 3) Dins la RAM, Stage 1 salta a 0x0000:0x8000 amb jmp (fletxa vermella discontínua) i s'executa Stage 2." height="550"></p>
 </figure>
 </div>
 <div class="fragment">
@@ -523,7 +523,7 @@ EIP         = 0x0000FFF0
 <section id="diagnòstic-on-sha-trencat-larrencada" class="slide level2">
 <h2>Diagnòstic: on s’ha trencat l’arrencada?</h2>
 
-<img data-src="figures/boot-diagnosis.png" class="quarto-figure quarto-figure-center r-stretch" style="width:94.0%" alt="Cadena horitzontal d'etapes de l'arrencada amb el missatge típic sota cada una: Power (sense senyal o sense vídeo); Firmware (BIOS/UEFI) amb «No bootable device»; Bootloader (p. ex. GRUB) amb «grub rescue>»; Kernel, amb «Loading initial ramdisk…» i que s'atura; Root FS amb «VFS: Cannot open root device» seguit de «Kernel panic - not syncing: VFS: Unable to mount root fs»; Userspace (p. ex. systemd) amb «You are in emergency mode»."><div class="fragment">
+<img data-src="figures/01/boot-diagnosis.png" class="quarto-figure quarto-figure-center r-stretch" style="width:94.0%" alt="Cadena horitzontal d'etapes de l'arrencada amb el missatge típic sota cada una: Power (sense senyal o sense vídeo); Firmware (BIOS/UEFI) amb «No bootable device»; Bootloader (p. ex. GRUB) amb «grub rescue>»; Kernel, amb «Loading initial ramdisk…» i que s'atura; Root FS amb «VFS: Cannot open root device» seguit de «Kernel panic - not syncing: VFS: Unable to mount root fs»; Userspace (p. ex. systemd) amb «You are in emergency mode»."><div class="fragment">
 <div class="errorcomu udl-component udl-errorcomu" title="Són indicacions, no diagnòstics exactes">
 <div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-errorcomu"></use></svg><span>Error Comú — Són indicacions, no diagnòstics exactes</span></div>
 <p>Un missatge apunta al punt on <strong>probablement</strong> ha fallat l’arrencada, però <strong>no determina</strong> una única etapa. Per exemple, <code>No bootable device</code> pot ser: (a) sense signatura <code>55 AA</code> vàlida al sector 0, (b) ordre d’arrencada apuntant a un altre dispositiu, o (c) mode BIOS/UEFI incompatible amb el disc.</p>
@@ -534,7 +534,7 @@ EIP         = 0x0000FFF0
 <h2>UEFI: un altre contracte</h2>
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/uefi-contract.png" class="quarto-figure quarto-figure-center" alt="Dues bandes. A dalt, el contracte conceptual del firmware UEFI a l'arrencada en quatre passos: 1) localitza una EFI System Partition (ESP), 2) accedeix al seu sistema de fitxers (normalment FAT32), 3) carrega una aplicació EFI (p. ex. BOOTX64.EFI o GRUBX64.EFI), 4) l'executa amb les interfícies del firmware (UEFI Boot Services). A baix, la configuració típica del nostre laboratori: taula de particions GPT, ESP, sistema de fitxers FAT32 i aplicació EFI en format PE32+ per a x86-64. Línies discontínues amb el mateix color uneixen els passos 1, 2 i 3 amb l'ESP, el FAT i l'aplicació EFI." height="500"></p>
+<p><img data-src="figures/01/uefi-contract.png" class="quarto-figure quarto-figure-center" alt="Dues bandes. A dalt, el contracte conceptual del firmware UEFI a l'arrencada en quatre passos: 1) localitza una EFI System Partition (ESP), 2) accedeix al seu sistema de fitxers (normalment FAT32), 3) carrega una aplicació EFI (p. ex. BOOTX64.EFI o GRUBX64.EFI), 4) l'executa amb les interfícies del firmware (UEFI Boot Services). A baix, la configuració típica del nostre laboratori: taula de particions GPT, ESP, sistema de fitxers FAT32 i aplicació EFI en format PE32+ per a x86-64. Línies discontínues amb el mateix color uneixen els passos 1, 2 i 3 amb l'ESP, el FAT i l'aplicació EFI." height="500"></p>
 </figure>
 </div>
 <div class="fragment">
@@ -545,7 +545,7 @@ EIP         = 0x0000FFF0
 <h2>UEFI: on és el <em>bootloader</em>?</h2>
 <div class="columns">
 <div class="column" style="width:64%;">
-<p><img data-src="figures/esp.png" style="width:100.0%" alt="A l'esquerra, un disc amb la taula de particions GPT (que no és una partició), l'ESP (EFI System Partition, FAT32, p. ex. 100–500 MB), una partició del sistema (p. ex. ext4) i altres particions. A la dreta, el contingut de l'ESP: la carpeta EFI amb les carpetes ubuntu i Microsoft en gris i la carpeta BOOT amb el fitxer BOOTX64.EFI en vermell. Ruta per defecte (fallback): si no hi ha cap entrada d'arrencada a la NVRAM o cap de les existents funciona, el firmware UEFI executa EFI/BOOT/BOOTX64.EFI."></p>
+<p><img data-src="figures/01/esp.png" style="width:100.0%" alt="A l'esquerra, un disc amb la taula de particions GPT (que no és una partició), l'ESP (EFI System Partition, FAT32, p. ex. 100–500 MB), una partició del sistema (p. ex. ext4) i altres particions. A la dreta, el contingut de l'ESP: la carpeta EFI amb les carpetes ubuntu i Microsoft en gris i la carpeta BOOT amb el fitxer BOOTX64.EFI en vermell. Ruta per defecte (fallback): si no hi ha cap entrada d'arrencada a la NVRAM o cap de les existents funciona, el firmware UEFI executa EFI/BOOT/BOOTX64.EFI."></p>
 </div><div class="column" style="width:36%;">
 <ul>
 <li><strong>ESP</strong>: <em>EFI System Partition</em>, identificada per un GUID de tipus de partició.</li>
@@ -562,7 +562,7 @@ EIP         = 0x0000FFF0
 <h2>Una aplicació EFI és un executable</h2>
 <div class="columns">
 <div class="column" style="width:66%;">
-<p><img data-src="figures/raw-vs-pecoff.png" style="width:100.0%" alt="Comparació. BIOS (mode real, 16 bits): un binari pla sense capçalera amb la directiva org 0x7C00 (link address = 0x7C00), que porta a suposicions fixes: adreça de càrrega coneguda, sense relocacions i entorn mínim de 16 bits amb serveis del BIOS. UEFI (long mode, 64 bits): un executable PE/COFF amb capçalera, seccions i informació de relocació, que el loader del firmware carrega i prepara, amb suport de relocacions: es pot carregar en diferents adreces, crida l'entrada EFI i obté els serveis a través de la SystemTable, sense enllaç dinàmic per imports."></p>
+<p><img data-src="figures/01/raw-vs-pecoff.png" style="width:100.0%" alt="Comparació. BIOS (mode real, 16 bits): un binari pla sense capçalera amb la directiva org 0x7C00 (link address = 0x7C00), que porta a suposicions fixes: adreça de càrrega coneguda, sense relocacions i entorn mínim de 16 bits amb serveis del BIOS. UEFI (long mode, 64 bits): un executable PE/COFF amb capçalera, seccions i informació de relocació, que el loader del firmware carrega i prepara, amb suport de relocacions: es pot carregar en diferents adreces, crida l'entrada EFI i obté els serveis a través de la SystemTable, sense enllaç dinàmic per imports."></p>
 </div><div class="column" style="width:34%;">
 <div class="concepte udl-component udl-concepte" title="Aplicació EFI = PE/COFF">
 <div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte — Aplicació EFI = PE/COFF</span></div>
@@ -574,7 +574,7 @@ EIP         = 0x0000FFF0
 <h2>El firmware ofereix serveis: la <code>SystemTable</code></h2>
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/system-table.png" class="quarto-figure quarto-figure-center" alt="Una aplicació EFI (p. ex. un bootloader) rep la SystemTable, una taula de punters a serveis UEFI, que dona accés a tres grups: Console (Simple Text Input/Output: entrada de teclat ConIn, sortida de text ConOut, sortida d'errors StdErr), Boot Services (gestió de memòria, càrrega d'imatges EFI amb LoadImage i StartImage, accés a dispositius i protocols, gràfics amb el Graphics Output Protocol i accés a sistemes de fitxers) i Runtime Services (variables NVRAM, rellotge RTC i serveis que continuen disponibles després de ExitBootServices)." height="580"></p>
+<p><img data-src="figures/01/system-table.png" class="quarto-figure quarto-figure-center" alt="Una aplicació EFI (p. ex. un bootloader) rep la SystemTable, una taula de punters a serveis UEFI, que dona accés a tres grups: Console (Simple Text Input/Output: entrada de teclat ConIn, sortida de text ConOut, sortida d'errors StdErr), Boot Services (gestió de memòria, càrrega d'imatges EFI amb LoadImage i StartImage, accés a dispositius i protocols, gràfics amb el Graphics Output Protocol i accés a sistemes de fitxers) i Runtime Services (variables NVRAM, rellotge RTC i serveis que continuen disponibles després de ExitBootServices)." height="580"></p>
 </figure>
 </div>
 <div class="fragment">
@@ -587,13 +587,13 @@ EIP         = 0x0000FFF0
 <div class="column" style="width:50%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/bios-contract.png" class="quarto-figure quarto-figure-center" alt="Contracte del BIOS en quatre preguntes. El firmware llegeix un sector del disc. Què carrega: un boot sector de 512 bytes, el primer sector del disc. On ho carrega: a 0x7C00, l'adreça de càrrega. En quin estat deixa la CPU: en mode real de 16 bits. Quins serveis ofereix: INT 10h per al vídeo i INT 13h per al disc." height="570"></p>
+<p><img data-src="figures/01/bios-contract.png" class="quarto-figure quarto-figure-center" alt="Contracte del BIOS en quatre preguntes. El firmware llegeix un sector del disc. Què carrega: un boot sector de 512 bytes, el primer sector del disc. On ho carrega: a 0x7C00, l'adreça de càrrega. En quin estat deixa la CPU: en mode real de 16 bits. Quins serveis ofereix: INT 10h per al vídeo i INT 13h per al disc." height="570"></p>
 </figure>
 </div>
 </div><div class="column" style="width:50%;">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/uefi-contract2.png" class="quarto-figure quarto-figure-center" alt="Contracte d'UEFI en quatre preguntes. El firmware UEFI (p. ex. OVMF a QEMU) accedeix a un sistema de fitxers (p. ex. l'EFI System Partition, FAT). Què carrega: una aplicació EFI, un executable PE/COFF (p. ex. BOOTX64.EFI). On ho carrega: a memòria, a una adreça escollida pel firmware. En quin estat deixa la CPU: en long mode, 64 bits en x86-64. Quins serveis ofereix: la SystemTable i els Boot Services, serveis UEFI durant l'arrencada." height="570"></p>
+<p><img data-src="figures/01/uefi-contract2.png" class="quarto-figure quarto-figure-center" alt="Contracte d'UEFI en quatre preguntes. El firmware UEFI (p. ex. OVMF a QEMU) accedeix a un sistema de fitxers (p. ex. l'EFI System Partition, FAT). Què carrega: una aplicació EFI, un executable PE/COFF (p. ex. BOOTX64.EFI). On ho carrega: a memòria, a una adreça escollida pel firmware. En quin estat deixa la CPU: en long mode, 64 bits en x86-64. Quins serveis ofereix: la SystemTable i els Boot Services, serveis UEFI durant l'arrencada." height="570"></p>
 </figure>
 </div>
 </div></div>
