@@ -1,0 +1,502 @@
+---
+title: "Arrencada (IV) · Migració a LUKS"
+author: "Jordi Mateo Fornés"
+format:
+  udl-course-html:
+    toc: false
+    number-sections: false
+---
+
+La imatge base de QEMU (`debian-amsa.qcow2`) té un disc de 20 GB amb arrencada UEFI i tres particions: `/boot/efi`, `/` (ext4 **sense xifrar**) i swap. A més, té els paquets d'`apt` mal configurats.
+
+En aquest laboratori farem dues coses:
+
+1. **Arreglar `apt`** perquè es puguin instal·lar paquets.
+2. **Preparar un disc nou xifrat amb LUKS** i clonar-hi el sistema en marxa. Per simplificar, **no migrarem la swap**.
+
+::: {.callout-note}
+Els exemples de sortida són orientatius: les mides, els UUID i les versions variaran a la vostra màquina.
+:::
+
+# Part A · Arreglar `apt`
+
+Si ara proveu d'instal·lar un paquet, no funcionarà perquè `apt` encara busca els paquets en un CD-ROM:
+
+:::{.terminal}
+```bash
+$ sudo apt install cowsay -y
+```
+:::
+
+## Editar `sources.list`
+
+Cal deixar a `/etc/apt/sources.list` només els repositoris d'Internet de Debian *trixie*. Això vol dir **eliminar** les línies que comencen per `deb cdrom:` i **afegir-hi** aquestes tres:
+
+```text
+deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+```
+
+::: {.panel-tabset}
+
+## Amb l'editor (nano)
+
+:::{.terminal}
+```bash
+$ sudo nano /etc/apt/sources.list
+```
+:::
+
+Esborreu les línies `deb cdrom:...`, enganxeu-hi les tres línies de dalt i deseu amb `Ctrl+O`, `Enter` i `Ctrl+X`.
+
+## Amb ordres directes
+
+`sed` esborra les línies del CD-ROM i `tee -a` afegeix les noves al final del fitxer:
+
+:::{.terminal}
+```bash
+$ sudo sed -i '/^deb cdrom:/d' /etc/apt/sources.list
+$ sudo tee -a /etc/apt/sources.list << 'EOF'
+deb http://deb.debian.org/debian/ trixie main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+EOF
+```
+:::
+
+:::
+
+## Actualitzar l'índex i provar
+
+`apt update` descarrega la llista de paquets dels repositoris nous:
+
+:::{.terminal}
+```bash
+$ sudo apt update -y
+Get:1 http://deb.debian.org/debian trixie InRelease [...]
+Get:2 http://deb.debian.org/debian-security trixie-security InRelease [...]
+Get:3 http://deb.debian.org/debian trixie-updates InRelease [...]
+...
+Reading package lists... Done
+```
+:::
+
+Ara ja podem instal·lar paquets:
+
+:::{.terminal}
+```bash
+$ sudo apt install cowsay -y
+...
+Setting up cowsay (3.03+dfsg2-8) ...
+```
+:::
+
+## Instal·lar les eines necessàries
+
+Per a aquest laboratori necessitem quatre paquets:
+
+- `parted`: crea les particions del disc nou.
+- `cryptsetup`: crea i obre el contenidor xifrat LUKS.
+- `cryptsetup-initramfs`: afegeix a l'`initramfs` el suport per desxifrar el disc en arrencar.
+- `rsync`: copia el sistema en marxa cap al disc nou.
+
+:::{.terminal}
+```bash
+$ sudo apt install parted cryptsetup cryptsetup-initramfs rsync -y
+Reading package lists... Done
+Building dependency tree... Done
+...
+Setting up cryptsetup (2:2.7.5-2) ...
+Setting up cryptsetup-initramfs (2:2.7.5-2) ...
+update-initramfs: deferring update (trigger activated)
+...
+```
+:::
+
+Comproveu que les ordres ja estan disponibles:
+
+:::{.terminal}
+```bash
+$ which parted cryptsetup rsync
+/usr/sbin/parted
+/usr/sbin/cryptsetup
+/usr/bin/rsync
+```
+:::
+
+
+Un cop la màquina QEMU funciona sense problemes, **apagueu-la** i sortiu de QEMU.
+
+# Part B · Afegir el disc nou a QEMU
+
+Aquesta part es fa al **host**, a la mateixa carpeta on hi ha `run.sh` i `debian-amsa.qcow2`.
+
+## Crear el fitxer del disc nou
+
+Podeu fer-ho de dues maneres. Trieu-ne **una**:
+
+::: {.panel-tabset}
+
+## Disc buit (`qemu-img create`)
+
+Crea un disc virtual buit de 20 GB en format `qcow2`:
+
+:::{.terminal}
+```bash
+host$ qemu-img create -f qcow2 root-luks.qcow2 20G
+Formatting 'root-luks.qcow2', fmt=qcow2 cluster_size=65536 extended_l2=off compression_type=zlib size=21474836480 lazy_refcounts=off refcount_bits=16
+```
+:::
+
+Aquest disc **no té particions**: dins la màquina virtual apareixerà com un disc buit.
+
+## Còpia del qcow2
+
+Si l'ordre anterior no us funciona, copieu el disc original i canvieu-li el nom:
+
+:::{.terminal}
+```bash
+host$ cp debian-amsa.qcow2 root-luks.qcow2
+host$ ls -lh *.qcow2
+-rw-r--r-- 1 user user 3,1G ... debian-amsa.qcow2
+-rw-r--r-- 1 user user 3,1G ... root-luks.qcow2
+```
+:::
+
+En aquest cas els dos discos tindran **les mateixes particions**. Dins la màquina virtual, el disc que **no** està muntat és el nou. Com que el volem buit, en aquest cas cal formatar-lo tal com s'explica a la secció **Identificar el disc nou**.
+
+:::
+
+## Modificar `run.sh`
+
+Editeu `run.sh` i afegiu **a sota** de la línia del disc original la línia del disc nou:
+
+```bash
+    -drive file="$BASE_DIR/debian-amsa.qcow2",format=qcow2 \
+    -drive file="$BASE_DIR/root-luks.qcow2",format=qcow2 \
+```
+
+Si voleu poder entrar per SSH, integreu el reenviament de port (`hostfwd`) dins de l'opció `-netdev` que ja existeix. Redirigeix el port 2222 del host cap al port 22 (SSH) de la màquina virtual:
+
+```bash
+    -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+```
+
+L'`run.sh` complet quedaria així:
+
+```bash
+#!/bin/bash
+
+BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+VARS="$BASE_DIR/OVMF_VARS.fd"
+
+if [ ! -f "$VARS" ]; then
+    cp "$BASE_DIR/firmware/OVMF_VARS_TEMPLATE.fd" "$VARS"
+fi
+
+exec qemu-system-x86_64 \
+    -machine q35 \
+    -m 4096 \
+    -smp 2 \
+    -vga virtio \
+    -drive if=pflash,format=raw,readonly=on,file="$BASE_DIR/firmware/OVMF_CODE.fd" \
+    -drive if=pflash,format=raw,file="$VARS" \
+    -drive file="$BASE_DIR/debian-amsa.qcow2",format=qcow2 \
+    -drive file="$BASE_DIR/root-luks.qcow2",format=qcow2 \
+    -netdev user,id=net0,hostfwd=tcp::2222-:22 \
+    -device virtio-net-pci,netdev=net0
+```
+
+## Arrencar i connectar-s'hi
+
+Executeu `run.sh` i entreu a la màquina de la manera que preferiu:
+
+::: {.panel-tabset}
+
+## SSH
+
+:::{.terminal}
+```bash
+host$ ./run.sh
+```
+:::
+
+Des d'una **altra** terminal del host:
+
+:::{.terminal}
+```bash
+host$ ssh -p 2222 jordi@localhost
+jordi@localhost's password: 1234
+jordi@debian:~$
+```
+:::
+
+L'usuari és `jordi` (contrasenya `1234`). No hi ha accés com a `root`: totes les ordres privilegiades es fan amb `sudo`.
+
+## Consola gràfica
+
+Useu directament la finestra de QEMU que s'obre en executar `./run.sh`.
+
+:::
+
+# Part C · Preparar el disc nou
+
+## Identificar el disc nou
+
+Dins de la màquina virtual, llisteu els discs:
+
+:::{.terminal}
+```bash
+$ lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0   20G  0 disk
+├─sda1   8:1    0  512M  0 part /boot/efi
+├─sda2   8:2    0 18,5G  0 part /
+└─sda3   8:3    0    1G  0 part [SWAP]
+sdb      8:16   0   20G  0 disk
+```
+:::
+
+Hi ha dos discs:
+
+- `sda`: el disc **original** (amb les tres particions muntades).
+- `sdb`: el disc **nou** que hem creat.
+
+A partir d'ara, el disc nou l'anomenarem **`/dev/NEW`** (és a dir, `/dev/sdb` en aquest exemple). Les seves particions seran `/dev/NEW1` i `/dev/NEW2`.
+
+::: {.callout-warning}
+Comproveu sempre amb `lsblk` quin disc és quin. Un error aquí pot esborrar el sistema original. El disc original és el que té els punts de muntatge (`/`, `/boot/efi`).
+:::
+
+::: {.panel-tabset}
+
+## Disc buit
+
+No cal fer res més: `/dev/NEW` no té particions i ja està a punt.
+
+## Còpia del qcow2
+
+Els dos discs mostraran particions, però el nou no té cap punt de muntatge. Formateu-lo:
+
+:::{.terminal}
+```bash
+$ sudo mkfs.ext4 /dev/NEW
+mke2fs 1.47.2 (1-Jan-2025)
+/dev/NEW contains a gpt partition table
+Proceed anyway? (y,N) y
+Creating filesystem with 5242880 4k blocks and 1310720 inodes
+...
+Writing superblocks and filesystem accounting information: done
+```
+:::
+
+:::
+
+## Crear les particions
+
+Volem que el disc nou tingui la mateixa estructura que l'original, però **amb l'arrel xifrada**:
+
+| Partició | Mida | Contingut |
+|----------|------|-----------|
+| `/dev/NEW1` | 512 MiB | ESP (FAT32), arrencada UEFI |
+| `/dev/NEW2` | la resta | LUKS, que contindrà l'arrel `/` |
+
+`parted --script` executa les ordres sense fer preguntes i no mostra cap sortida si tot va bé:
+
+:::{.terminal}
+```bash
+$ sudo parted --script /dev/NEW mklabel gpt
+$ sudo parted --script /dev/NEW mkpart ESP fat32 1MiB 513MiB
+$ sudo parted --script /dev/NEW set 1 esp on
+$ sudo parted --script /dev/NEW mkpart primary 513MiB 100%
+```
+:::
+
+Ara formateu la partició d'arrencada (l'ESP) com a FAT32, que és el que exigeix UEFI:
+
+:::{.terminal}
+```bash
+$ sudo mkfs.fat -F32 /dev/NEW1
+mkfs.fat 4.2 (2021-01-31)
+```
+:::
+
+## Xifrar la segona partició
+
+`cryptsetup luksFormat` crea el contenidor xifrat. **Esborra tot el que hi hagi** a la partició i us demana una contrasenya.
+
+Per al laboratori farem servir la contrasenya **`1234`**.
+
+:::{.terminal}
+```bash
+$ sudo cryptsetup luksFormat /dev/NEW2
+
+WARNING!
+========
+This will overwrite data on /dev/NEW2 irrevocably.
+
+Are you sure? (Type 'yes' in capital letters): YES
+Enter passphrase for /dev/NEW2: 1234
+Verify passphrase: 1234
+```
+:::
+
+Després l'**obrim** amb `luksOpen`. Això crea el dispositiu `/dev/mapper/cryptroot`, que és la **versió desxifrada** de la partició. Tot el que s'hi escrigui es xifrarà automàticament:
+
+:::{.terminal}
+```bash
+$ sudo cryptsetup luksOpen /dev/NEW2 cryptroot
+Enter passphrase for /dev/NEW2: 1234
+```
+:::
+
+Hi creem el sistema de fitxers ext4:
+
+:::{.terminal}
+```bash
+$ sudo mkfs.ext4 /dev/mapper/cryptroot
+mke2fs 1.47.2 (1-Jan-2025)
+Creating filesystem with 4718080 4k blocks and 1179648 inodes
+...
+Writing superblocks and filesystem accounting information: done
+```
+:::
+
+Comproveu el resultat: sota `NEW2` hauria d'aparèixer `cryptroot` de tipus `crypt`:
+
+:::{.terminal}
+```bash
+$ lsblk
+NAME        MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINTS
+sda           8:0    0   20G  0 disk
+├─sda1        8:1    0  512M  0 part  /boot/efi
+├─sda2        8:2    0 18,5G  0 part  /
+└─sda3        8:3    0    1G  0 part  [SWAP]
+sdb           8:16   0   20G  0 disk
+├─sdb1        8:17   0  512M  0 part
+└─sdb2        8:18   0 19,5G  0 part
+  └─cryptroot 254:0  0 19,5G  0 crypt
+```
+:::
+
+# Part D · Clonar el sistema en marxa
+
+## Muntar el disc nou
+
+Muntem l'arrel xifrada a `/mnt/newroot` i, a dins, l'ESP nova a `/mnt/newroot/boot/efi`:
+
+:::{.terminal}
+```bash
+$ sudo mkdir -p /mnt/newroot
+$ sudo mount /dev/mapper/cryptroot /mnt/newroot
+$ sudo mkdir -p /mnt/newroot/boot/efi
+$ sudo mount /dev/NEW1 /mnt/newroot/boot/efi
+```
+:::
+
+## Copiar el sistema amb `rsync`
+
+`rsync` copia tot el sistema d'arxius de `/` cap al disc nou. Les opcions `-aHAX` conserven permisos, propietaris, enllaços durs, ACL i atributs estesos. Excloem els directoris virtuals o temporals (`/proc`, `/sys`, `/dev`, `/run`, `/tmp`), els punts de muntatge (`/mnt`, `/media`) i `/boot/efi`:
+
+:::{.terminal}
+```bash
+$ sudo rsync -aHAX \
+  --exclude=/proc/* --exclude=/sys/* --exclude=/dev/* \
+  --exclude=/run/* --exclude=/tmp/* --exclude=/mnt/* --exclude=/media/* \
+  --exclude=/boot/efi/* \
+  / /mnt/newroot/
+```
+:::
+
+No mostra cap sortida mentre copia i pot tardar uns minuts. Quan el prompt torni a aparèixer, la còpia ha acabat. Podeu comprovar-ho:
+
+:::{.terminal}
+```bash
+$ ls /mnt/newroot
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+```
+:::
+
+# Part E · Adaptar `fstab` i `crypttab`
+
+El sistema copiat encara té l'`fstab` de l'original, que apunta a les particions antigues. Cal fer-lo apuntar a les **particions noves**.
+
+## Obtenir els UUID
+
+Un UUID és un identificador únic de cada sistema de fitxers. És més fiable que `/dev/sdX`, perquè el nom del disc pot canviar entre arrencades:
+
+:::{.terminal}
+```bash
+$ sudo blkid /dev/NEW1                # ESP nova
+/dev/sdb1: UUID="1A2B-3C4D" BLOCK_SIZE="512" TYPE="vfat" PARTLABEL="ESP" PARTUUID="..."
+
+$ sudo blkid /dev/NEW2                # partició LUKS
+/dev/sdb2: UUID="0f8e...-...-...-...-...c3a1" TYPE="crypto_LUKS" PARTLABEL="primary" PARTUUID="..."
+
+$ sudo blkid /dev/mapper/cryptroot    # sistema de fitxers de dins
+/dev/mapper/cryptroot: UUID="7d42...-...-...-...-...9b10" BLOCK_SIZE="4096" TYPE="ext4"
+```
+:::
+
+Apunteu-vos els tres UUID. Podeu veure'ls també amb:
+
+:::{.terminal}
+```bash
+$ lsblk -f
+```
+:::
+
+## Editar `fstab`
+
+:::{.terminal}
+```bash
+$ sudo nano /mnt/newroot/etc/fstab
+```
+:::
+
+Canvieu:
+
+- la línia de **`/`**, perquè apunti a l'UUID de `/dev/mapper/cryptroot`;
+- la línia de **`/boot/efi`**, perquè apunti a l'UUID de `/dev/NEW1`;
+- la línia de **swap**: per simplificar, **no migrem la swap**, així que l'esborreu (o la comenteu amb `#`). El disc nou no té partició de swap.
+
+::: {.callout-tip}
+Fixeu-vos que l'arrel apunta al UUID del sistema de fitxers **de dins** de LUKS (`cryptroot`), no al de la partició `NEW2`.
+:::
+
+## Verificar l'`fstab` amb `findmnt`
+
+Abans de continuar, comprovem que els UUID que heu copiat a mà apunten als dispositius correctes. Un UUID mal copiat (una lletra de més o de menys) faria que el sistema no arrenqués.
+
+Primer, mirem què hi ha escrit a l'`fstab` del disc nou:
+
+:::{.terminal}
+```bash
+$ findmnt --fstab --tab-file /mnt/newroot/etc/fstab -o TARGET,SOURCE,FSTYPE
+TARGET    SOURCE                                   FSTYPE
+/         UUID=7d42...-...-...-...-...9b10         ext4
+/boot/efi UUID=1A2B-3C4D                           vfat
+```
+:::
+
+Ara demanem a `findmnt` que tradueixi cada UUID al dispositiu real amb `--evaluate`:
+
+:::{.terminal}
+```bash
+$ findmnt --fstab --evaluate --tab-file /mnt/newroot/etc/fstab -o TARGET,SOURCE,FSTYPE
+TARGET    SOURCE                 FSTYPE
+/         /dev/mapper/cryptroot  ext4
+/boot/efi /dev/NEW1              vfat
+```
+:::
+
+Ha de sortir:
+
+- `/` → `/dev/mapper/cryptroot`
+- `/boot/efi` → `/dev/NEW1` (al vostre cas, `/dev/sdb1`)
+
+Si a la columna `SOURCE` es queda l'`UUID=...` sense traduir, vol dir que aquell UUID **no existeix**: hi ha un error de còpia.
+
+
