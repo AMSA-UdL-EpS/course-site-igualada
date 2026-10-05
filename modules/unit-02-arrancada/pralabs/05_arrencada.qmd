@@ -1,0 +1,347 @@
+---
+title: "Arrencada (IV) · Migració a LUKS (Part 2)"
+author: "Jordi Mateo Fornés"
+format:
+  udl-course-html:
+    toc: false
+    number-sections: false
+---
+
+
+# Part F · Crear `/etc/crypttab`
+
+L'`fstab` diu **què es munta i on**. Però abans de poder muntar `/` cal **obrir el LUKS**, i d'això no se'n parla a l'`fstab`. Aquesta feina la descriu `/etc/crypttab`:
+
+:::{.terminal}
+```bash
+$ cat /mnt/newroot/etc/crypttab
+```
+:::
+
+Probablement està buit o no existeix: el sistema original no estava xifrat. Creeu-lo (o editeu-lo):
+
+:::{.terminal}
+```bash
+$ sudo nano /mnt/newroot/etc/crypttab
+```
+:::
+
+```text
+# <target>   <source device>   <key file>   <options>
+cryptroot    UUID=<uuid>       none         luks
+```
+
+- `cryptroot`: el nom del dispositiu desxifrat (apareixerà com `/dev/mapper/cryptroot`).
+- `UUID=<uuid>`: el **contenidor** que s'ha d'obrir.
+- `none`: no hi ha cap fitxer de clau, per tant es demanarà la contrasenya.
+- `luks`: el tipus de contenidor.
+
+Torneu a mirar els tres UUID que vau anotar a la Part E (`blkid`). Ara en feu servir **dos** en llocs diferents:
+
+| Fitxer | Línia | Quin UUID? |
+|--------|-------|------------|
+| `fstab` | `/` | el de dins del LUKS (`/dev/mapper/cryptroot`, `ext4`) |
+| `fstab` | `/boot/efi` | el de `/dev/NEW1` (`vfat`) |
+| `crypttab` | `cryptroot` | el de `/dev/NEW2` (`crypto_LUKS`) |
+
+::: {.callout-warning}
+Un UUID de la capa equivocada no dóna cap error d'edició: el fitxer és perfectament vàlid. L'error us el trobareu a l'arrencada.
+:::
+
+Reviseu el resultat abans de continuar:
+
+:::{.terminal}
+```bash
+$ cat /mnt/newroot/etc/crypttab
+$ cat /mnt/newroot/etc/fstab
+```
+:::
+
+# Part G · `chroot` i GRUB
+
+El disc nou ja té les dades, però encara no té **gestor d'arrencada** (l'ESP nova és buida) ni un **initramfs** que sàpiga obrir el LUKS. Aquestes dues coses s'han de fer des de dins del sistema nou, amb un `chroot`.
+
+## Preparar l'entorn del `chroot`
+
+Dins del `chroot` calen els pseudosistemes de fitxers de la màquina real. Si no hi són, ni `update-initramfs` ni `grub-install` poden veure els dispositius:
+
+:::{.terminal}
+```bash
+$ for d in dev proc sys; do sudo mount --rbind /$d /mnt/newroot/$d; done
+$ sudo mount --bind /run /mnt/newroot/run
+$ for d in dev proc sys run; do sudo mount --make-rslave /mnt/newroot/$d; done
+```
+:::
+
+::: {.callout-important}
+**`--make-rslave` no és opcional.** En un sistema amb `systemd` els muntatges són *shared*: sense això, quan desmunteu `/mnt/newroot/dev` la propagació desmunta també el `/dev` de la màquina real, i us quedeu amb la VM mig morta.
+:::
+
+::: {.callout-note}
+Muntem `/run` amb `--bind` (no recursiu) a propòsit: un `--rbind` hi arrossegaria també `/run/user/1000`, que després impedeix desmuntar amb un *target is busy*.
+:::
+
+Entreu al sistema nou:
+
+:::{.terminal}
+```bash
+$ sudo chroot /mnt/newroot /bin/bash
+# findmnt /
+# findmnt /boot/efi
+# ls /sys/firmware/efi/efivars | head -3
+```
+:::
+
+Comproveu que `/` és `/dev/mapper/cryptroot`, que `/boot/efi` és la partició `NEW1` i que `efivars` no és buit (sense això, `grub-install` no podrà registrar l'entrada a la NVRAM).
+
+## Dins del `chroot`
+
+Primer, avisem GRUB que el que ha de llegir (`/boot`, `grub.cfg`, el nucli) és **dins** d'un disc xifrat:
+
+:::{.terminal}
+```bash
+# nano /etc/default/grub
+```
+:::
+
+Afegiu (o descomenteu) aquesta línia:
+
+```text
+GRUB_ENABLE_CRYPTODISK=y
+```
+
+Ara generem l'initramfs, instal·lem GRUB i generem `grub.cfg`:
+
+:::{.terminal}
+```bash
+# update-initramfs -u -k all
+# grub-install --target=x86_64-efi --efi-directory=/boot/efi \
+    --bootloader-id=debian-luks --recheck
+Installing for x86_64-efi platform.
+Installation finished. No error reported.
+# update-grub
+# grep -m1 'root=' /boot/grub/grub.cfg
+```
+:::
+
+
+Comproveu que l'initramfs porta el necessari per desxifrar:
+
+:::{.terminal}
+```bash
+# lsinitramfs /boot/initrd.img-* | grep -E 'cryptsetup|crypttab'
+```
+:::
+
+::: {.concepte}
+`update-initramfs` llegeix `/etc/crypttab` **en el moment d'executar-se** i, si hi troba l'arrel, hi incrusta `cryptsetup`, els mòduls de xifrat i una còpia del `crypttab`. `grub-install` registra una entrada nova a la NVRAM (recordeu `efibootmgr`) que apunta a l'ESP d'aquest disc. `update-grub` genera `grub.cfg` amb la línia `linux ... root=...`, que ha d'apuntar al sistema de fitxers de **dins** del LUKS (per UUID o per `/dev/mapper/cryptroot`), mai a `/dev/sdb2`.
+:::
+
+Sortiu del `chroot`:
+
+:::{.terminal}
+```bash
+# exit
+```
+:::
+
+## Desmuntar i tancar
+
+Desmunteu en ordre i tanqueu el contenidor. Si no el tanqueu, el disc queda "en ús" i podeu apagar la VM amb coses a mig escriure:
+
+:::{.terminal}
+```bash
+$ sudo umount -R /mnt/newroot
+$ findmnt -R /mnt/newroot          # no ha de mostrar res
+$ sudo cryptsetup luksClose cryptroot
+```
+:::
+
+Si `umount -R` es queixa de *target is busy*, mireu què hi ha a dins amb `findmnt -R /mnt/newroot` i useu `sudo umount -R -l /mnt/newroot` (lazy) només com a últim recurs.
+
+Apagueu la VM.
+
+# Part H · Primera arrencada
+
+Provarem el disc nou **tot sol**, tal com arrencaria una màquina real. Al host, feu una còpia de `run.sh` sense el disc original:
+
+:::{.terminal}
+```bash
+host$ sed '/debian-amsa.qcow2/d' run.sh > run-luks.sh
+host$ chmod +x run-luks.sh
+host$ grep drive run-luks.sh
+host$ ./run-luks.sh
+```
+:::
+
+::: {.callout-warning}
+No esborreu `OVMF_VARS.fd`. Allà hi ha l'entrada `debian-luks` que ha creat `grub-install`.
+:::
+
+Useu la **finestra gràfica** de QEMU: la contrasenya es demana abans que existeixi la xarxa, i per SSH no hi arribareu.
+
+# Part I · Diagnòstic i reparació
+
+Probablement no ha arrencat a la primera. És normal: ara cal fer el que faria un administrador.
+
+## Mètode
+
+1. **Aturar-se i llegir.** L'últim missatge que veieu us diu en quina fase s'ha parat.
+2. **Localitzar la fase:** UEFI, GRUB, nucli, initramfs, o sistema ja arrencat.
+3. **Formular una hipòtesi** i comprovar-la abans de canviar res.
+4. **Corregir en un sol lloc** i tornar a provar.
+
+<details>
+<summary>Mapa de diagnòstic (obriu-lo només després d'haver intentat)</summary>
+
+::: {.solucio}
+| Què veieu | Fase | Sospitós |
+|-----------|------|----------|
+| Shell UEFI o cap entrada d'arrencada | UEFI | `OVMF_VARS.fd` esborrat; `grub-install` no ha registrat l'entrada |
+| `grub rescue>`, o un error de `cryptouuid` / disc no trobat | GRUB | GRUB no pot obrir el LUKS |
+| GRUB demana contrasenya i l'accepta, el nucli carrega i apareix `(initramfs)` amb `ALERT! UUID=... does not exist` | initramfs | l'initramfs no porta `cryptsetup`, o el `crypttab` apunta al UUID equivocat |
+| Una pausa llarga i `Gave up waiting for suspend/resume device` | initramfs | `RESUME` apunta a un swap que ja no existeix |
+| Una pausa de 90 s amb `A start job is running for /dev/disk/by-uuid/...` | systemd | l'`fstab` encara té la línia de swap |
+| Arrenca, però `/` és de només lectura (`apt` o `passwd` fallen) | sistema | l'UUID de `/` a l'`fstab` no és el de dins del LUKS |
+:::
+
+</details>
+
+## Tornar al sistema antic
+
+El disc original no s'ha tocat, així que és la vostra "consola de rescat". Arrenqueu amb **els dos discs** (`./run.sh`). Com que `grub-install` ha posat `debian-luks` primer a l'ordre d'arrencada, haureu de triar el sistema antic a mà: premeu `Esc` mentre apareix el logo d'UEFI, entreu a **Boot Manager** i trieu l'entrada `debian`.
+
+Un cop dins, identifiqueu els discs amb `lsblk` (el nou ha de ser `sdb`) i recupereu l'entorn de la Part G:
+
+:::{.terminal}
+```bash
+$ sudo cryptsetup luksOpen /dev/NEW2 cryptroot
+$ sudo mount /dev/mapper/cryptroot /mnt/newroot
+$ sudo mount /dev/NEW1 /mnt/newroot/boot/efi
+$ for d in dev proc sys; do sudo mount --rbind /$d /mnt/newroot/$d; done
+$ sudo mount --bind /run /mnt/newroot/run
+$ for d in dev proc sys run; do sudo mount --make-rslave /mnt/newroot/$d; done
+$ sudo chroot /mnt/newroot /bin/bash
+```
+:::
+
+Ara ja podeu comprovar la vostra hipòtesi. Cada cop que canvieu alguna cosa, recordeu quina part és un **artefacte generat** (`initrd.img`, `grub.cfg`, entrada NVRAM) i s'ha de regenerar.
+
+
+## Correccions
+
+<details>
+<summary>GRUB no pot obrir el LUKS</summary>
+
+::: {.solucio}
+Mireu el format i la funció de derivació de clau:
+
+:::{.terminal}
+```bash
+$ sudo cryptsetup luksDump /dev/NEW2 | grep -E 'Version|PBKDF'
+Version:        2
+        PBKDF:      argon2id
+```
+:::
+
+`cryptsetup luksFormat` crea per defecte LUKS2 amb **argon2id**, i GRUB només sap fer servir **PBKDF2** amb LUKS2. Cal convertir la clau (la contrasenya no canvia):
+
+:::{.terminal}
+```bash
+$ sudo cryptsetup luksConvertKey --pbkdf pbkdf2 /dev/NEW2
+Enter passphrase for /dev/NEW2: 1234
+$ sudo cryptsetup luksDump /dev/NEW2 | grep PBKDF
+        PBKDF:      pbkdf2
+```
+:::
+
+No cal reinstal·lar GRUB: llegeix la capçalera del disc a cada arrencada. Si el problema fos que `GRUB_ENABLE_CRYPTODISK=y` faltava, dins del `chroot` caldria afegir-la i tornar a executar `grub-install` i `update-grub`.
+
+Alternativa: refer el contenidor amb `luksFormat --type luks1`. Cal repetir la còpia, i per això és pitjor.
+:::
+
+</details>
+
+<details>
+<summary>L'initramfs no sap obrir el LUKS</summary>
+
+::: {.solucio}
+Dins del `chroot`:
+
+:::{.terminal}
+```bash
+# cat /etc/crypttab
+# blkid /dev/NEW2
+# update-initramfs -u -k all
+# lsinitramfs /boot/initrd.img-* | grep -E 'cryptsetup|crypttab'
+```
+:::
+
+La causa típica és haver posat a `crypttab` l'UUID de `/dev/mapper/cryptroot` (el d'`ext4`) en lloc del de `/dev/NEW2` (`crypto_LUKS`). Corregiu-lo i **regenereu l'initramfs**: corregir el fitxer no canvia l'`initrd.img` ja generat. Si un `update-initramfs` ha avisat que la imatge "may not contain cryptsetup binaries", el `crypttab` no es va llegir bé.
+:::
+
+</details>
+
+<details>
+<summary>Retard per <code>resume</code> o per swap</summary>
+
+::: {.solucio}
+Dins del `chroot`:
+
+:::{.terminal}
+```bash
+# echo "RESUME=none" > /etc/initramfs-tools/conf.d/resume
+# update-initramfs -u -k all
+# nano /etc/fstab        # esborreu la línia de swap
+```
+:::
+
+Ni l'un ni l'altre bloquegen l'arrencada, però l'allarguen i omplen els logs d'errors que no signifiquen res.
+:::
+
+</details>
+
+<details>
+<summary><code>/</code> és de només lectura</summary>
+
+::: {.solucio}
+El nucli munta l'arrel amb el `root=` de GRUB, però després `systemd-remount-fs` la remunta en lectura i escriptura segons l'`fstab`. Si l'UUID de `/` no existeix, aquest pas falla i l'arrel es queda en `ro`. Per sortir-ne:
+
+:::{.terminal}
+```bash
+$ sudo mount -o remount,rw /
+$ lsblk -f
+$ sudo nano /etc/fstab
+$ findmnt --fstab --evaluate -o TARGET,SOURCE
+```
+:::
+
+Comproveu que `/` surt traduït a `/dev/mapper/cryptroot`.
+:::
+
+</details>
+
+## Desmuntar i tornar a provar
+
+Sortiu del `chroot`, desmunteu amb `umount -R`, tanqueu amb `luksClose cryptroot`, apagueu la VM i torneu a executar `./run-luks.sh`. Repetiu el cicle fins que el sistema arrenqui sense errors.
+
+
+# Part J · Comprovació final
+
+Quan el disc nou arrenqui bé, comproveu que l'arrel és realment la xifrada:
+
+:::{.terminal}
+```bash
+$ findmnt /
+TARGET SOURCE                 FSTYPE OPTIONS
+/      /dev/mapper/cryptroot  ext4   rw,relatime,errors=remount-ro
+$ lsblk
+$ sudo cryptsetup status cryptroot
+```
+:::
+
+Apagueu la VM i substituïu el disc original, guardant l'antic per si de cas.
+
+::: {.callout-note}
+Cada arrencada demana la contrasenya dues vegades: una a GRUB, perquè ha de llegir `/boot` des del disc xifrat, i una a l'initramfs, perquè ha d'obrir l'arrel. Al proper laboratori en treurem la segona.
+:::
