@@ -8,7 +8,7 @@
 
 <meta name="author" content="Jordi Mateo Fornés">
 
-<title>Arrencada (III) · De GRUB a Linux – Administració i Manteniment de Sistemes i Aplicacions</title>
+<title>Arrencada (IV) · Migració a LUKS (Part 2) – Administració i Manteniment de Sistemes i Aplicacions</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -72,8 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../../../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../../../">
-<link href="../../../modules/unit-02-arrancada/pralabs/04_arrencada.html" rel="next">
-<link href="../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" rel="prev">
+<link href="../../../modules/unit-02-arrancada/pralabs/04_arrencada.html" rel="prev">
 <link href="../../../assets/logo.svg" rel="icon" type="image/svg+xml">
 <script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -117,35 +116,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 </head>
 
@@ -375,7 +345,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 2 · Arrancada</li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html">Pralabs</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/03_arrencada.html">Arrencada (III) · De GRUB a Linux</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 2 · Arrancada</li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html">Pralabs</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/05_arrencada.html">Arrencada (IV) · Migració a LUKS (Part 2)</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -547,7 +517,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../../modules/unit-02-arrancada/pralabs/03_arrencada.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../../modules/unit-02-arrancada/pralabs/03_arrencada.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Arrencada (III) · De GRUB a Linux</span></a>
   </div>
 </li>
@@ -559,7 +529,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../../modules/unit-02-arrancada/pralabs/05_arrencada.html" class="sidebar-item-text sidebar-link">
+  <a href="../../../modules/unit-02-arrancada/pralabs/05_arrencada.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Arrencada (IV) · Migració a LUKS (Part 2)</span></a>
   </div>
 </li>
@@ -579,9 +549,9 @@ window.Quarto = {
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 2 · Arrancada</li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html">Pralabs</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/03_arrencada.html">Arrencada (III) · De GRUB a Linux</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 2 · Arrancada</li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html">Pralabs</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/pralabs/05_arrencada.html">Arrencada (IV) · Migració a LUKS (Part 2)</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Arrencada (III) · De GRUB a Linux</h1>
+<h1 class="title">Arrencada (IV) · Migració a LUKS (Part 2)</h1>
 </div>
 
 
@@ -604,313 +574,388 @@ window.Quarto = {
 </header>
 
 
-<section id="introducció" class="level2">
-<h2 class="anchored" data-anchor-id="introducció">Introducció</h2>
-<p>A la Part 2 de la teoria hem seguit la cadena sencera:</p>
-<p><span class="math display">\[ \text{firmware} \rightarrow \text{GRUB} \rightarrow \text{kernel} \rightarrow \text{initramfs} \rightarrow \text{ arrel } \rightarrow \text{systemd} \]</span></p>
-<p>En aquest laboratori la explorarem sobre una <strong>Debian real amb GRUB de veritat</strong>.</p>
-<div class="resultat udl-component udl-resultat" title="En acabar aquest laboratori seràs capaç de...">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-resultat"></use></svg><span>Resultat d'Aprenentatge — En acabar aquest laboratori seràs capaç de...</span></div>
-<ul>
-<li>Verificar, amb ordres reals, cada etapa de la cadena d’arrencada d’una Debian: firmware, GRUB, kernel, initramfs, <code>systemd</code>.</li>
-<li>Distingir la <strong>configuració</strong> de GRUB (<code>grub.cfg</code>) de l’<strong>estat observable</strong> del sistema en marxa (<code>/proc/cmdline</code>).</li>
-<li>Explicar per què eines com <code>cryptsetup</code> o <code>lvm</code> poden viure dins de l’initramfs encara que ja estiguin instal·lades al sistema.</li>
-<li>Editar temporalment la línia del kernel des de GRUB.</li>
-<li>Argumentar per què l’accés físic a la consola d’arrencada és un vector d’atac real, i què el mitiga (i què no).</li>
-</ul>
-</div>
-<div class="programari udl-component udl-programari">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-programari"></use></svg><span>Programari Necessari</span></div>
-<ul>
-<li><code>qemu-system-x86_64</code> instal·lat al teu amfitrió.</li>
-<li><a href="https://drive.google.com/file/d/1amFpyJElxsG7yofvrUSK25U5_Kn1Fvqp/view?usp=drive_link">Imatge de la VM</a></li>
-</ul>
-</div>
-<hr>
-</section>
-<section id="preparació" class="level2">
-<h2 class="anchored" data-anchor-id="preparació">Preparació</h2>
-<p>A diferència dels laboratoris anteriors, aquí necessitem un sistema operatiu <strong>complet i real</strong>, amb GRUB instal·lat pel seu propi instal·lador. En lloc que cadascú instal·li una Debian pel seu compte (llarg, i cadascú n’obtindria una lleugerament diferent), el professor us dona una <strong>VM ja instal·lada</strong>, idèntica per a tothom.</p>
-<section id="comprova-que-tens-qemu" class="level3">
-<h3 class="anchored" data-anchor-id="comprova-que-tens-qemu">Comprova que tens QEMU</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">qemu-system-x86_64</span> <span class="at">--version</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Si no hi és (Debian/Ubuntu):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install qemu-system-x86</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="descomprimeix-el-paquet-de-la-vm" class="level3">
-<h3 class="anchored" data-anchor-id="descomprimeix-el-paquet-de-la-vm">Descomprimeix el paquet de la VM</h3>
-<p>El professor us farà arribar un fitxer comprimit amb aquesta estructura:</p>
-<div class="terminal udl-component udl-terminal" title="`tree` ">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal — `tree` </span></div>
-<pre><code>debian-amsa/
-├── run.sh
-├── debian-amsa.qcow2
-└── firmware/
-    ├── OVMF_CODE.fd
-    └── OVMF_VARS_TEMPLATE.fd</code></pre>
-</div>
-<div class="concepte udl-component udl-concepte">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
-<p><code>OVMF_CODE.fd</code> és el <strong>codi</strong> del firmware UEFI: idèntic per a tothom, i el script el munta només de lectura. <code>OVMF_VARS_TEMPLATE.fd</code> és una <strong>plantilla</strong> de la NVRAM (on GRUB escriu les seves entrades de <code>Boot####</code>); cadascú n’obtindrà la seva pròpia còpia, perquè és l’estat que la vostra VM anirà modificant. Exactament la mateixa separació codi/NVRAM que hem vist a teoria.</p>
-</div>
-</section>
-<section id="arrenca-la" class="level3">
-<h3 class="anchored" data-anchor-id="arrenca-la">Arrenca-la</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> debian-amsa</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x run.sh</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./run.sh</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>La primera vegada, <code>run.sh</code> detecta que no teniu <code>OVMF_VARS.fd</code> propi i el crea a partir de la plantilla. A partir d’aquí, ja és la <strong>vostra</strong> NVRAM: les execucions següents no la tornaran a tocar.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Amfitrió x86_64 (Intel / AMD)</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Amfitrió ARM (Apple Silicon, Raspberry Pi…)</a></li></ul>
-<div class="tab-content">
-<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<p>El <em>script</em> no fa servir acceleració per hardware (<code>-enable-kvm</code>), a propòsit: així funciona igual en qualsevol amfitrió, sense dependre de tenir accés a <code>/dev/kvm</code>. Si voleu més velocitat i sabeu que teniu KVM disponible, podeu editar <code>run.sh</code> i afegir-hi la línia <code>-enable-kvm \</code> (no n’hi ha prou amb passar-la per línia d’ordres: el <em>script</em> no reenvia arguments extra a QEMU).</p>
-</div>
-<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<p>No toqueu res: <code>run.sh</code> ja està pensat perquè funcioni igual a tothom, sense KVM. Un amfitrió ARM, a més, no podria accelerar per hardware una VM x86_64 encara que ho intentéssiu (l’acceleració només funciona quan l’arquitectura convidada coincideix amb la de l’amfitrió).</p>
-</div>
-</div>
-</div>
-<div class="errorcomu udl-component udl-errorcomu">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-errorcomu"></use></svg><span>Error Comú</span></div>
-<p>Si QEMU es queixa de memòria en arrencar, editeu <code>run.sh</code> i baixeu <code>-m 4096</code> a un valor que la vostra màquina pugui oferir (per exemple, <code>-m 2048</code>).</p>
-</div>
-<p>Un cop dins de Debian, comproveu que heu arrencat en UEFI i instal·leu l’eina que ens falta:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">test</span> <span class="at">-d</span> /sys/firmware/efi <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> UEFI</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">su</span> <span class="at">-c</span> <span class="st">"apt install efibootmgr -y"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<hr>
-</section>
-</section>
-<section id="part-a-reconstruir-la-cadena-darrencada" class="level2">
-<h2 class="anchored" data-anchor-id="part-a-reconstruir-la-cadena-darrencada">Part A · Reconstruir la cadena d’arrencada</h2>
-<p>Arrenqueu la vostra Debian amb normalitat i obriu una terminal. Anirem verificant, ordre per ordre, cada peça de la cadena.</p>
-<section id="el-disc-i-les-particions" class="level3">
-<h3 class="anchored" data-anchor-id="el-disc-i-les-particions">El disc i les particions</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-o</span> NAME,SIZE,FSTYPE,PARTTYPE,PARTLABEL,MOUNTPOINTS</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="exercici udl-component udl-exercici">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
-<p>Localitzeu-hi les vostres particions d’arrencada i d’arrel. Quin tipus de partició és cadascuna? Quin sistema de fitxers hi ha a cada una? Quin és el <em>PARTTYPE</em> de la partició d’arrencada?</p>
-</div>
-</section>
-<section id="la-nvram-i-lesp" class="level3">
-<h3 class="anchored" data-anchor-id="la-nvram-i-lesp">La NVRAM i l’ESP</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">efibootmgr</span> <span class="at">-v</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> find /boot/efi/EFI <span class="at">-type</span> f</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="reflexio udl-component udl-reflexio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió</span></div>
-<p>A quina entrada de <code>efibootmgr</code> correspon el fitxer <code>.efi</code> que heu trobat amb <code>find</code>? És la ruta de <em>fallback</em> (<code>BOOTX64.EFI</code>) o una entrada pròpia de la distribució (per exemple, <code>EFI/debian/grubx64.efi</code>)?</p>
-</div>
-</section>
-<section id="kernel-i-initramfs-al-disc" class="level3">
-<h3 class="anchored" data-anchor-id="kernel-i-initramfs-al-disc">Kernel i initramfs al disc</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> /boot/vmlinuz<span class="pp">*</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> /boot/initrd<span class="pp">*</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="el-kernel-en-marxa" class="level3">
-<h3 class="anchored" data-anchor-id="el-kernel-en-marxa">El kernel en marxa</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /proc/cmdline</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="systemd" class="level3">
-<h3 class="anchored" data-anchor-id="systemd"><code>systemd</code></h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> <span class="at">-p</span> 1 <span class="at">-o</span> pid,comm,args</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="exercici udl-component udl-exercici">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
-<p><code>ps -p 1</code> hauria de mostrar <code>systemd</code> a la columna <code>COMMAND</code>. Si <code>systemd-analyze</code> falla amb un missatge sobre <strong>PID 1</strong>, què estaria indicant?</p>
-</div>
-<details>
-<summary>
-Pots veure el raonament
-</summary>
-<div class="solucio udl-component udl-solucio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
-<p><code>systemd-analyze</code> necessita parlar amb <code>systemd</code> com a PID 1 a través del bus de D-Bus. Si falla amb un missatge del tipus <em>System has not been booted with systemd as init system</em>, vol dir que el procés 1 <strong>no és</strong> <code>systemd</code> (per exemple, en alguns contenidors o entorns molt restringits). En una Debian normal arrencada amb GRUB, no hauria de passar.</p>
-</div>
-</details>
-<hr>
-</section>
-</section>
-<section id="part-b-investigar-lentrada-de-grub" class="level2">
-<h2 class="anchored" data-anchor-id="part-b-investigar-lentrada-de-grub">Part B · Investigar l’entrada de GRUB</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> grep <span class="at">-E</span> <span class="st">'^(menuentry|linux|initrd)'</span> /boot/grub/grub.cfg</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Una entrada de <code>grub.cfg</code> té sempre aquesta forma:</p>
+<section id="part-f-crear-etccrypttab" class="level1">
+<h1>Part F · Crear <code>/etc/crypttab</code></h1>
+<p>L’<code>fstab</code> diu <strong>què es munta i on</strong>. Però abans de poder muntar <code>/</code> cal <strong>obrir el LUKS</strong>, i d’això no se’n parla a l’<code>fstab</code>. Aquesta feina la descriu <code>/etc/crypttab</code>:</p>
 <div class="terminal udl-component udl-terminal">
 <div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
-<pre><code>menuentry
-   │
-   ├── linux
-   │     ├── kernel
-   │     └── paràmetres
-   │
-   └── initrd
-         └── initramfs</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat /mnt/newroot/etc/crypttab</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Compareu-ho amb el que el kernel diu que ha rebut de debò:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /proc/cmdline</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="reflexio udl-component udl-reflexio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió</span></div>
-<p>Què ha <strong>escrit</strong> GRUB a <code>grub.cfg</code>, i què ha <strong>rebut realment</strong> el kernel? Els paràmetres coincideixen exactament amb la línia <code>linux</code> de l’entrada, o n’hi ha algun que <code>grub-mkconfig</code> ha afegit automàticament (per exemple, algun UUID)?</p>
+<p>Probablement està buit o no existeix: el sistema original no estava xifrat. Creeu-lo (o editeu-lo):</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo nano /mnt/newroot/etc/crypttab</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<hr>
-</section>
-<section id="part-c-inspeccionar-linitramfs" class="level2">
-<h2 class="anchored" data-anchor-id="part-c-inspeccionar-linitramfs">Part C · Inspeccionar l’initramfs</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lsinitramfs</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span> <span class="kw">|</span> <span class="fu">less</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>I, més concret:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lsinitramfs</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span> <span class="kw">|</span> <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'(^|/)(init|cryptsetup|lvm|scripts/)'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="exercici udl-component udl-exercici">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
-<p>Abans d’executar-ho: la vostra instal·lació <strong>no</strong> té LUKS ni LVM. Prediu: hi trobareu <code>cryptsetup</code> o <code>lvm</code> dins de l’initramfs? I què hi hauria de ser igualment?</p>
-</div>
-<details>
-<summary>
-Pots veure el raonament
-</summary>
-<div class="solucio udl-component udl-solucio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
-<p>No hi hauria d’haver <code>cryptsetup</code> ni <code>lvm</code>: <code>initramfs-tools</code> només hi inclou les eines que la <strong>vostra</strong> configuració necessita (llegides de <code>/etc/crypttab</code> i de si l’arrel és un volum lògic), i cap de les dues coses és certa aquí. Però l’initramfs <strong>no és buit</strong>: hi trobareu igualment <code>/init</code>, els mòduls del controlador de disc i el suport per a <code>ext4</code>, perquè <strong>això</strong> sí que fa falta sempre per arribar a <code>/</code>, encara que no hi hagi xifratge ni volums lògics.</p>
-</div>
-</details>
-<div class="reflexio udl-component udl-reflexio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió</span></div>
-<p>Si aquesta mateixa VM tingués l’arrel sobre LUKS+LVM (l’esquema per defecte de l’instal·lador de Debian que vam veure a teoria), <code>cryptsetup</code> i <code>lvm</code> <strong>sí</strong> que hi haurien de ser. És exactament el mateix mecanisme: l’initramfs s’adapta a la configuració real del sistema, no porta mai «totes les eines possibles per si de cas».</p>
-</div>
-<hr>
-</section>
-<section id="part-d-recuperació-amb-grub" class="level2">
-<h2 class="anchored" data-anchor-id="part-d-recuperació-amb-grub">Part D · Recuperació amb GRUB</h2>
-<div class="errorcomu udl-component udl-errorcomu" title="Abans de començar">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-errorcomu"></use></svg><span>Error Comú — Abans de començar</span></div>
-<p>Reinicieu la VM des d’una <strong>còpia</strong>, no des de l’original. Aquesta part edita paràmetres d’arrencada i canvia una contrasenya.</p>
-</div>
-<ol type="1">
-<li>Reinicieu la VM i, al menú de GRUB, premeu <code>e</code> per editar l’entrada.</li>
-<li>Localitzeu la línia que comença per <code>linux</code> i acaba en <code>ro</code>. Afegiu-hi, al final: <code>init=/bin/bash</code></li>
-<li>Premeu <code>Ctrl+X</code> (o <code>F10</code>) per arrencar amb aquesta edició.</li>
-</ol>
-<div class="concepte udl-component udl-concepte">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
-<p><code>init=/bin/bash</code> <strong>no</strong> és una ordre de GRUB: és un paràmetre que GRUB passa a la línia d’ordres del <strong>kernel</strong>.</p>
-<p><span class="math display">\[
-\text{GRUB} \xrightarrow{\text{paràmetre}} \text{kernel} \xrightarrow{\text{interpreta init=}} /bin/bash
-\]</span></p>
-</div>
-<div class="errorcomu udl-component udl-errorcomu" title="Per què no cal `chroot`">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-errorcomu"></use></svg><span>Error Comú — Per què no cal `chroot`</span></div>
-<p><code>init=</code> no li diu al kernel <strong>salta’t l’initramfs</strong>: l’initramfs fa tota la seva feina normal (mòduls, desxifrar, activar LVM, muntar l’arrel) exactament igual que sempre. L’única cosa que canvia és <strong>què s’executa després del <code>switch_root</code></strong>: en lloc de <code>/sbin/init</code> (que arrencaria <code>systemd</code>), s’executa <code>/bin/bash</code>. Quan veieu el <em>prompt</em>, el <code>switch_root</code> <strong>ja ha passat</strong>: ja sou a l’arrel real.</p>
-</div>
-<ol start="4" type="1">
-<li><p>Munteu l’arrel en lectura-escriptura (el kernel l’ha muntada <code>ro</code>, per la línia original):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> <span class="at">-o</span> remount,rw /</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
-<li><p>Canvieu la contrasenya <strong>d’un usuari del laboratori, no de <code>root</code></strong>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">passwd</span> nom_usuari</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
-<li><p>Sincronitzeu i reinicieu:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sync</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">reboot</span> <span class="at">-f</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
-<li><p>Inicieu sessió amb l’usuari i la contrasenya nova.</p></li>
-</ol>
-<div class="reflexio udl-component udl-reflexio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió</span></div>
-<p>No hem tocat cap contrasenya de <code>root</code>, ni hem hagut d’introduir-ne cap enlloc. Què demostra això sobre la relació entre <strong>accés físic a la consola d’arrencada</strong> i <strong>autenticació normal del sistema operatiu</strong>?</p>
-</div>
-<details>
-<summary>
-Pots veure el raonament
-</summary>
-<div class="solucio udl-component udl-solucio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
-<p>Que <strong>no hi ha cap relació</strong>: qui té accés físic (o a la consola de la VM) al moment del <code>boot</code> pot saltar-se completament l’autenticació normal, perquè encara no s’ha arribat al punt on aquesta autenticació existeix (<code>systemd</code> ni tan sols ha arrencat). No cal <strong>trencar</strong> cap contrasenya: només cal triar quin programa s’executa com a PID 1.</p>
-</div>
-</details>
-<hr>
-</section>
-<section id="part-e-protegir-grub-amb-contrasenya" class="level2">
-<h2 class="anchored" data-anchor-id="part-e-protegir-grub-amb-contrasenya">Part E · Protegir GRUB amb contrasenya</h2>
-<p>Genereu un hash de contrasenya:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">grub-mkpasswd-pbkdf2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Sortida esperada (la línia que conté <code>pbkdf2</code> és la que copiareu):</p>
-<pre><code>Enter password:
-Reenter password:
-PBKDF2 hash of your password is grub.pbkdf2.sha512.10000.XXXXXX...</code></pre>
-<p>Editeu <code>/etc/grub.d/40_custom</code> (com a <code>root</code>) i afegiu-hi:</p>
-<pre><code>set superusers="root"
-password_pbkdf2 root grub.pbkdf2.sha512.10000.XXXXXX...</code></pre>
-<p>Regenereu la configuració i reinicieu:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">update-grub</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ex">reboot</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Torneu a provar de prémer <code>e</code> al menú: ara us hauria de demanar credencials.</p>
-<div class="errorcomu udl-component udl-errorcomu" title="Secure Boot no és el mateix mecanisme">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-errorcomu"></use></svg><span>Error Comú — Secure Boot no és el mateix mecanisme</span></div>
-<p>No confongueu les dues coses. La <strong>contrasenya de GRUB</strong> és el que impedeix editar la línia del kernel (el que acabeu de fer a la Part D). El <strong>Secure Boot</strong> és una cosa diferent: verifica la <strong>signatura</strong> del binari de GRUB/kernel abans d’executar-lo, no restringeix què escriviu un cop GRUB ja s’executa. Amb Secure Boot activat però <strong>sense</strong> contrasenya de GRUB, l’atac <code>init=/bin/bash</code> de la Part D <strong>continua funcionant igual</strong>. Són dues capes independents, i cal totes dues (a més del control físic de la màquina) per tancar aquest vector.</p>
-</div>
-<div class="reflexio udl-component udl-reflexio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-reflexio"></use></svg><span>Reflexió</span></div>
-<p>Amb la contrasenya de GRUB activada, encara podríeu recuperar l’accés arrencant des d’un USB en viu. Quina mesura, de les tres (contrasenya de GRUB, Secure Boot, seguretat física), tanca <strong>aquesta</strong> via concreta?</p>
-</div>
-<details>
-<summary>
-Pots veure el raonament
-</summary>
-<div class="solucio udl-component udl-solucio">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
-<p>Cap de les dues primeres: un USB en viu arrenca el <strong>seu propi</strong> GRUB, no el del disc, així que la contrasenya que heu configurat no hi intervé, i Secure Boot només verificaria la signatura d’aquest altre GRUB (que podria estar igualment signat si és una distribució normal). L’única mesura que ho tanca és la <strong>seguretat física</strong>: restringir l’ordre d’arrencada al firmware (o protegir-lo també amb contrasenya) perquè no arrenqui mai de dispositius externs.</p>
-</div>
-</details>
-<hr>
-</section>
-<section id="resum" class="level2">
-<h2 class="anchored" data-anchor-id="resum">Resum</h2>
-<div class="resum udl-component udl-resum">
-<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-resum"></use></svg><span>Resum</span></div>
-<p><strong>Què hem fet.</strong> Hem recorregut la mateixa cadena de la teoria (firmware → GRUB → kernel → initramfs → arrel real → <code>systemd</code>), però verificant cada etapa amb ordres reals sobre una Debian de veritat, i després l’hem fet servir per intervenir-hi amb <code>init=/bin/bash</code>.</p>
+<pre class="text"><code># &lt;target&gt;   &lt;source device&gt;   &lt;key file&gt;   &lt;options&gt;
+cryptroot    UUID=&lt;uuid&gt;       none         luks</code></pre>
+<ul>
+<li><code>cryptroot</code>: el nom del dispositiu desxifrat (apareixerà com <code>/dev/mapper/cryptroot</code>).</li>
+<li><code>UUID=&lt;uuid&gt;</code>: el <strong>contenidor</strong> que s’ha d’obrir.</li>
+<li><code>none</code>: no hi ha cap fitxer de clau, per tant es demanarà la contrasenya.</li>
+<li><code>luks</code>: el tipus de contenidor.</li>
+</ul>
+<p>Torneu a mirar els tres UUID que vau anotar a la Part E (<code>blkid</code>). Ara en feu servir <strong>dos</strong> en llocs diferents:</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
+<col style="width: 29%">
+<col style="width: 25%">
+<col style="width: 44%">
 </colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;">Teoria (Part 2)</th>
-<th style="text-align: left;">Laboratori</th>
+<th>Fitxer</th>
+<th>Línia</th>
+<th>Quin UUID?</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">ESP, BIOS boot partition</td>
-<td style="text-align: left;"><code>lsblk</code>, <code>PARTTYPE</code></td>
+<td><code>fstab</code></td>
+<td><code>/</code></td>
+<td>el de dins del LUKS (<code>/dev/mapper/cryptroot</code>, <code>ext4</code>)</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">NVRAM, <code>Boot####</code></td>
-<td style="text-align: left;"><code>efibootmgr -v</code></td>
+<td><code>fstab</code></td>
+<td><code>/boot/efi</code></td>
+<td>el de <code>/dev/NEW1</code> (<code>vfat</code>)</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;"><code>grub.cfg</code> generat, no editat</td>
-<td style="text-align: left;"><code>grep</code> a <code>grub.cfg</code> vs.&nbsp;<code>/proc/cmdline</code></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GRUB carrega kernel + initramfs</td>
-<td style="text-align: left;"><code>ls /boot/vmlinuz*</code> / <code>initrd*</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Per què existeix l’initramfs</td>
-<td style="text-align: left;"><code>lsinitramfs</code> + <code>grep cryptsetup/lvm</code></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><code>init=</code> i <code>switch_root</code></td>
-<td style="text-align: left;">Part D: <code>init=/bin/bash</code> sense <code>chroot</code></td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><code>systemd</code>, PID 1</td>
-<td style="text-align: left;"><code>ps -p 1</code>, <code>systemd-analyze</code></td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Secure Boot ≠ contrasenya de GRUB</td>
-<td style="text-align: left;">Part E</td>
+<td><code>crypttab</code></td>
+<td><code>cryptroot</code></td>
+<td>el de <code>/dev/NEW2</code> (<code>crypto_LUKS</code>)</td>
 </tr>
 </tbody>
 </table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Un UUID de la capa equivocada no dóna cap error d’edició: el fitxer és perfectament vàlid. L’error us el trobareu a l’arrencada.</p>
+</div>
+</div>
+<p>Reviseu el resultat abans de continuar:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat /mnt/newroot/etc/crypttab</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat /mnt/newroot/etc/fstab</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="part-g-chroot-i-grub" class="level1">
+<h1>Part G · <code>chroot</code> i GRUB</h1>
+<p>El disc nou ja té les dades, però encara no té <strong>gestor d’arrencada</strong> (l’ESP nova és buida) ni un <strong>initramfs</strong> que sàpiga obrir el LUKS. Aquestes dues coses s’han de fer des de dins del sistema nou, amb un <code>chroot</code>.</p>
+<section id="preparar-lentorn-del-chroot" class="level2">
+<h2 class="anchored" data-anchor-id="preparar-lentorn-del-chroot">Preparar l’entorn del <code>chroot</code></h2>
+<p>Dins del <code>chroot</code> calen els pseudosistemes de fitxers de la màquina real. Si no hi són, ni <code>update-initramfs</code> ni <code>grub-install</code> poden veure els dispositius:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> for d in dev proc sys<span class="kw">;</span> <span class="cf">do</span> <span class="fu">sudo</span> mount <span class="at">--rbind</span> /<span class="va">$d</span> /mnt/newroot/<span class="va">$d</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo mount <span class="at">--bind</span> /run /mnt/newroot/run</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> for d in dev proc sys run<span class="kw">;</span> <span class="cf">do</span> <span class="fu">sudo</span> mount <span class="at">--make-rslave</span> /mnt/newroot/<span class="va">$d</span><span class="kw">;</span> <span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong><code>--make-rslave</code> no és opcional.</strong> En un sistema amb <code>systemd</code> els muntatges són <em>shared</em>: sense això, quan desmunteu <code>/mnt/newroot/dev</code> la propagació desmunta també el <code>/dev</code> de la màquina real, i us quedeu amb la VM mig morta.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Muntem <code>/run</code> amb <code>--bind</code> (no recursiu) a propòsit: un <code>--rbind</code> hi arrossegaria també <code>/run/user/1000</code>, que després impedeix desmuntar amb un <em>target is busy</em>.</p>
+</div>
+</div>
+<p>Entreu al sistema nou:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo chroot /mnt/newroot /bin/bash</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># findmnt /</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># findmnt /boot/efi</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ls /sys/firmware/efi/efivars | head -3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Comproveu que <code>/</code> és <code>/dev/mapper/cryptroot</code>, que <code>/boot/efi</code> és la partició <code>NEW1</code> i que <code>efivars</code> no és buit (sense això, <code>grub-install</code> no podrà registrar l’entrada a la NVRAM).</p>
+</section>
+<section id="dins-del-chroot" class="level2">
+<h2 class="anchored" data-anchor-id="dins-del-chroot">Dins del <code>chroot</code></h2>
+<p>Primer, avisem GRUB que el que ha de llegir (<code>/boot</code>, <code>grub.cfg</code>, el nucli) és <strong>dins</strong> d’un disc xifrat:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># nano /etc/default/grub</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Afegiu (o descomenteu) aquesta línia:</p>
+<pre class="text"><code>GRUB_ENABLE_CRYPTODISK=y</code></pre>
+<p>Ara generem l’initramfs, instal·lem GRUB i generem <code>grub.cfg</code>:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># update-initramfs -u -k all</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># grub-install --target=x86_64-efi --efi-directory=/boot/efi \</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">--bootloader-id=debian-luks</span> <span class="at">--recheck</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Installing</span> for x86_64-efi platform.</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Installation</span> finished. No error reported.</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># update-grub</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># grep -m1 'root=' /boot/grub/grub.cfg</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Comproveu que l’initramfs porta el necessari per desxifrar:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># lsinitramfs /boot/initrd.img-* | grep -E 'cryptsetup|crypttab'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="concepte udl-component udl-concepte">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte</span></div>
+<p><code>update-initramfs</code> llegeix <code>/etc/crypttab</code> <strong>en el moment d’executar-se</strong> i, si hi troba l’arrel, hi incrusta <code>cryptsetup</code>, els mòduls de xifrat i una còpia del <code>crypttab</code>. <code>grub-install</code> registra una entrada nova a la NVRAM (recordeu <code>efibootmgr</code>) que apunta a l’ESP d’aquest disc. <code>update-grub</code> genera <code>grub.cfg</code> amb la línia <code>linux ... root=...</code>, que ha d’apuntar al sistema de fitxers de <strong>dins</strong> del LUKS (per UUID o per <code>/dev/mapper/cryptroot</code>), mai a <code>/dev/sdb2</code>.</p>
+</div>
+<p>Sortiu del <code>chroot</code>:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># exit</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="desmuntar-i-tancar" class="level2">
+<h2 class="anchored" data-anchor-id="desmuntar-i-tancar">Desmuntar i tancar</h2>
+<p>Desmunteu en ordre i tanqueu el contenidor. Si no el tanqueu, el disc queda “en ús” i podeu apagar la VM amb coses a mig escriure:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo umount <span class="at">-R</span> /mnt/newroot</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> findmnt <span class="at">-R</span> /mnt/newroot          <span class="co"># no ha de mostrar res</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo cryptsetup luksClose cryptroot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Si <code>umount -R</code> es queixa de <em>target is busy</em>, mireu què hi ha a dins amb <code>findmnt -R /mnt/newroot</code> i useu <code>sudo umount -R -l /mnt/newroot</code> (lazy) només com a últim recurs.</p>
+<p>Apagueu la VM.</p>
+</section>
+</section>
+<section id="part-h-primera-arrencada" class="level1">
+<h1>Part H · Primera arrencada</h1>
+<p>Provarem el disc nou <strong>tot sol</strong>, tal com arrencaria una màquina real. Al host, feu una còpia de <code>run.sh</code> sense el disc original:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">host$</span> sed <span class="st">'/debian-amsa.qcow2/d'</span> run.sh <span class="op">&gt;</span> run-luks.sh</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">host$</span> chmod +x run-luks.sh</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">host$</span> grep drive run-luks.sh</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ex">host$</span> ./run-luks.sh</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>No esborreu <code>OVMF_VARS.fd</code>. Allà hi ha l’entrada <code>debian-luks</code> que ha creat <code>grub-install</code>.</p>
+</div>
+</div>
+<p>Useu la <strong>finestra gràfica</strong> de QEMU: la contrasenya es demana abans que existeixi la xarxa, i per SSH no hi arribareu.</p>
+</section>
+<section id="part-i-diagnòstic-i-reparació" class="level1">
+<h1>Part I · Diagnòstic i reparació</h1>
+<p>Probablement no ha arrencat a la primera. És normal: ara cal fer el que faria un administrador.</p>
+<section id="mètode" class="level2">
+<h2 class="anchored" data-anchor-id="mètode">Mètode</h2>
+<ol type="1">
+<li><strong>Aturar-se i llegir.</strong> L’últim missatge que veieu us diu en quina fase s’ha parat.</li>
+<li><strong>Localitzar la fase:</strong> UEFI, GRUB, nucli, initramfs, o sistema ja arrencat.</li>
+<li><strong>Formular una hipòtesi</strong> i comprovar-la abans de canviar res.</li>
+<li><strong>Corregir en un sol lloc</strong> i tornar a provar.</li>
+</ol>
+<details>
+<summary>
+Mapa de diagnòstic (obriu-lo només després d’haver intentat)
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 22%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Què veieu</th>
+<th>Fase</th>
+<th>Sospitós</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Shell UEFI o cap entrada d’arrencada</td>
+<td>UEFI</td>
+<td><code>OVMF_VARS.fd</code> esborrat; <code>grub-install</code> no ha registrat l’entrada</td>
+</tr>
+<tr class="even">
+<td><code>grub rescue&gt;</code>, o un error de <code>cryptouuid</code> / disc no trobat</td>
+<td>GRUB</td>
+<td>GRUB no pot obrir el LUKS</td>
+</tr>
+<tr class="odd">
+<td>GRUB demana contrasenya i l’accepta, el nucli carrega i apareix <code>(initramfs)</code> amb <code>ALERT! UUID=... does not exist</code></td>
+<td>initramfs</td>
+<td>l’initramfs no porta <code>cryptsetup</code>, o el <code>crypttab</code> apunta al UUID equivocat</td>
+</tr>
+<tr class="even">
+<td>Una pausa llarga i <code>Gave up waiting for suspend/resume device</code></td>
+<td>initramfs</td>
+<td><code>RESUME</code> apunta a un swap que ja no existeix</td>
+</tr>
+<tr class="odd">
+<td>Una pausa de 90 s amb <code>A start job is running for /dev/disk/by-uuid/...</code></td>
+<td>systemd</td>
+<td>l’<code>fstab</code> encara té la línia de swap</td>
+</tr>
+<tr class="even">
+<td>Arrenca, però <code>/</code> és de només lectura (<code>apt</code> o <code>passwd</code> fallen)</td>
+<td>sistema</td>
+<td>l’UUID de <code>/</code> a l’<code>fstab</code> no és el de dins del LUKS</td>
+</tr>
+</tbody>
+</table>
+</div>
+</details>
+</section>
+<section id="tornar-al-sistema-antic" class="level2">
+<h2 class="anchored" data-anchor-id="tornar-al-sistema-antic">Tornar al sistema antic</h2>
+<p>El disc original no s’ha tocat, així que és la vostra “consola de rescat”. Arrenqueu amb <strong>els dos discs</strong> (<code>./run.sh</code>). Com que <code>grub-install</code> ha posat <code>debian-luks</code> primer a l’ordre d’arrencada, haureu de triar el sistema antic a mà: premeu <code>Esc</code> mentre apareix el logo d’UEFI, entreu a <strong>Boot Manager</strong> i trieu l’entrada <code>debian</code>.</p>
+<p>Un cop dins, identifiqueu els discs amb <code>lsblk</code> (el nou ha de ser <code>sdb</code>) i recupereu l’entorn de la Part G:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo cryptsetup luksOpen /dev/NEW2 cryptroot</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo mount /dev/mapper/cryptroot /mnt/newroot</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo mount /dev/NEW1 /mnt/newroot/boot/efi</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> for d in dev proc sys<span class="kw">;</span> <span class="cf">do</span> <span class="fu">sudo</span> mount <span class="at">--rbind</span> /<span class="va">$d</span> /mnt/newroot/<span class="va">$d</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo mount <span class="at">--bind</span> /run /mnt/newroot/run</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> for d in dev proc sys run<span class="kw">;</span> <span class="cf">do</span> <span class="fu">sudo</span> mount <span class="at">--make-rslave</span> /mnt/newroot/<span class="va">$d</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo chroot /mnt/newroot /bin/bash</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Ara ja podeu comprovar la vostra hipòtesi. Cada cop que canvieu alguna cosa, recordeu quina part és un <strong>artefacte generat</strong> (<code>initrd.img</code>, <code>grub.cfg</code>, entrada NVRAM) i s’ha de regenerar.</p>
+</section>
+<section id="correccions" class="level2">
+<h2 class="anchored" data-anchor-id="correccions">Correccions</h2>
+<details>
+<summary>
+GRUB no pot obrir el LUKS
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Mireu el format i la funció de derivació de clau:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo cryptsetup luksDump /dev/NEW2 <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'Version|PBKDF'</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Version:</span>        2</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>        <span class="ex">PBKDF:</span>      argon2id</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>cryptsetup luksFormat</code> crea per defecte LUKS2 amb <strong>argon2id</strong>, i GRUB només sap fer servir <strong>PBKDF2</strong> amb LUKS2. Cal convertir la clau (la contrasenya no canvia):</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo cryptsetup luksConvertKey <span class="at">--pbkdf</span> pbkdf2 /dev/NEW2</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Enter</span> passphrase for /dev/NEW2: 1234</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo cryptsetup luksDump /dev/NEW2 <span class="kw">|</span> <span class="fu">grep</span> PBKDF</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="ex">PBKDF:</span>      pbkdf2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>No cal reinstal·lar GRUB: llegeix la capçalera del disc a cada arrencada. Si el problema fos que <code>GRUB_ENABLE_CRYPTODISK=y</code> faltava, dins del <code>chroot</code> caldria afegir-la i tornar a executar <code>grub-install</code> i <code>update-grub</code>.</p>
+<p>Alternativa: refer el contenidor amb <code>luksFormat --type luks1</code>. Cal repetir la còpia, i per això és pitjor.</p>
+</div>
+</details>
+<details>
+<summary>
+L’initramfs no sap obrir el LUKS
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Dins del <code>chroot</code>:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cat /etc/crypttab</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># blkid /dev/NEW2</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># update-initramfs -u -k all</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># lsinitramfs /boot/initrd.img-* | grep -E 'cryptsetup|crypttab'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>La causa típica és haver posat a <code>crypttab</code> l’UUID de <code>/dev/mapper/cryptroot</code> (el d’<code>ext4</code>) en lloc del de <code>/dev/NEW2</code> (<code>crypto_LUKS</code>). Corregiu-lo i <strong>regenereu l’initramfs</strong>: corregir el fitxer no canvia l’<code>initrd.img</code> ja generat. Si un <code>update-initramfs</code> ha avisat que la imatge “may not contain cryptsetup binaries”, el <code>crypttab</code> no es va llegir bé.</p>
+</div>
+</details>
+<details>
+<summary>
+Retard per <code>resume</code> o per swap
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>Dins del <code>chroot</code>:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># echo "RESUME=none" &gt; /etc/initramfs-tools/conf.d/resume</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># update-initramfs -u -k all</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># nano /etc/fstab        # esborreu la línia de swap</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Ni l’un ni l’altre bloquegen l’arrencada, però l’allarguen i omplen els logs d’errors que no signifiquen res.</p>
+</div>
+</details>
+<details>
+<summary>
+<code>/</code> és de només lectura
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p>El nucli munta l’arrel amb el <code>root=</code> de GRUB, però després <code>systemd-remount-fs</code> la remunta en lectura i escriptura segons l’<code>fstab</code>. Si l’UUID de <code>/</code> no existeix, aquest pas falla i l’arrel es queda en <code>ro</code>. Per sortir-ne:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo mount <span class="at">-o</span> remount,rw /</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> lsblk <span class="at">-f</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo nano /etc/fstab</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> findmnt <span class="at">--fstab</span> <span class="at">--evaluate</span> <span class="at">-o</span> TARGET,SOURCE</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Comproveu que <code>/</code> surt traduït a <code>/dev/mapper/cryptroot</code>.</p>
+</div>
+</details>
+</section>
+<section id="desmuntar-i-tornar-a-provar" class="level2">
+<h2 class="anchored" data-anchor-id="desmuntar-i-tornar-a-provar">Desmuntar i tornar a provar</h2>
+<p>Sortiu del <code>chroot</code>, desmunteu amb <code>umount -R</code>, tanqueu amb <code>luksClose cryptroot</code>, apagueu la VM i torneu a executar <code>./run-luks.sh</code>. Repetiu el cicle fins que el sistema arrenqui sense errors.</p>
+</section>
+</section>
+<section id="part-j-comprovació-final" class="level1">
+<h1>Part J · Comprovació final</h1>
+<p>Quan el disc nou arrenqui bé, comproveu que l’arrel és realment la xifrada:</p>
+<div class="terminal udl-component udl-terminal">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-terminal"></use></svg><span>Terminal</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> findmnt /</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">TARGET</span> SOURCE                 FSTYPE OPTIONS</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="ex">/</span>      /dev/mapper/cryptroot  ext4   rw,relatime,errors=remount-ro</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> lsblk</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> sudo cryptsetup status cryptroot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Apagueu la VM i substituïu el disc original, guardant l’antic per si de cas.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cada arrencada demana la contrasenya dues vegades: una a GRUB, perquè ha de llegir <code>/boot</code> des del disc xifrat, i una a l’initramfs, perquè ha d’obrir l’arrel. Al proper laboratori en treurem la segona.</p>
+</div>
 </div>
 
 
@@ -1332,14 +1377,11 @@ Pots veure el raonament
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" class="pagination-link" aria-label="Arrencada (II) · UEFI">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Arrencada (II) · UEFI</span>
+      <a href="../../../modules/unit-02-arrancada/pralabs/04_arrencada.html" class="pagination-link" aria-label="Arrencada (IV) · Migració a LUKS">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Arrencada (IV) · Migració a LUKS</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../../../modules/unit-02-arrancada/pralabs/04_arrencada.html" class="pagination-link" aria-label="Arrencada (IV) · Migració a LUKS">
-        <span class="nav-page-text">Arrencada (IV) · Migració a LUKS</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
   </div>
 </nav>
 </div> <!-- /content -->
