@@ -56,6 +56,7 @@ website:
               contents:
                 - modules/unit-02-arrancada/theory/01-arrancada.qmd
                 - modules/unit-02-arrancada/theory/02-arrancada.qmd
+                - modules/unit-02-arrancada/theory/03-arrancada.qmd
             - section: "Activitats"
             - section: "Pralabs"
               contents:
