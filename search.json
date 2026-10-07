@@ -1571,6 +1571,412 @@
     ]
   },
   {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#del-kernel-a-lespai-dusuari-pid-1",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#del-kernel-a-lespai-dusuari-pid-1",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Del kernel a l’espai d’usuari: PID 1",
+    "text": "Del kernel a l’espai d’usuari: PID 1\nQuan el kernel ha descomprimit l’initramfs, l’executa i en llança el programa /init com a procés amb PID 1: és el primer procés de l’espai d’usuari.\n\n\n\nL’/init de l’initramfs prepara el sistema d’arxius arrel real (controladors, LUKS, LVM, fsck…) i el munta.\nDesprés es substitueix a si mateix pel init definitiu:\n\nexec switch_root /mnt /sbin/init\n\n\nswitch_root allibera l’initramfs, canvia l’arrel a la partició real i executa /sbin/init.\nGràcies a exec, el PID no canvia: el PID 1 de l’initramfs i el de systemd són el mateix procés, amb un programa diferent.\nA Debian, /sbin/init és un enllaç simbòlic a systemd.\n\n\n\nLa ruta de l’arrel real depèn del generador d’initramfs: /root a initramfs-tools (Debian), /sysroot a dracut (RHEL/Fedora). Aquí fem servir /mnt només com a exemple.\nError comú que cal desmuntar: «el kernel passa el control a systemd i deixa de gestionar processos». No és cert: el kernel continua planificant tots els processos. El que passa és que el primer procés de l’espai d’usuari canvia de programa.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#comprovem-ho-el-pid-1-al-sistema",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#comprovem-ho-el-pid-1-al-sistema",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Comprovem-ho: el PID 1 al sistema",
+    "text": "Comprovem-ho: el PID 1 al sistema\nps -o pid,ppid,comm -p 1\nls -l /sbin/init\npstree -p | head -n 5\n\nMostra que el procés amb PID 1 és systemd i que el seu pare (PPID) és 0: el kernel.\n/sbin/init apunta a systemd, però el nom init es conserva per compatibilitat.\npstree mostra l’arbre de processos que penja del PID 1.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#funcions-del-pid-1",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#funcions-del-pid-1",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Funcions del PID 1",
+    "text": "Funcions del PID 1\n\n\n\nInicialització de l’espai d’usuari: arrenca serveis i dimonis en l’ordre i en paral·lel segons les dependències.\nArrel de l’arbre de processos: tots els altres processos en pengen, directament o indirectament.\n\n\n\nRecollir orfes: quan un procés pare mor, el kernel reassigna els fills al PID 1. Aquest ha de fer wait() quan acabin; si no, queden com a zombies.\nApagat i reinici: coordina l’aturada ordenada dels serveis, el desmuntatge dels sistemes d’arxius i l’ordre final al kernel.\n\n\n\n\n\n\n\n\n\nEl PID 1 no pot morir\n\n\nSi el PID 1 acaba, el kernel entra en panic. Per això és un programa petit, estable i protegit.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#systemd-vs-sysvinit",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#systemd-vs-sysvinit",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "systemd vs SysVinit",
+    "text": "systemd vs SysVinit\nEl canvi de SysVinit a systemd a la majoria de distribucions va respondre a la necessitat de reduir el temps d’arrencada i de gestionar millor els serveis.\n\n\nSysVinit\n\nSeqüencial: scripts shell a /etc/rc?.d/ executats un darrere l’altre (S##nom, K##nom). L’ordre és numèric, no declaratiu.\nSimple: cada servei és un script llegible i modificable.\nSense supervisió: no sap si un servei ha mort, no el reinicia, no controla els processos que ha creat.\n\n\nsystemd\n\nParal·lelisme: dependències declaratives i socket activation permeten arrencar molts serveis alhora.\nUnitats (unit files) declaratives: dependències, ordre, condicions de reinici…\ncgroups: cada servei té el seu grup de processos i es poden limitar els seus recursos.\njournald: registres estructurats, consultables amb journalctl.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#crítiques-a-systemd",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#crítiques-a-systemd",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Crítiques a systemd",
+    "text": "Crítiques a systemd\n\nAbast i complexitat: és un projecte que inclou molts components (journald, logind, networkd, resolved, timers…). Cada component és un binari i un procés separat, però evolucionen acoblats i el PID 1 és el manager que els coordina.\nFilosofia Unix: eines petites i composables enfront d’un conjunt d’eines integrades.\nDependència: molts paquets assumeixen systemd, cosa que dificulta alternatives (SysVinit, OpenRC, runit).\n\n\nEl debat\n\nDefensors: unifica en un sol lloc el que abans calien moltes eines i scripts heterogenis.\nCrítics: massa intrusiu; redueix la flexibilitat en entorns mínims o per a administradors avançats.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#cas-destudi-la-porta-del-darrere-dxz-utils-i",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#cas-destudi-la-porta-del-darrere-dxz-utils-i",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Cas d’estudi: la porta del darrere d’XZ Utils (I)",
+    "text": "Cas d’estudi: la porta del darrere d’XZ Utils (I)\nCVE-2024-3094 (CVSS 10.0). Una porta del darrere deliberada a la llibreria liblzma, dins de xz-utils, que permetia execució remota de codi a través de sshd.\n\n\n\n\n\n\n\nData\nEsdeveniment\n\n\n\n\n2021\nUn compte (JiaT75) comença a contribuir a xz i a altres projectes.\n\n\n2022\nComptes sense historial pressionen el mantenidor, Lasse Collin, perquè cedeixi la gestió.\n\n\n2023\nJiaT75 és co-mantenidor i signa releases.\n\n\nfeb.-març 2024\nVersions 5.6.0 i 5.6.1 amb el codi maliciós.\n\n\n29 març 2024\nAndres Freund ho descobreix i ho publica a la llista oss-security.\n\n\n\n\nInsistir que NO és una vulnerabilitat (un error accidental) sinó codi introduït expressament: és un atac a la cadena de subministrament (supply chain). Les dates i detalls s’han de contrastar amb l’avís original d’Andres Freund i amb l’entrada del NVD.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#cas-destudi-xz-utils-ii-com-funcionava",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#cas-destudi-xz-utils-ii-com-funcionava",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Cas d’estudi: XZ Utils (II) — com funcionava",
+    "text": "Cas d’estudi: XZ Utils (II) — com funcionava\n\n\nsshd  (amb pegat de distribució)\n └─ libsystemd.so\n     └─ liblzma.so   ← codi maliciós\n\nL’OpenSSH original no enllaça amb libsystemd. Debian i Fedora ho feien per poder cridar sd_notify.\nlibsystemd depenia de liblzma, de manera que sshd acabava carregant-la.\n\n\n\nInjecció: el payload era a fitxers de prova binaris del repositori. L’script de compilació que l’extreia només era als tarballs de release, no a git.\nCondicions: només s’activava en compilar paquets .deb/.rpm per a x86-64 Linux amb glibc i GCC.\nExecució: en carregar-se, interceptava la funció criptogràfica RSA_public_decrypt d’sshd.\nActivació: només si el certificat estava signat amb la clau privada Ed448 de l’atacant; llavors executava ordres amb els privilegis de sshd.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#cas-destudi-xz-utils-iii-lliçons",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#cas-destudi-xz-utils-iii-lliçons",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Cas d’estudi: XZ Utils (III) — lliçons",
+    "text": "Cas d’estudi: XZ Utils (III) — lliçons\n\n\n\nNo era un defecte de systemd ni d’OpenSSH. El vector va ser una combinació de dependències transitives que una distribució va afegir per comoditat.\nConfiança en els mantenidors: l’enginyeria social contra persones pot ser un atac tan eficaç com un exploit.\nCodi font ≠ tarball de release: el que es compila pot no coincidir amb el que es revisa a git.\n\n\n\nMinimitzar dependències: sd_notify és un missatge trivial, i no calia carregar tota una llibreria per enviar-lo.\nDetecció per casualitat: una anomalia de rendiment (≈500 ms més per iniciar sessió SSH) va delatar l’atac.\nAbast limitat: va afectar versions de desenvolupament (Debian sid/testing, Fedora Rawhide…). Debian stable (bookworm, xz-utils 5.4.x) no es va veure afectat.\n\n\n\n\n\n\n\n\n\nActivitat (5 minuts)\n\n\nAl Debian de laboratori, comprova la versió i la cadena de dependències d’sshd:\ndpkg -s xz-utils | grep '^Version'\nldd /usr/sbin/sshd | grep -E 'libsystemd|liblzma'\nPer què carrega sshd la llibreria liblzma?",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#executar-els-targets-o-runlevels",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#executar-els-targets-o-runlevels",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Executar els targets (o runlevels)",
+    "text": "Executar els targets (o runlevels)\nEl PID 1 activa un target: una unitat que agrupa unitats i defineix un estat del sistema (equivalent als runlevels de SysVinit).\n\n\n\ndefault.target: enllaç al target d’arrencada per defecte (graphical o multi-user).\ngraphical.target: entorn gràfic (runlevel 5).\nmulti-user.target: multiusuari sense entorn gràfic, habitual en servidors (runlevel 3).\nrescue.target: consola de rescat amb els sistemes d’arxius muntats (runlevel 1).\nemergency.target: el mínim imprescindible; arrel en mode lectura.\npoweroff.target, reboot.target: apagada i reinici.\n\n\n# Quin és el target per defecte?\nsystemctl get-default\n\n# Canviar el target per defecte\n# (afecta a les PROPERES arrencades)\nsudo systemctl set-default multi-user.target\n\n# Passar ara a un altre target\n# (afecta al sistema EN EXECUCIÓ)\nsudo systemctl isolate rescue.target\n\n\nConfusió habitual: set-default no canvia l’estat actual i isolate no és persistent.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#unitats-de-systemd",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#unitats-de-systemd",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Unitats de systemd",
+    "text": "Unitats de systemd\nUna unitat és un recurs que systemd gestiona, descrit en un fitxer de configuració.\n\n\n\n\n\n\n\nDirectori\nÚs\n\n\n\n\n/etc/systemd/system/\nFitxers de l’administrador (màxima prioritat).\n\n\n/run/systemd/system/\nUnitats transitòries; es perden en reiniciar.\n\n\n/usr/lib/systemd/system/\nFitxers dels paquets de la distribució. A Debian: /lib/systemd/system/.\n\n\n\n\nSi dues unitats tenen el mateix nom, guanya la del directori de més amunt a la taula: /etc s’imposa a /usr/lib.\n\n\nPer modificar una unitat dels paquets sense tocar-ne l’original, fes servir un drop-in: sudo systemctl edit &lt;unitat&gt;. Per veure la configuració efectiva: systemctl cat &lt;unitat&gt;.\n\n\nDesprés de canviar fitxers d’unitat a mà, executa sudo systemctl daemon-reload.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#tipus-dunitats",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#tipus-dunitats",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Tipus d’unitats",
+    "text": "Tipus d’unitats\n\n\n\nService (.service): defineix com s’inicia, s’atura i es supervisa un servei. Ex.: ssh.service (a Debian; sshd.service n’és un àlies).\nSocket (.socket): sockets d’escolta que poden activar un servei.\nDevice (.device): dispositius detectats per udev.\nMount / Automount: punts de muntatge.\n\n\n\nPath (.path): activa unitats quan canvia un fitxer o directori.\nTimer (.timer): activa unitats en moments determinats (alternativa a cron).\nTarget (.target): agrupa unitats en estats del sistema.\nSlice / Scope: organitzen processos en cgroups.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#targets-i-systemd",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#targets-i-systemd",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Targets i systemd",
+    "text": "Targets i systemd",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#exemple-de-fitxer-dunitat",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#exemple-de-fitxer-dunitat",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Exemple de fitxer d’unitat",
+    "text": "Exemple de fitxer d’unitat\nFitxer simplificat del servei CUPS (Common Unix Printing System):\n\n\n[Unit]\nDescription=CUPS Scheduler\nDocumentation=man:cupsd(8)\nAfter=network.target\n\n[Service]\nExecStart=/usr/sbin/cupsd -l\nType=notify\n\n[Install]\nAlso=cups.socket cups.path\nWantedBy=printer.target\n\n\nAfter=network.target: ordre, no dependència. Si el target de xarxa no és a la transacció, CUPS no el demana.\nType=notify: CUPS avisa systemd quan està llest.\nAlso=: en fer enable/disable d’aquesta unitat, també s’habiliten/deshabiliten cups.socket i cups.path.\nWantedBy=printer.target: en habilitar-la es crea un enllaç a printer.target.wants/.\n\n\n\nprinter.target és un target passiu: no s’activa per defecte, el sol·liciten altres unitats quan és necessari (p. ex. la detecció d’una impressora). A la pràctica CUPS sol arrencar per socket activation a través de cups.socket; per això la unitat sencera de Debian també declara Requires=cups.socket.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#socket-activation",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#socket-activation",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Socket activation",
+    "text": "Socket activation\n\n\nsystemd pot crear i escoltar el socket abans que el servei estigui en marxa.\n\nsystemd obre el socket (p. ex. cups.socket).\nEls clients ja poden connectar-s’hi: el kernel acumula les connexions pendents.\nQuan arriba la primera, systemd arrenca el servei i li passa el socket ja obert.\n\n\nAvantatges\n\nArrencada més paral·lela: el client no ha d’esperar que el servidor estigui llest.\nEls serveis rarament utilitzats només s’engeguen quan cal.\nReiniciar el servei no perd les connexions pendents.\n\nsystemctl list-sockets",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#dependències-entre-unitats",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#dependències-entre-unitats",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Dependències entre unitats",
+    "text": "Dependències entre unitats\nLes dependències es declaren a la secció [Unit]. Cada tipus d’unitat n’afegeix algunes per defecte.\n\nRequires=: dependència forta. Si la unitat requerida no s’arrenca amb èxit, aquesta tampoc. Si s’atura la requerida, també s’atura aquesta.\nWants=: dependència feble. Intenta arrencar l’altra, però ignora el seu fracàs. És la que s’ha de preferir per defecte.\nRequisite=: la unitat ja ha d’estar activa; si no, falla immediatament.\nBindsTo=: com Requires=, però si l’altra queda inactiva per qualsevol motiu, aquesta s’atura.\nPartOf=: només propaga aturades i reinicis del pare al fill.\nConflicts=: dues unitats no poden estar actives alhora; arrencar una atura l’altra.\nAfter= / Before=: només defineixen l’ordre d’arrencada (i l’invers en aturar). No creen cap dependència.\n\n\n\n\n\n\n\n\n\n\nRequeriment i ordre són independents\n\n\nRequires=B sense After=B arrenca A i B en paral·lel.\n\n\n\n\n\n\n\n\n\n\n\n\nDeclaració a A\nResultat\n\n\n\n\nRequires=B + After=B\nB s’arrenca primer; A només si B funciona.\n\n\nRequires=B\nA i B s’arrenquen alhora.\n\n\nAfter=B\nCap dependència: ordena només si les dues ja són a la transacció.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#transaccions-a-systemd",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#transaccions-a-systemd",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Transaccions a systemd",
+    "text": "Transaccions a systemd\nQuan es demana una acció (p. ex. systemctl start ssh), systemd construeix una transacció: un conjunt de feines (jobs) coherent, que es valida abans de tocar res.\n\nCreació: una feina per a la unitat demanada (anchor job) i, recursivament, per a les seves dependències.\nFusió: les feines sobre la mateixa unitat es combinen si són compatibles; si no, la transacció falla.\nEliminació de redundants: es descarten feines sense efecte (p. ex. start d’una unitat ja activa).\nVerificació de l’ordre: amb After=/Before= es construeix un graf. Un cicle impedeix trobar un ordre vàlid; systemd intenta trencar-lo eliminant una feina no essencial (ho registra al journal) i, si no pot, la transacció falla.\nActivació: les feines s’encuen i s’executen en paral·lel respectant l’ordre.\n\n\nLa validació prèvia fa que la transacció sigui tot o res: o es pot executar de forma coherent, o no s’encua cap feina.\n\n\nL’ordre i el detall exactes dels passos es poden consultar a src/core/transaction.c del codi font de systemd. systemctl list-jobs només mostra feines en curs; a l’arrencada o amb serveis lents és quan és útil. Per detectar cicles en unitats pròpies: systemd-analyze verify &lt;fitxer&gt;.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#systemctl-i-gestió-de-serveis",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#systemctl-i-gestió-de-serveis",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "systemctl (I): gestió de serveis",
+    "text": "systemctl (I): gestió de serveis\nLes accions que modifiquen l’estat requereixen privilegis (sudo); les de consulta, no.\n\n\n\n\n\n\n\nComanda\nDescripció\n\n\n\n\nsystemctl status &lt;unit&gt;\nEstat, darreres línies del journal i arbre de processos (cgroup).\n\n\nsudo systemctl start &lt;unit&gt; / stop\nArrenca / atura ara.\n\n\nsudo systemctl restart &lt;unit&gt;\nAtura i torna a arrencar.\n\n\nsudo systemctl reload &lt;unit&gt;\nTorna a llegir la configuració sense aturar (si el servei ho suporta).\n\n\nsudo systemctl enable &lt;unit&gt;\nCrea els enllaços de [Install]: arrencarà a la propera arrencada. No l’arrenca ara.\n\n\nsudo systemctl enable --now &lt;unit&gt;\nHabilita i arrenca alhora.\n\n\nsudo systemctl disable &lt;unit&gt;\nElimina els enllaços de [Install].\n\n\nsudo systemctl mask &lt;unit&gt;\nEnllaça la unitat a /dev/null: ni manual ni per dependència.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#systemctl-ii-consulta",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#systemctl-ii-consulta",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "systemctl (II): consulta",
+    "text": "systemctl (II): consulta\n\n\n\n\n\n\n\nComanda\nDescripció\n\n\n\n\nsystemctl is-active &lt;unit&gt;\nComprova si està activa.\n\n\nsystemctl is-enabled &lt;unit&gt;\nComprova si arrencarà automàticament.\n\n\nsystemctl list-units\nUnitats carregades actualment.\n\n\nsystemctl list-unit-files\nFitxers d’unitat disponibles i el seu estat d’habilitació.\n\n\nsystemctl list-dependencies &lt;unit&gt;\nArbre de dependències d’una unitat.\n\n\nsystemctl list-jobs\nFeines pendents o en execució.\n\n\nsystemctl --failed\nUnitats que han fallat.\n\n\nsystemctl cat &lt;unit&gt;\nMostra el fitxer d’unitat (amb els drop-ins).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#diagnosi-de-larrencada",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#diagnosi-de-larrencada",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Diagnosi de l’arrencada",
+    "text": "Diagnosi de l’arrencada\n\n\n# Quant ha trigat l'arrencada?\nsystemd-analyze\n\n# Quines unitats han trigat més?\nsystemd-analyze blame\n\n# Cadena crítica de l'arrencada\nsystemd-analyze critical-chain\n\n# Què ha fallat?\nsystemctl --failed\n\n# Registres d'aquesta arrencada\njournalctl -b\n\n# Només errors o pitjor\njournalctl -b -p err\n\n# Registres d'un servei\njournalctl -u ssh.service\n\nPer veure el journal del sistema cal ser root o pertànyer als grups adm o systemd-journal.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#exemple-mínim-el-nostre-primer-servei",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#exemple-mínim-el-nostre-primer-servei",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Exemple mínim: el nostre primer servei",
+    "text": "Exemple mínim: el nostre primer servei\nsudo tee /etc/systemd/system/hola.service &gt; /dev/null &lt;&lt;'EOF'\n[Unit]\nDescription=Servei d'exemple: escriu un missatge al journal\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/logger -t hola \"Hola des de systemd\"\n\n[Install]\nWantedBy=multi-user.target\nEOF\n\nEs fa servir sudo tee perquè la redirecció &gt; s’executa amb els privilegis de l’usuari, no els de sudo.\n&lt;&lt;'EOF' (amb cometes) evita que el shell interpreti el contingut.\nType=oneshot: el servei fa una feina i acaba.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#prova-i-errors-comuns",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#prova-i-errors-comuns",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Prova i errors comuns",
+    "text": "Prova i errors comuns\n\n\nsudo systemctl daemon-reload\nsudo systemctl start hola.service\nsystemctl status hola.service\njournalctl -t hola -n 3\nsudo systemctl enable hola.service\n\nErrors típics\n\nOblidar daemon-reload després d’editar el fitxer.\nConfondre enable (futur) amb start (ara).\nEsperar que status mostri «active» en un oneshot: després d’acabar queda inactive (dead) si no hi ha RemainAfterExit=yes.\nConfondre reload amb restart.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#la-secció-install",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#la-secció-install",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "La secció [Install]",
+    "text": "La secció [Install]\n[Install]\nWantedBy=multi-user.target\nAlso=sysstat-collect.timer\nAlso=sysstat-summary.timer\nAlias=monitoring.service\n\n[Install] només s’utilitza per enable i disable; systemd no la llegeix per arrencar la unitat.\nWantedBy=multi-user.target: en habilitar-la es crea un enllaç a multi-user.target.wants/; arrencarà amb el target multiusuari (runlevel 3).\nAlso=: en habilitar-la, s’habiliten també les unitats indicades.\nAlias=: nom alternatiu (enllaç simbòlic) amb el mateix tipus d’unitat.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#opcions-de-service-i",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#opcions-de-service-i",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Opcions de [Service] (I)",
+    "text": "Opcions de [Service] (I)\n\n\n\n\n\n\n\nOpció\nDescripció\n\n\n\n\nType=\nQuan es considera iniciat el servei: simple, exec, forking, oneshot, notify, dbus, idle.\n\n\nExecStart=\nComanda que inicia el servei.\n\n\nExecStop=\nComanda que l’atura (si no, es fa servir SIGTERM).\n\n\nExecReload=\nComanda que en recarrega la configuració.\n\n\nRemainAfterExit=\nManté la unitat com a activa després que el procés acabi (típic en oneshot).\n\n\nRestart=\nQuan es reinicia: no, on-failure, always…\n\n\nUser= / Group=\nUsuari i grup amb què s’executa.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#opcions-de-service-ii",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#opcions-de-service-ii",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Opcions de [Service] (II)",
+    "text": "Opcions de [Service] (II)\n\n\n\n\n\n\n\nOpció\nDescripció\n\n\n\n\nEnvironment=\nVariables d’entorn del servei.\n\n\nWorkingDirectory=\nDirectori de treball.\n\n\nPIDFile=\nFitxer amb el PID del procés principal; només té sentit amb Type=forking.\n\n\nTimeoutStartSec=\nTemps màxim d’arrencada.\n\n\nTimeoutStopSec=\nTemps màxim d’aturada.\n\n\nStandardOutput= / StandardError=\nOn van les sortides; per defecte, al journal.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#tipus-de-serveis-i",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#tipus-de-serveis-i",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Tipus de serveis (I)",
+    "text": "Tipus de serveis (I)\n\nsimple: el valor per defecte si hi ha ExecStart= i no hi ha Type= ni BusName=. systemd el considera iniciat tan bon punt crea el procés (fork()), sense esperar res més.\nexec: com simple, però espera que el binari s’hagi executat (execve()); detecta errors com un fitxer inexistent.\nforking: el procés fa fork() i el pare surt; el servei es considera iniciat quan el pare acaba. Clàssic dels dimonis tradicionals.\noneshot: tasca única. Mentre s’executa està activating; quan acaba, la unitat torna a inactive tret que hi hagi RemainAfterExit=yes.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#tipus-de-serveis-ii",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#tipus-de-serveis-ii",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Tipus de serveis (II)",
+    "text": "Tipus de serveis (II)\n\nnotify: el servei envia explícitament a systemd un avís de «llest» (sd_notify).\ndbus: es considera iniciat quan el servei ocupa el seu nom al bus D-Bus.\nidle: com simple, però retarda l’execució fins que s’han enviat les altres feines (màxim 5 s). S’usa per evitar que la sortida a la consola s’entrelliï.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#efecte-del-tipus-de-servei-al-runtime",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#efecte-del-tipus-de-servei-al-runtime",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Efecte del tipus de servei al runtime",
+    "text": "Efecte del tipus de servei al runtime",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#inici-de-sessió-dun-usuari",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#inici-de-sessió-dun-usuari",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Inici de sessió d’un usuari",
+    "text": "Inici de sessió d’un usuari\nQuan s’han carregat els serveis, apareix un punt d’entrada (getty a la consola, sshd per xarxa, un gestor gràfic).\ngetty / sshd  →  login  →  PAM  →  systemd-logind  →  shell de login\n\nPAM autentica i prepara la sessió.\nsystemd-logind registra la sessió i en gestiona el cicle de vida (loginctl list-sessions).\nEs llança un shell de login, que llegeix els fitxers de configuració de l’usuari.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
+    "objectID": "modules/unit-02-arrancada/theory/03-arrancada.html#fitxers-de-configuració-del-shell-bash",
+    "href": "modules/unit-02-arrancada/theory/03-arrancada.html#fitxers-de-configuració-del-shell-bash",
+    "title": "Unitat 2 · Arrencada (Part 3)",
+    "section": "Fitxers de configuració del shell (bash)",
+    "text": "Fitxers de configuració del shell (bash)\n\n\n\n\n\n\n\nTipus de shell\nFitxers que llegeix\n\n\n\n\nLogin\n/etc/profile (que carrega /etc/profile.d/*.sh) i el primer que existeixi de ~/.bash_profile, ~/.bash_login, ~/.profile.\n\n\nInteractiu, no login\n/etc/bash.bashrc (Debian; /etc/bashrc a RHEL) i ~/.bashrc.\n\n\nEn tancar un shell de login\n~/.bash_logout.\n\n\n\n\nA Debian, el ~/.profile per defecte carrega ~/.bashrc, i així un shell de login també aplica la configuració personal.\n~/.bash_history és un fitxer de dades (l’històric); no s’executa.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 2 · Arrancada",
+      "Teoria",
+      "Unitat 2 · Arrencada (Part 3)"
+    ]
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Administració i Manteniment de Sistemes i Aplicacions",
