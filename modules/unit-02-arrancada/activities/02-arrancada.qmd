@@ -1,0 +1,374 @@
+---
+title: "Activitats teòriques · Unitat 2"
+subtitle: "Administració i Manteniment de Sistemes i Aplicacions"
+format:
+  udl-course-html:
+    toc: true
+    number-sections: false
+---
+
+Per complementar la sessió teòrica sobre l'arrencada, proposem una petita col·lecció de preguntes de **cert o fals**.
+
+L'activitat és **no avaluable**. No es tracta de memoritzar adreces ni xifres, sinó de **raonar**: cada afirmació es pot validar o desmuntar entenent què fa cada peça (CPU, firmware, Stage 1, Stage 2) i en quin ordre.
+
+Per a cada pregunta teniu dos desplegables:
+
+- **Pista**: una pregunta que us orienta sense donar-vos la resposta. Intenteu-ho primer sense obrir-la.
+- **Solució**: la resposta i, sobretot, el *perquè*.
+
+---
+
+## Pregunta 1 — El reset
+
+::: {.exercici title="L'adreça de reset"}
+
+Imagineu que hem fet un reset al nostre ordinador. Perquè la CPU busqui la primera instrucció a executar a l'adreça de reset, es fa el càlcul següent:
+
+$$
+\texttt{CS.selector} + \texttt{CS.base} = \text{Adreça de reset}
+$$
+
+on `CS.selector` i `CS.base` són adreces definides per l'arquitectura x86 de la CPU.
+
+1. És certa l'afirmació? Per què?
+2. Què hi ha físicament a aquesta adreça perquè la CPU hi trobi el codi del firmware?
+
+:::
+
+::: {.callout-tip collapse="true"}
+## Pista
+
+- Un *selector* és una adreça o és un altre tipus de valor?
+- Per calcular on és la instrucció següent, la CPU necessita saber *on comença el segment* i *on és dins del segment*. Quin registre us falta a la fórmula?
+- Quan la CPU llegeix aquesta adreça, encara no hi ha res carregat a la RAM. Llavors, d'on surt el codi? On viu el firmware dins de la placa base?
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+
+**1. Fals.** Hi ha dos errors a l'enunciat:
+
+- **La fórmula és incorrecta.** La CPU no suma el selector i la base. La primera instrucció es busca a la **base del segment més l'`EIP`**:
+
+$$
+\texttt{CS.base} + \texttt{EIP} = \texttt{0xFFFF0000} + \texttt{0xFFF0} = \texttt{0xFFFFFFF0}
+$$
+
+- **El selector no és una adreça.** Els valors de reset (`CS.selector = 0xF000`, `CS.base = 0xFFFF0000`, `EIP = 0xFFF0`) sí que els fixa l'arquitectura x86, però el selector només identifica el segment; qui diu on comença és la base.
+
+Amb detectar qualsevol dels dos errors ja s'ha respost bé. Ho podeu comprovar a la Part B del laboratori de BIOS amb `monitor info registers` (`CS =f000 ffff0000 ...`).
+
+**2. El xip flash del firmware.** Just després del reset la RAM no conté res útil. El firmware (BIOS o UEFI) viu en un xip de memòria flash de la placa base, mapejat a la part alta de l'espai d'adreces: quan la CPU llegeix `0xFFFFFFF0`, està llegint d'aquest xip.
+:::
+
+<!-- Aportació redactada amb IA (Claude), revisada per l'autor -->
+::: {.callout-important collapse="true"}
+## Per aprofundir
+
+- **Per què el selector no és l'adreça?** En mode real, la base es calcula normalment com `selector × 16`. Amb `0xF000` donaria `0xF0000`, però just després del reset la base val `0xFFFF0000`. És un estat especial: la CPU fa servir la part oculta del registre (la base) i el selector no intervé en el càlcul. Aquest estat dura fins al primer salt *far*, quan la CPU torna a calcular la base amb la regla normal.
+- **En mode protegit** encara es veu més clar: el selector és un índex a una taula (GDT o LDT) més uns bits de permisos. L'adreça on comença el segment es guarda a la taula, no al selector.
+- **Què hi ha a `0xFFFFFFF0`?** Només hi caben 16 bytes abans del final de l'espai d'adreces, així que la primera instrucció del firmware sol ser un salt cap a la resta del seu codi.
+- **Qui fixa què:** els valors de `CS` i `EIP` al reset els fixa la **CPU** (manuals d'Intel/AMD). El que hi ha a aquella adreça ho decideix la **placa base**, que hi mapeja el xip flash.
+:::
+
+---
+
+## Pregunta 2 — Com arriba l'Stage 1 a la memòria
+
+::: {.exercici title="El BIOS i el boot sector"}
+
+El model de firmware BIOS, per carregar l'Stage 1, fa els passos següents:
+
+1. Llegeix de la RAM, específicament de l'adreça `0x7C00`, el boot sector.
+2. Comprova la signatura (`55 AA`).
+3. Guarda el boot sector al sector 0 (LBA 0) del disc.
+4. Una vegada al disc, executem el boot sector, que ens guardarà l'Stage 1 al sector 2048 del disc.
+
+És certa l'afirmació? Si és certa, argumenteu per què. Si és falsa, digueu què canviaríeu perquè l'enunciat fos cert.
+
+:::
+
+::: {.callout-tip collapse="true"}
+## Pista
+
+- Abans que el BIOS faci res, on és el boot sector: al disc o a la RAM?
+- El BIOS escriu al disc o només hi llegeix?
+- La CPU pot executar codi directament del disc?
+- Quantes etapes hi ha al laboratori i qui carrega cadascuna?
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+
+**Fals.** L'error principal és la direcció: el BIOS **agafa el boot sector del disc**, concretament del sector 0, i **el porta a la RAM** per executar-lo. No llegeix res de la RAM ni escriu res al disc.
+
+L'ordre correcte és el de les diapositives:
+
+1. Llegeix el sector 0 (LBA 0) del dispositiu triat segons l'ordre d'arrencada.
+2. Comprova la signatura `55 AA`.
+3. Carrega els 512 B a `0x7C00`–`0x7DFF`.
+4. Salta a `0x7C00`: transfereix el control al codi carregat.
+
+Un altre detall de l'enunciat: **boot sector i Stage 1 són pràcticament el mateix**. El boot sector és el sector 0 on viu el codi, i aquest codi és l'Stage 1. Per tant, el boot sector no «guarda l'Stage 1» enlloc: el que hi ha al sector 2048 és l'**Stage 2**, i el boot sector, un cop executat, el que fa és carregar-lo.
+:::
+
+<!-- Aportació redactada amb IA (Claude), revisada per l'autor -->
+::: {.callout-important collapse="true"}
+## Per aprofundir
+
+- **La signatura en bytes.** Al codi escrivim `dw 0xaa55`, però al disc es veu `55 aa` als bytes 510–511. x86 és *little-endian*: el byte menys significatiu va primer.
+- **El BIOS mai no escriu al disc** durant l'arrencada. Només hi llegeix. El boot sector hi ha arribat abans, quan l'hem escrit nosaltres (amb `dd`) o un instal·lador.
+- **La CPU només executa des de la memòria.** Per això sempre cal *carregar* (copiar del disc a la RAM) abans d'*executar* (saltar-hi).
+- **Què ens deixa el BIOS a `0x7C00`?** Només una cosa fiable: a `DL`, la unitat d'arrencada. La resta de registres (`DS`, `ES`, `SS`, `SP`) no es poden assumir. Per això el nostre Stage 1 els inicialitza i guarda `DL` a `boot_drive` (Part B del laboratori).
+- **El BIOS només carrega 512 bytes.** Tot el que no hi càpiga, l'Stage 1 ho ha d'anar a buscar al disc. D'aquí ve la necessitat d'un Stage 2.
+:::
+## Pregunta 3 — `[org]` i l'adreça de càrrega
+
+::: {.exercici title="Què passa si [org] no coincideix?"}
+
+Hem escrit un Stage 1 i volem que el BIOS l'arrenqui. Per això hem executat les següents comandes:
+
+```bash
+# Pseudocodi: <disc> és el disc des d'on arrencarà la màquina: ja existeix i funciona
+nasm -f bin -o boot.bin boot.asm                    # genera el binari de 512 bytes
+dd if=boot.bin of=<disc> bs=512 count=1 conv=notrunc # l'escriu al sector 0
+hexdump -C -s 510 -n 2 <disc>                       # comprova la signatura: 55 aa
+```
+
+En arrencar, l'Stage 1 es carrega a memòria a l'adreça X (la seva **adreça de càrrega**), però el seu codi comença així:
+
+- `[org Y]`
+- (més instruccions)
+
+amb Y ≠ X. És a dir, l'adreça de càrrega que *assumim* en escriure el codi (Y, l'**adreça de vinculació**) no coincideix amb l'adreça on realment es carrega (X).
+
+**Nota:** `[org Y]` indica a NASM a quina adreça ha de suposar que es carregarà.
+
+1. Qui ha carregat l'Stage 1 a memòria? Podem saber si ho ha fet correctament?
+2. Podem assumir que totes les instruccions posteriors a `[org Y]` **no** s'executaran? Per què?
+
+:::
+
+::: {.callout-tip collapse="true"}
+## Pista
+
+- `[org]` genera algun byte al fitxer `.bin`? La CPU sap quin `org` hi vau posar?
+- Qui decideix on es carrega l'Stage 1 a la memòria? Aquesta adreça pot variar d'un ordinador a un altre?
+- Quines instruccions depenen d'una adreça absoluta i quines no? Penseu en `xor ax, ax` i en `mov si, msg`.
+- Recordeu l'ampliació sobre `[org]` del laboratori: què va passar amb `[org 0x0]`?
+:::
+::: {.callout-note collapse="true"}
+## Solució
+
+La trampa és pensar que `[org Y]` carrega l'Stage 1 a l'adreça Y. **`[org Y]` no carrega res**: només diu a NASM quina adreça ha de suposar per calcular les adreces absolutes. La CPU ni tan sols sap que hi és.
+
+**1. L'Stage 1 el carrega el BIOS**, i sempre a la mateixa adreça: X = `0x7C00`, per convenció. Com que l'Stage 1 és al sector 0 i té la signatura `55 AA`, sabem que el BIOS l'ha carregat bé i hi ha saltat. Perquè tot sigui correcte cal que **X = Y**, és a dir, que l'`[org]` coincideixi amb l'adreça de càrrega: `[org 0x7c00]`.
+
+**2. No es pot assumir.** Les instruccions s'executen totes, una darrere l'altra. El que passa és que:
+
+- Les que **no depenen d'adreces absolutes** funcionen igual: operacions entre registres (`xor ax, ax`) o salts i crides relatius (`jmp .halt`, `call print`).
+- Les que **sí que en depenen** porten «gravada» l'adreça que va calcular NASM a partir de Y, i apunten a llocs equivocats: `mov si, msg` llegirà memòria qualsevol, `mov [boot_drive], dl` escriurà on no toca i el salt *far* `jmp 0x0000:start` enviarà la CPU fora del nostre codi.
+
+Per tant, algunes instruccions no funcionaran, però no totes. És el que es veu a l'ampliació del laboratori de BIOS: amb `[org 0x0]`, `mov si, msg` es converteix en `mov si, 0x0014` i el missatge surt amb escombraries.
+:::
+
+<!-- Aportació redactada amb IA (Claude), revisada per l'autor -->
+::: {.callout-important collapse="true"}
+## Per aprofundir
+
+- **`[org]` no deixa rastre al binari.** El `hexdump` de `boot.bin` comença directament amb `ea 05 7c 00 00`, el salt *far*. El seu efecte només queda dins de les instruccions que fan servir adreces absolutes, que NASM calcula en assemblar.
+- **Per què els salts curts sobreviuen?** `jmp .halt` o `call print` es codifiquen com una **distància** des de la instrucció actual, no com una adreça. Moure tot el codi no canvia aquesta distància.
+- **Per què el salt *far* no sobreviu?** `jmp 0x0000:start` porta «gravada» l'adreça absoluta de `start`. Amb `[org 0x7c00]` és `0x7C05` (els bytes `05 7c`). Amb un altre `org`, seria `Y + 5`, que no és on hi ha el codi.
+- **`org` és una promesa a NASM**, i la càrrega és qui la compleix o no: el BIOS sempre posa l'Stage 1 a `0x7C00`, i nosaltres decidim on volem l'Stage 2 (`0x8000`).
+- **Per comprovar-ho:** `ndisasm -b 16 -o 0x7c00 boot.bin` mostra les adreces absolutes que ha calculat NASM. Si canvieu l'`org` i torneu a assemblar, veureu que canvien només algunes instruccions.
+:::
+
+---
+
+## Pregunta 4 — L'Stage 2 funcionarà?
+
+::: {.exercici title="Una adreça de vinculació «correcta»"}
+
+El BIOS ha carregat correctament l'Stage 1 a `0x7C00` i l'ha començat a executar. Aquest és el codi de l'Stage 1:
+
+```nasm
+[org 0x7c00]
+bits 16
+
+    jmp 0x0000:start            ; far jump: força CS = 0x0000
+
+start:
+    cli                         ; sense interrupcions mentre canviem SS:SP
+    xor  ax, ax
+    mov  ds, ax                 ; DS = 0
+    mov  es, ax                 ; ES = 0
+    mov  [boot_drive], dl       ; guardem la unitat d'arrencada (DL)
+    mov  ss, ax                 ; SS = 0
+    mov  sp, 0x7c00             ; pila: creix cap a adreces més baixes
+    sti
+
+    mov  si, msg_stage1
+    call print
+
+.load_stage2:
+    mov  si, dap                ; DS:SI → DAP
+    mov  dl, [boot_drive]       ; DL = unitat d'arrencada
+    mov  ah, 0x42               ; AH = lectura estesa (LBA)
+    int  0x13
+    jc   .boot_failed           ; CF = 1 → error
+
+.halt:
+    hlt
+    jmp  .halt
+
+.boot_failed:
+    mov  si, msg_fail
+    call print
+    jmp  .halt
+
+print:
+.next:
+    lodsb
+    test al, al
+    jz   .done
+    mov  ah, 0x0e
+    mov  bx, 0x0007
+    int  0x10
+    jmp  .next
+.done:
+    ret
+
+dap:
+
+boot_drive  db 0
+msg_stage1  db "Stage 1: carregant Stage 2...", 13, 10, 0
+msg_fail    db "Error carregant Stage 2!", 13, 10, 0
+
+times 510 - ($ - $$) db 0
+dw 0xaa55
+```
+
+I aquest és l'Stage 2, amb adreça de vinculació `0x8000`, que és elecció nostra:
+
+```nasm
+[org 0x8000]                ; Programa carregat a 0x8000
+bits 16                     ; Mode real de 16 bits
+
+    mov  si, msg            ; SI apunta al primer caràcter de la cadena
+.next:
+    lodsb                   ; al = [DS:SI], SI++ -> Agafa caràcter i avança
+    test al, al             ; AL == 0 ? -> fi de la cadena?
+    jz   .halt
+    mov  ah, 0x0e           ; funció per escriure un caràcter a la pantalla
+    mov  bx, 0x0007         ; pàgina 0, color gris
+    int  0x10               ; escriu el caràcter a la pantalla
+    jmp  .next
+
+.halt:
+    hlt
+    jmp  .halt
+
+msg db "Stage 2 s'ha carregat correctament a memòria!", 13, 10, 0
+```
+
+Podem assegurar que l'Stage 2 s'executarà i funcionarà correctament? Per què?
+
+**Nota:** *executar* vol dir que la CPU comença a llegir les instruccions que hi ha al codi.
+
+:::
+
+::: {.callout-tip collapse="true"}
+## Pista
+
+- L'Stage 1 hauria de llegir l'Stage 2 del disc. Algú ens ha dit que l'Stage 2 hi sigui?
+- Com sap el BIOS quin sector ha de llegir i on l'ha de deixar? Busqueu-ho al codi de l'Stage 1.
+- Suposem que la lectura funciona: on va a parar la CPU després de `int 0x13`?
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+
+**No.** Aquesta pregunta té **més d'una resposta correcta**: n'hi ha prou de trobar-ne una. L'`[org 0x8000]` de l'Stage 2 és correcte, però la cadena que l'ha de fer arribar a la CPU té tres buits:
+
+1. **L'Stage 2 no s'ha escrit al disc.** A diferència de la pregunta anterior, aquí ningú no ens diu que s'hagi fet. Assemblar-lo només genera `second_boot.bin`; cal escriure'l a l'LBA 2048 (`dd ... seek=2048 conv=notrunc`).
+2. **El DAP és buit.** L'Stage 1 fa `mov si, dap`, però l'etiqueta `dap:` no té contingut. El DAP és el que diu al BIOS **quants sectors ha de llegir, des de quin LBA i cap a quina adreça**. Sense ell, el BIOS llegeix com a DAP els bytes que vénen després (`boot_drive` i els missatges), i el més probable és que la lectura falli i surti `Error carregant Stage 2!`.
+3. **L'Stage 1 no salta a l'Stage 2.** Encara que la lectura funcionés, després de `int 0x13` la CPU passa directament a `.halt`. L'Stage 2 seria a `0x8000`, però no s'executaria mai: **carregar no és executar**. Hi falta `jmp 0x0000:0x8000`.
+
+Si arreglem els tres punts, l'Stage 2 funcionarà: el salt fixa `CS = 0` i `IP = 0x8000`, que és on suposa el seu `[org]`, i `DS` i la pila ja els ha preparat l'Stage 1.
+:::
+
+
+<!-- Aportació redactada amb IA (Claude), revisada per l'autor -->
+::: {.callout-important collapse="true"}
+## Per aprofundir
+
+- **Si l'Stage 2 no és al disc, la lectura no falla.** Llegir un sector ple de zeros és una lectura vàlida (`CF = 0`). L'Stage 1 copiaria zeros a `0x8000` i, si hi saltés, la CPU els executaria com si fossin instruccions. És el cas **E3 · Stage 2 desaparegut** del laboratori.
+- **Quan sí que falla la lectura?** Per exemple, si l'LBA és fora del disc. Llavors el BIOS posa `CF = 1` i el `jc .boot_failed` mostra l'error. És el cas **E2 · Lectura fallida**.
+- **`INT 13h` copia sectors sencers.** L'Stage 2 ocupa 59 bytes, però la lectura copia els 512 bytes del sector.
+- **Què hereta l'Stage 2 de l'Stage 1?** L'Stage 2 no inicialitza res, i funciona perquè confia en l'Stage 1:
+  - **`CS:IP`**: el salt `jmp 0x0000:0x8000` fixa `CS = 0` i `IP = 0x8000`, i per tant `mov si, msg` (que NASM tradueix com `mov si, 0x8014`) apunta al missatge.
+  - **`DS = 0`**: `lodsb` llegeix de `DS:SI`, i l'Stage 1 l'ha posat a 0.
+  - **La pila**: `INT 10h` fa servir la pila, i `SS:SP` els ha configurat l'Stage 1 (`0x0000:0x7C00`).
+  - **`DL`**: l'Stage 1 el torna a carregar des de `boot_drive` abans de llegir, i continua valent la unitat d'arrencada.
+- **Les dades no s'executen.** `msg` és darrere del bucle `hlt`, de manera que la CPU mai no hi arriba com si fossin instruccions.
+- **Un detall per als més curiosos:** `lodsb` avança `SI` només si el *direction flag* és 0, i cap dels dos stages fa `cld` per assegurar-ho. Funciona perquè el BIOS el deixa a 0, però és una altra suposició.
+:::
+
+---
+
+## Pregunta 5 — UEFI i el bootloader
+
+::: {.exercici title="Com carrega UEFI el bootloader"}
+
+Perquè UEFI pugui carregar el bootloader, fa els passos següents:
+
+1. Busca la ruta de l'aplicació EFI encarregada de fer de bootloader al seu sistema de fitxers (normalment FAT32).
+2. Un cop trobada l'aplicació EFI, s'assegura que l'aplicació s'executi en *long mode* (64 bits).
+3. Posa l'aplicació EFI al disc, justament en una secció de la taula de particions GPT.
+4. Una vegada l'aplicació és al disc, executem l'aplicació EFI amb les interfícies del firmware corresponents.
+
+És certa l'afirmació? Si és certa, argumenteu per què. Si és falsa, digueu què canviaríeu perquè fos certa.
+
+:::
+
+::: {.callout-tip collapse="true"}
+## Pista
+
+- Abans d'arrencar, on és l'aplicació EFI? Cal que el firmware la posi al disc?
+- Què conté realment una taula de particions GPT: fitxers o descripcions de particions?
+- Com a la pregunta 2: la CPU pot executar codi directament del disc?
+- En quin mode s'està executant ja el firmware UEFI d'una màquina x86-64?
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+
+**Fals.** És un error semblant al de la pregunta 2, però encara més gran: gairebé tots els passos són incorrectes. L'aplicació EFI **ja és al disc** des del principi; el firmware no l'hi posa, sinó que la porta a la RAM per executar-la.
+
+El que fa realment UEFI és:
+
+1. **Localitza la partició ESP** (*EFI System Partition*), on hi ha l'aplicació EFI que fa de bootloader.
+2. **Accedeix al sistema de fitxers** de l'ESP (FAT32). A diferència del BIOS, el firmware UEFI sap llegir FAT.
+3. **Carrega l'aplicació EFI** (per exemple `\EFI\BOOT\BOOTX64.EFI`) **a la RAM**.
+4. **L'executa**, passant-li les interfícies del firmware corresponents (la *System Table*).
+
+Sobre els passos de l'enunciat:
+
+- **Pas 2.** El firmware no ha de «posar» l'aplicació en *long mode*: en una màquina x86-64, ja s'executa en aquest mode.
+- **Pas 3.** La taula GPT no conté aplicacions: només descriu on comença i acaba cada partició.
+- **Pas 4.** La CPU no executa res directament des del disc, sinó des de la RAM.
+:::
+
+
+
+<!-- Aportació redactada amb IA (Claude), revisada per l'autor -->
+::: {.callout-important collapse="true"}
+## Per aprofundir
+
+- **Com troba l'aplicació?** El firmware consulta les entrades d'arrencada guardades a la NVRAM. Si no n'hi ha, fa servir la ruta per defecte `\EFI\BOOT\BOOTX64.EFI`.
+- **Un fitxer, no un sector.** El BIOS carrega 512 bytes sense format a una adreça fixa (`0x7C00`). UEFI carrega un fitxer executable sencer en format PE/COFF.
+- **Adreça de càrrega no fixa.** El firmware tria on carrega l'aplicació, i per això el binari ha de ser **reubicable**. És una diferència clara amb el BIOS, on l'`[org 0x7c00]` funciona perquè l'adreça sempre és la mateixa.
+- **La *System Table*.** En saltar-hi, el firmware li passa aquesta taula, i a través d'ella l'aplicació accedeix als serveis del firmware (consola, disc, memòria...). Fa el paper que al BIOS fan les interrupcions (`INT 10h`, `INT 13h`).
+- **Es pot arrencar sense bootloader intermedi.** Un kernel de Linux compilat com a executable EFI (*EFI stub*) es pot carregar directament des de l'ESP, sense GRUB.
+:::
+---
