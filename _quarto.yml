@@ -65,6 +65,11 @@ website:
                 - modules/unit-02-arrancada/pralabs/03_arrencada.qmd
                 - modules/unit-02-arrancada/pralabs/04_arrencada.qmd
                 - modules/unit-02-arrancada/pralabs/05_arrencada.qmd
+        - section: "Unitat 3 · Emmagatzematge"
+          contents: 
+            - section: Teoria
+              contents:
+                - modules/unit-03-storage/theory/01-raids.qmd
 
 
 
