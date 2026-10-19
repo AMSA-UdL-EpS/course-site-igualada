@@ -1991,6 +1991,510 @@
     "text": "Professorat\n\nJordi Mateo mailto:jordi.mateo@udl.cat"
   },
   {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#què-és-un-raid",
+    "href": "modules/unit-03-storage/theory/01-raids.html#què-és-un-raid",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Què és un RAID?",
+    "text": "Què és un RAID?\nUn RAID (Redundant Array of Independent (originalment Inexpensive) Disks) és un conjunt de dispositius d’emmagatzematge que es combinen per a formar un sistema d’emmagatzematge únic. Aquest nou sistema d’emmagatzematge permet distribuir les dades entre els diferents dispositius que el formen i millorar-ne mètriques com la redundància o el rendiment.\n\n\nEls RAIDs són un conjunt de dispositius d’emmagatzematge que es combinen per a formar un sistema d’emmagatzematge únic.\nEl principal objectiu d’aquesta combinació és tolerar les fallades que es poden produir en els dispositius d’emmagatzematge. Aquesta redundància es pot aconseguir mitjançant la duplicació de les dades o mitjançant la paritat, com veurem més endavant.\nUn altre objectiu important dels RAIDs és millorar el rendiment del sistema mitjançant la distribució de les dades entre els diferents dispositius. Això permet millorar la velocitat de lectura i escriptura de les dades. Es coneix també com striping o en altres paraules ens permet incrementar la ample de banda.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#què-és-el-rendiment-i-la-redundància",
+    "href": "modules/unit-03-storage/theory/01-raids.html#què-és-el-rendiment-i-la-redundància",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Què és el rendiment i la redundància?",
+    "text": "Què és el rendiment i la redundància?\n\nLa redundància és la capacitat d’un sistema de continuar funcionant en cas de fallada d’un o més dispositius. Aquesta capacitat es pot aconseguir mitjançant la duplicació de les dades o mitjançant la paritat.\nEl rendiment és la capacitat d’un sistema de processar un volum de dades en un temps determinat. Aquesta capacitat es pot aconseguir mitjançant la distribució de les dades entre els diferents dispositius, mitjançant una tècnica coneguda com striping.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#conceptes-bàsics",
+    "href": "modules/unit-03-storage/theory/01-raids.html#conceptes-bàsics",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Conceptes bàsics",
+    "text": "Conceptes bàsics\n\nRedundància: Capacitat de tolerar fallades de dispositiu (quantitat de discs que poden fallar sense perdre dades).\nRendiment: Mesurat en IOPS i ample de banda MB/s. Depèn de la mida de stripe,nombre de discs i patró d’accés (seqüencial vs aleatori).\nCapacitat: La capacitat total del sistema és la suma de les capacitats dels dispositius que el formen, tenint en compte la redundància.\nStripe: Un stripe és una unitat d’informació que es distribueix entre els diferents dispositius que formen el RAID. Conjunt de blocs distribuïts entre discs dins del RAID.\nBloc: Un bloc és una unitat d’informació que es llegeix o s’escriu en un dispositiu d’emmagatzematge. (512B, 4KB…).\n\n\n\n\n\n\n\n\nDiferència entre Stripe i Bloc\n\n\nAmb 2 dispositius i un stripe de 64 KB, cada dispositiu guarda 64 KB alternatius d’un fitxer.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#implementacions-de-raids",
+    "href": "modules/unit-03-storage/theory/01-raids.html#implementacions-de-raids",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Implementacions de RAIDs",
+    "text": "Implementacions de RAIDs\n\nSoftware RAID: Implementat a nivell de sistema operatiu.\n\nAvantatges: flexibilitat, transparència, no depèn del hardware.\nInconvenients: CPU utilitzat per càlculs de paritat.\n\nHardware RAID: Controladora dedicada (característiques pròpies, cache, acceleració XOR).\n\nAvantatges: millors rendiments en alguns escenaris;\nInconvenients: dependència del controlador, propietat de metadades.\n\nFake/BIOS RAID: Solució mixta (controladora amb firmware mínim). Pot generar problemes de portabilitat i compatibilitat.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#implementacions-de-raids-1",
+    "href": "modules/unit-03-storage/theory/01-raids.html#implementacions-de-raids-1",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Implementacions de RAIDs",
+    "text": "Implementacions de RAIDs",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-lineal",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-lineal",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID Lineal",
+    "text": "RAID Lineal\ncat lògic entre diversos dispositius d’emmagatzematge físics. JBOD (Just a Bunch Of Disks). No millora ni la redundància ni el rendiment.\n\n\n\n\n\nEl RAID lineal és el més bàsic de tots els tipus de RAID.\nEn aquest sistema, la informació es distribueix primer en un disc i després en l’altre, seguint un ordre seqüencial. Cada unitat d’informació es coneguda com a stripe, i correspon a un bloc.\nLa figura mostra un exemple de RAID Lineal (/dev/md0) amb dos discos (/dev/vda i /dev/vdb). En aquest exemple s’han guardat els primers blocs (1 al 6) a la partició (/dev/vda1). Ara, s’ha d’assumir que la partició (/dev/sda1) es plena. Els següents blocs es guarden a la següent partició disponible (/dev/vdb1). I així successivament.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-0-striping",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-0-striping",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID 0 (Striping)",
+    "text": "RAID 0 (Striping)\n\n\n\n\n\nObjectiu: augmentar rendiment i capacitat (capacitat = suma de discos).\nMida de stripe:\n\nPetits milloren IOPS aleatoris.\nGrans stripes milloren seqüencials.\n\nSi les dades són prou grans, es poden llegir/escriure en paral·lel.\nTolerància a fallades: 0 (pèrdua total si un disc falla).\nAplicacions: cache, fitxers temporals, tasques on la redundància no és prioritària.\n\n\n\n\nEl nivell 0 de RAID és un dels més senzills i més utilitzats. El seu objectiu principal és millorar el rendiment del sistema mitjançant la distribució de les dades entre els diferents dispositius.\nAquesta distribució es realitza mitjançant una tècnica coneguda com striping. Aquesta tècnica permet dividir les dades en blocs més petits i distribuir-los entre els diferents dispositius. Fent Round Robin a tots els dispositius.\nAixò permet millorar la velocitat de lectura i escriptura de les dades, per tant incrementa l’ample de banda.\nLa capacitat del sistema també es veu incrementada, ja que la capacitat total del sistema és la suma de les capacitats dels dispositius que el formen.\nEl principal desavantatge del nivell 0 de RAID és que no ofereix cap tipus de redundància. Això vol dir que si un dels dispositius falla, es perden totes les dades del sistema.\nLa figura mostra un exemple de RAID0 (/dev/md0) amb dos discos (/dev/vda i /dev/vdb). En aquest exemple s’han guardat els primers blocs (1 al 6) de forma alternada 1 a cada disc. El següent bloc (9) es guarda al disc (/dev/vdb). En aquest exemple, els blocs parells es guarden al disc (/dev/vdb) i els senars al disc (/dev/vda).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-1-mirror",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-1-mirror",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID 1 (Mirror)",
+    "text": "RAID 1 (Mirror)\n\n\n\n\n\nObjectiu: redundància via duplicació exacta (mirrors).\nLectures: potencialment paral·leles (millora), depèn del controlador.\nEscriptures: es repliquen en tots els mirrors (overhead escritura).\nCapacitat usable: 50% amb 2 discos (en general n/2 en conjunts de mirrors).\nAplicacions: sistema root, dades crítiques on la coherència immediata és prioritària.\n\n\n\n\nEl nivell 1 té com a objectiu principal millorar la redundància del sistema mitjançant la duplicació de les dades en dos dispositius.\nLa figura 1.3 mostra un exemple de RAID1 (/dev/md0) amb dos discos (/dev/vda i /dev/vdb). En aquest exemple s’han guardat els primers blocs (1 al 6) de forma idèntica en els dos discos. Això significa que si un dels discos falla, l’altre disc pot continuar funcionant sense interrupció, ja que conté una còpia completa de totes les dades.\nPer tant, el principal avantatge del nivell 1 de RAID és la redundància. Això vol dir que si un dels dispositius falla, es poden recuperar les dades sense problemes.\nUn altre avantatge del nivell 1 de RAID és que permet realitzar lectures gairebé el doble de ràpides, ja que es poden llegir les dades de forma simultània des dels dos dispositius.\nPer contra, el nivell 1 de RAID també té alguns desavantatges. El principal desavantatge és el cost, ja que es necessiten més dispositius per a duplicar les dades. Això vol dir que el cost del sistema es duplica. A més, l’escriptura és més lenta, ja que es necessita escriure les dades en els dos dispositius de forma simultània. Finalment, la capacitat del sistema també es veu reduïda, ja que només es pot utilitzar la meitat de la capacitat total dels dispositius.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-2",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-2",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID 2",
+    "text": "RAID 2\n\n\n\n\nEl stripe és a nivell de bit i no de bloc com fins ara.\nPràcticament obsolet en sistemes moderns: exigeix molts discs i accès sincronitzat.\n\n\n\nEl nivell 2 de RAID utilitza la paritat per detectar i corregir errors en les dades. Aquesta paritat es calcula mitjançant bits de control anomenats bits de paritat.\nObservem que el stripe és a nivell de bit i no de bloc com fins ara. Això vol dir que les dades es divideixen en bits més petits i es distribueixen entre els diferents dispositius.\nLa Figura 1.4 mostra un exemple d’una configuració RAID 2 que implementa un codi Hamming(4,3), és a dir, 4 bits de dades i 3 bits de paritat. Aquesta configuració pot semblar poc pràctica en molts contextos, però ens proporciona una comprensió clara de com funciona la codificació de les dades i, en particular, la codificació de Hamming.\nEls codis Hamming són una classe de codis de correcció d’errors que es basen en la paritat. Aquests codis són molt útils per a la detecció i correcció d’errors en les dades, ja que permeten identificar i corregir errors en les dades sense necessitat de retransmissió.\nEl seu ús es poc pràctic en molts contextos, ja que requereix una gran quantitat de dispositius i afegeix la complexitat de la implementació de la codificació de Hamming (encoded).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#codis-de-hamming",
+    "href": "modules/unit-03-storage/theory/01-raids.html#codis-de-hamming",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Codis de Hamming",
+    "text": "Codis de Hamming\nEls codis de Hamming són una classe de codis de correcció d’errors que es basen en la paritat. Aquests codis són molt útils per a la detecció i correcció d’errors en les dades, ja que permeten identificar i corregir errors en les dades sense necessitat de retransmissió.\n\nEl codi de Hamming permet detectar i corregir un sol error de bit.\n\nS’utilitza en el RAID 2 per protegir dades a nivell de bit.\nS’intercalen bits de paritat entre els bits de dades.\n\nCada bit de paritat comprova un conjunt específic de bits de dades.\n\nSi un bit es corromp, la combinació dels bits de paritat indica quin bit s’ha de corregir.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#xor-operació-bàsica",
+    "href": "modules/unit-03-storage/theory/01-raids.html#xor-operació-bàsica",
+    "title": "Unitat 3 · RAIDs",
+    "section": "XOR (Operació bàsica)",
+    "text": "XOR (Operació bàsica)\nLa operació XOR (exclusive OR) és una operació lògica que compara dos bits i retorna un bit de resultat. El resultat és 1 si els bits comparats són diferents, i 0 si són iguals.\n\n\n\nA\nB\n\\(A \\oplus B\\)\n\n\n\n\n0\n0\n0\n\n\n0\n1\n1\n\n\n1\n0\n1\n\n\n1\n1\n0",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#hamming74---0110",
+    "href": "modules/unit-03-storage/theory/01-raids.html#hamming74---0110",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Hamming(7,4) -> [0110]",
+    "text": "Hamming(7,4) -&gt; [0110]\n\n\n\n\n1\n2\n3\n4\n5\n6\n7\n\n\n\n\n\n\\(p_1\\)\n\\(p_2\\)\n\\(d_1\\)\n\\(p_3\\)\n\\(d_2\\)\n\\(d_3\\)\n\\(d_4\\)\n\n\nDades\n\n\n0\n\n1\n1\n0\n\n\n\\(p_1\\)\n1\n\n0\n\n1\n\n0\n\n\n\\(p_2\\)\n\n1\n0\n\n\n1\n0\n\n\n\\(p_3\\)\n\n\n\n0\n1\n1\n0\n\n\nCodi\n1\n1\n0\n0\n1\n1\n0\n\n\n\n\n\n\nEls bits que són potència de 2 (\\(2^k\\), k=0,1, 2…) són els bits de paritat.\nBits de paritat = XOR bits de dades amb el \\(n^o\\) de bit de paritat.\n\n\n\n\n[0110] es codifica com [1100110]",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#comprovació-derrors-amb-hamming-1100110",
+    "href": "modules/unit-03-storage/theory/01-raids.html#comprovació-derrors-amb-hamming-1100110",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Comprovació d’errors amb Hamming [1100110]",
+    "text": "Comprovació d’errors amb Hamming [1100110]\n\nEs calcula els bits de Comprovació = XOR del bits de paritat i de tots els seus bits de dades associats:\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n1\n2\n3\n4\n5\n6\n7\n\n\n\n\n\n\np\\(_1\\)\np\\(_2\\)\nd\\(_1\\)\np\\(_3\\)\nd\\(_2\\)\nd\\(_3\\)\nd\\(_4\\)\nComprovació\n\n\nCodi\n1\n1\n0\n0\n1\n1\n0\n\n\n\np\\(_1\\)\n1\n\n0\n\n1\n\n0\n0\n\n\np\\(_2\\)\n\n1\n0\n\n\n1\n0\n0\n\n\np\\(_3\\)\n\n\n\n0\n1\n1\n0\n0\n\n\n\n\nTots els bits de comprovació = 0 → cap error detectat.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#comprovació-derrors-amb-hamming-1100111",
+    "href": "modules/unit-03-storage/theory/01-raids.html#comprovació-derrors-amb-hamming-1100111",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Comprovació d’errors amb Hamming [1100111]",
+    "text": "Comprovació d’errors amb Hamming [1100111]\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n1\n2\n3\n4\n5\n6\n7\n\n\n\n\n\n\np\\(_1\\)\np\\(_2\\)\nd\\(_1\\)\np\\(_3\\)\nd\\(_2\\)\nd\\(_3\\)\nd\\(_4\\)\nComprovació\n\n\nCodi\n1\n1\n0\n0\n1\n1\n1\n\n\n\np\\(_1\\)\n1\n\n0\n\n1\n\n1\n1\n\n\np\\(_2\\)\n\n1\n0\n\n\n1\n1\n1\n\n\np\\(_3\\)\n\n\n\n0\n1\n1\n1\n1\n\n\n\n\nS’ha alterat el bit 7 corresponent a d\\(_4\\).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#comprovació-derrors-amb-hamming-0100110",
+    "href": "modules/unit-03-storage/theory/01-raids.html#comprovació-derrors-amb-hamming-0100110",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Comprovació d’errors amb Hamming [0100110]",
+    "text": "Comprovació d’errors amb Hamming [0100110]\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n1\n2\n3\n4\n5\n6\n7\n\n\n\n\n\n\np\\(_1\\)\np\\(_2\\)\nd\\(_1\\)\np\\(_3\\)\nd\\(_2\\)\nd\\(_3\\)\nd\\(_4\\)\nComprovació\n\n\nCodi\n0\n1\n0\n0\n1\n1\n0\n\n\n\np\\(_1\\)\n0\n\n0\n\n1\n\n0\n1\n\n\np\\(_2\\)\n\n1\n0\n\n\n1\n0\n0\n\n\np\\(_3\\)\n\n\n\n0\n1\n1\n0\n0\n\n\n\n\nEls bits de comprovació = 001 → s’ha alterat el bit 1 corresponent a \\(p_1\\).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-3-i-4",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-3-i-4",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID 3 i 4",
+    "text": "RAID 3 i 4\n\n\n\n\n\nRAID 3: striping a nivell de byte, paritat en disc dedicat; accés molt sincronitzat → bo per fitxers grans i seqüencials (p.ex. streaming).\nRAID 4: striping a nivell de bloc, paritat en disc dedicat; permet accessos independents per bloc però pateix bottleneck al disc de paritat.\nEn ambdós casos la paritat dedicada pot ser coll d’ampolla per escriptura.\n\n\n\n\nLa diferència entre un RAID 3 i 4 és la granularitat de la paritat. En un RAID 3 la paritat es calcula a nivell de bytes i en un RAID 4 a nivell de blocs.\nLes dades es distribueixen com un RAID 0 i la paritat es guarda en un disc dedicat.\nEn realitat, en un RAID 3 o 4, les dades no es dupliquen, sinó que es calcula una paritat. Si un disc falla, les dades es poden recuperar utilitzant la informació de paritat dels altres discs.\nLa figura il·lustra un exemple de configuració RAID 4. En aquest exemple, el RAID 4, identificat com a /dev/md0, està format per cinc discos: /dev/vda, /dev/vdb, /dev/vdc, /dev/vdd i /dev/vde. En aques- ta configuració RAID 4, els primers quatre discos (/dev/vda, /dev/vdb, /dev/vdc, i /dev/vdd) s’utilitzen per emmagatzemar les dades. El cin- què disc (/dev/vde) s’utilitza exclusivament per a la paritat.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-5",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-5",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID 5",
+    "text": "RAID 5\n\n\n\n\n\nParitat distribuïda entre tots els discos (evita coll d’ampolla únic).\nTolerància: 1 disc (hi ha un petit risc durant rebuild). Probabilitat de fallada en discs grans.\nLectura: alta (com RAID0).\nEscriptura: penalització per read-modify-write (llegir bloc antic, llegir paritat antiga, escriure dades i paritat nova). Crític per a càrregues amb moltes escriptures petites.\nCapacitat: \\((n-1)/n\\).\nAplicacions: sistemes de fitxers, bases de dades, servidors web.\n\n\n\n\nEl RAID 5 és un dels nivells de RAID més utilitzats en els sistemes informàtics actuals. Aquest RAID ofereix un bon equilibri entre rendiment i redundància.\nLa principal diferència entre un RAID 4 i un RAID 5 és que en un RAID 5 la paritat es distribueix entre els diferents discs per evitar el coll d’ampolla.\nLa figura il·lustra un exemple de configuració RAID 5. En aquesta configuració, la paritat es distribueix entre tots els discs, en lloc de ser emmagatzemada en un disc dedicat com en el RAID 4.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-6",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-6",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID 6",
+    "text": "RAID 6\n\nExtensió de RAID5 amb doble paritat (P i Q) → tolera 2 fallades simultànies.\nRecomanat en conjunts grans (n gran) on la probabilitat de fallada durant rebuild és significativa.\nPenalització d’escriptura més elevada que RAID5, però millor tolerància.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-10",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-10",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID 10",
+    "text": "RAID 10\n\nmirror + stripe. Tolerància variable segons quins discs fallen; reconstrucció molt més ràpida.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#raid-50",
+    "href": "modules/unit-03-storage/theory/01-raids.html#raid-50",
+    "title": "Unitat 3 · RAIDs",
+    "section": "RAID 50",
+    "text": "RAID 50\n\nStripe sobre múltiples conjunts RAID5. Millora rendiment i tolerància depenent de cada grup.\n\n\n.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#comparativa-de-raids",
+    "href": "modules/unit-03-storage/theory/01-raids.html#comparativa-de-raids",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Comparativa de RAIDs",
+    "text": "Comparativa de RAIDs\n\n\n\n\n\n\n\n\n\n\n\nNivell\nMin discs\nCapacitat\nTolerància\nLectura\nEscriptura\n\n\n\n\nRAID 0\n2\n100%\n0\nAlt\nAlt\n\n\nRAID 1\n2\n50% (amb 2 discos)\n1 per mirror\nPot ser Alt\nMitjà\n\n\nRAID 5\n3\n\\((n-1)/n\\)\n1\nAlt\nMitjà-Baix\n\n\nRAID 6\n4\n\\((n-2)/n\\)\n2\nAlt\nMitjà-Baix (pitjor que RAID5)\n\n\nRAID 10\n4\n50% (depèn)\n≥1 (segons fallades)\nAlt\nAlt\n\n\nRAID 50\n6\naproximadament \\((n-1)/n\\) per grup\n≥1 per grup\nAlt\nMitjà\n\n\n\n\n\nLa taula mostra una comparativa entre els diferents nivells de RAID més comuns. Aquesta comparativa inclou les característiques més importants de cada RAID, com ara el nombre mínim de dispositius, la redundància, el rendiment en lectura i escriptura i la capacitat.\nCom es pot observar, cada RAID té les seves pròpies característiques i avantatges. Per exemple, el RAID 0 ofereix un rendiment molt alt en lectura i escriptura, però no ofereix cap tipus de redundància. En canvi, el RAID 1 ofereix una alta redundància, però el rendiment en escriptura és baix.\nPer exemple, la instal·lació d’un sistema operatiu es podria fer en un RAID 1, ja que la redundància és més important que el rendiment.\nEn canvi, un servidor web seria més adequat en un RAID 5, ja que ofereix un bon equilibri entre rendiment i redundància.\nEn general, la selecció del RAID més adequat depèn de les necessitats del sistema i dels usuaris.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#dispositiu-devmd",
+    "href": "modules/unit-03-storage/theory/01-raids.html#dispositiu-devmd",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Dispositiu /dev/md*",
+    "text": "Dispositiu /dev/md*\n\nLinux implementa Software RAID mitjançant el subsistema del kernel MD (Multiple Device).\nEl mòdul principal és md_mod, que crea dispositius virtuals de bloc /dev/mdX sobre dispositius físics (/dev/sd*, /dev/nvme*, etc.).\nCada dispositiu MD és gestionat per un controlador de tipus mdX que manté una taula de mapatge (metadata) amb:\n\nnivell RAID (level)\nnombre de dispositius (raid_disks)\nsuperblocs (superblock)\nestat de sincronització i fallades",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#components-del-subsistema-md",
+    "href": "modules/unit-03-storage/theory/01-raids.html#components-del-subsistema-md",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Components del subsistema MD",
+    "text": "Components del subsistema MD\n\n\n\n\n\n\n\nComponent\nFunció principal\n\n\n\n\nmd_mod\nGestor principal del subsistema MD (creació i manteniment de /dev/mdX).\n\n\nraid0, raid1, raid5, raid6, raid10\nMòduls del kernel que implementen la lògica específica de cada nivell RAID.\n\n\nmdadm\nEina user-space que interactua amb el subsistema MD via ioctl i sysfs.\n\n\n/proc/mdstat\nPunt d’entrada per consultar estat de sincronització, reconstrucció i fallades.\n\n\n/sys/block/mdX\nDirectori amb informació detallada i opcions de configuració per a cada mdX.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#flux-doperacions",
+    "href": "modules/unit-03-storage/theory/01-raids.html#flux-doperacions",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Flux d’operacions",
+    "text": "Flux d’operacions\n\n\n\n\n\nsequenceDiagram\n    participant A as Aplicació\n    participant B as Sistema de fitxers\n    participant C as VFS\n    participant D as /dev/mdX (md_mod)\n    participant E as Driver RAIDn\n    participant F as Discos físics\n\n    A-&gt;&gt;B: Read/Write\n    B-&gt;&gt;C: Operació de fitxer\n    C-&gt;&gt;D: Accés a /dev/mdX\n    D-&gt;&gt;E: Gestió RAID\n    E-&gt;&gt;F: Accés a discos físics\n\n\n\n\n\n\n\nLes operacions de paritat, mirroring o striping s’executen al context del kernel, sovint amb tasques asíncrones (mdX_raid_thread).\nLes metadades del RAID s’emmagatzemen al final (o inici) de cada disc com a superblock MD v1.x.\nDes del kernel 4.0 es pot utilitzar reshape per canviar el nivell RAID o afegir dispositius en viu.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#paquet-mdadm",
+    "href": "modules/unit-03-storage/theory/01-raids.html#paquet-mdadm",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Paquet mdadm",
+    "text": "Paquet mdadm\nEn la majoria de les distribucions de Linux, el paquet mdadm permet la creació i gestió de dispositius RAID.\n\n\nDistribucions basades en Red Hat\ndnf search mdadm\ndnf install mdadm -y\n\nDistribucions basades en Debian\napt search mdadm\napt install mdadm -y\n\n\nEl funcionament del paquet mdadm és similar en totes les distribucions de Linux. Per tant, les instruccions d’ús són similars i no importa la distribució que s’utilitzeu.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#creació-de-dispositius-raids",
+    "href": "modules/unit-03-storage/theory/01-raids.html#creació-de-dispositius-raids",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Creació de Dispositius RAIDs",
+    "text": "Creació de Dispositius RAIDs\n\n\nOpcions Bàsiques\nmdadm --create --verbose /dev/[nom] \n--level=[nivell] \n--raid-devices=[nº dispositius] [dispositius]\n\n--create: Crea un nou dispositiu RAID.\n--verbose: Mostra informació detallada sobre el procés.\n/dev/[nom]: Nom del dispositiu RAID.\n--level=[nivell]: RAID.\n--raid-devices=[nº dispositius]: Nombre de dispositius que formen el RAID.\n[dispositius]: Llista de dispositius que formen el RAID.\n\n\n\n\nAltres Opcions\nmdadm --create --help\n\n--metadata=[tipus]: Tipus de metadades.\n--spare-devices=[nº dispositius]: Nombre de dispositius reservats.\n--chunk=[mida]: Mida dels blocs.\n--layout=[esquema]: Esquema de distribució de les dades.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#gestió-del-raid---manage",
+    "href": "modules/unit-03-storage/theory/01-raids.html#gestió-del-raid---manage",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Gestió del RAID (--manage)",
+    "text": "Gestió del RAID (--manage)\nmdadm --manage /dev/[nom] [options] [dispositius]\n  --add         -a   : afegeix dispositius posteriors a l'array\n  --re-add           : els dispositius posteriors són reafegits si eren\n                     : membres recents de l'array\n  --remove      -r   : elimina els dispositius posteriors, que no han d'estar actius\n  --fail        -f   : marca els dispositius posteriors com a defectuosos\n  --set-faulty       : igual que --fail\n  --replace          : marca el(s) dispositiu(s) per ser reemplaçat(s) per recanvis. \n                     : Un cop completat el reemplaçament, el dispositiu es marcarà \n                     : com a defectuós\n  --with             : indica quin recanvi hauria de preferir un '--replace' anterior\n  --run         -R   : inicia un array parcialment construït\n  --stop        -S   : desactiva l'array, alliberant tots els recursos\n  --readonly    -o   : marca l'array com a només lectura\n  --readwrite   -w   : marca l'array com a lectura i escriptura",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#informació-i-monitoratge-del-raid",
+    "href": "modules/unit-03-storage/theory/01-raids.html#informació-i-monitoratge-del-raid",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Informació i Monitoratge del RAID",
+    "text": "Informació i Monitoratge del RAID\nLes opcions --detail i --examine permeten obtenir informació detallada sobre un dispositiu RAID. La principal diferència entre ambdues opcions és que --examine mostra informació més detallada sobre el dispositiu.\n\n\nmdadm --detail /dev/[nom]\n\nmdadm --examine /dev/[nom]\n\nLa opció --monitor permet monitorar un dispositiu RAID en temps real. Obtenint informació sobre els esdeveniments que es produeixen en el dispositiu i ens permet prendre accions en conseqüència.\nmdadm --monitor /dev/[nom]",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#ensamblatge---assemble",
+    "href": "modules/unit-03-storage/theory/01-raids.html#ensamblatge---assemble",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Ensamblatge --assemble",
+    "text": "Ensamblatge --assemble\n\nPermet muntar un array RAID existent.\nAquesta opció no crea un nou array, sinó que reuneix un array existent a partir dels dispositius que especifiquem.\n\nmdadm --assemble /dev/[nom] [dispositius]\n\nCada cop que el sistema s’inicia, aquesta opció s’executa al kernel. Escaneja els discs, busca els superblocks i reconstrueix tots els arrays per a nosaltres.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#initramfs-i-raid",
+    "href": "modules/unit-03-storage/theory/01-raids.html#initramfs-i-raid",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Initramfs i RAID",
+    "text": "Initramfs i RAID\nEn entorns amb RAID, initramfs inclou els binaris i la configuració necessaris per gestionar els arrays RAID. Durant la fase d’arrencada, es fa servir la comanda:\nmdadm --assemble --scan\nDetecta i munta automàticament tots els arrays definits a /etc/mdadm/mdadm.conf. Això assegura que les particions RAID estiguin operatives abans de muntar la partició root i iniciar el sistema operatiu.\nA més, initramfs pot incloure scripts per comprovar la integritat dels dispositius RAID i gestionar fallades de discs durant l’arrencada, assegurant un boot fiable en entorns amb mirroring (RAID1).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#actualització-amb---grow",
+    "href": "modules/unit-03-storage/theory/01-raids.html#actualització-amb---grow",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Actualització amb --grow",
+    "text": "Actualització amb --grow\nAquesta opció permet actualitzar un dispositiu RAID. Per exemple, canviar el RAID, augmentar el nombre de dispositius o canviar la mida dels blocs.\nmdadm --grow /dev/[nom] --level=[nivell] --raid-devices=[nº dispositius]\n\nSituació I: En un RAID5 format per 3 discs, ens pot interessar al cap del temps afegir un disc més.\nSituació II: En un RAID5 format per 4 discs, ens pot interessar al cap del temps canviar el RAID a 6.\nSituació III: En un RAID5 format per 4 discs, ens pot interessar al cap del temps canviar la mida dels blocs.\n\n\n\n\n\n\n\n\nCompte!\n\n\nAmb aquestes operacions, el sistema pot quedar inutilitzat. És recomanable fer una còpia de seguretat abans de realitzar aquestes operacions.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#aturar-i-eliminar-un-raid",
+    "href": "modules/unit-03-storage/theory/01-raids.html#aturar-i-eliminar-un-raid",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Aturar i Eliminar un RAID",
+    "text": "Aturar i Eliminar un RAID\nPer aturar un RAID, podem utilitzar l’opció --stop del mode --manage de mdadm. Aquesta opció desactiva l’array i allibera tots els recursos associats.\nmdadm --manage /dev/[nom] --stop\n\n\n\n\n\n\n\nCompte!\n\n\nAquesta operació no destruirà l’array, sinó que simplement el desactivarà. Per eliminar un raid podem eliminar el seu dispositiu associat, sempre primer aturant l’array.\nmdadm --manage /dev/[nom] --stop\nrm /dev/[nom]",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#etcmdadmmdadm.conf",
+    "href": "modules/unit-03-storage/theory/01-raids.html#etcmdadmmdadm.conf",
+    "title": "Unitat 3 · RAIDs",
+    "section": "/etc/mdadm/mdadm.conf",
+    "text": "/etc/mdadm/mdadm.conf\nAquest fitxer conté informació que permet al sistema reconèixer i muntar automàticament els arrays RAID durant l’arrencada i també proporciona paràmetres per a la creació, monitorització i manteniment dels arrays.\nARRAY /dev/md0 UUID=12345678:90ab:cdef:1234:567890abcdef\nARRAY /dev/md1 UUID=abcdef12:3456:7890:abcd:ef1234567890\n\nARRAY: indica un dispositiu RAID gestionat per mdadm.\n/dev/mdX: dispositiu de bloc que representa l’array RAID.\nUUID: identificador únic de l’array RAID, utilitzat per assegurar que el sistema connecta correctament les particions corresponents encara que canviïn els noms dels dispositius físics (per exemple, vdb1 esdevé vdc1).",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#cas-pràctic-i",
+    "href": "modules/unit-03-storage/theory/01-raids.html#cas-pràctic-i",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Cas Pràctic (I)",
+    "text": "Cas Pràctic (I)\nAssumeix que vols configurar un RAID per configurar la partició root del teu servidor Debian. quin RAID recomanaries i que t’aportaria?\n\nEl RAID 5. Aquest RAID ofereix redundància i una millora en la velocitat de lectura. No obstant això, requereix un mínim de tres discs i la velocitat d’escriptura pot veure’s afectada per les operacions de paritat. Aquest RAID pot ser una bona opció per a emmagatzemament de dades, però pot ser massa complex per a un sistema root.\nEl RAID 10 combina les característiques del RAID 1 i del RAID 0, oferint tant redundància com una millora en la velocitat de lectura i escriptura. Aquest RAID pot ser una bona opció per a un sistema que requereixi un alt rendiment, però pot ser massa costós per a un sistema root.\n\n\n\nLa meva recomanació és utilitzar RAID 1 per a un sistema root, ja que proporciona la redundància necessària per assegurar la integritat de les dades del sistema. Si la velocitat de lectura és una preocupació, es podria considerar l’ús d’un disc SSD",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#cas-pràctic-ii",
+    "href": "modules/unit-03-storage/theory/01-raids.html#cas-pràctic-ii",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Cas Pràctic (II)",
+    "text": "Cas Pràctic (II)\nAssumeix que vols configurar un servidor amb dos discs SATA per fer renders de vídeo on l’objectiu principal es millorar el rendiment i la capacitat d’enmagatzemament temporal. Quin RAID recomanaries?\n\nCom únicament es disposa de dos discs, el RAID 0 seria la millor opció. Aquest RAID millora el rendiment i la capacitat d’emmagatzemament temporal, ja que les dades es divideixen i s’emmagatzemen en els dos discs de forma simultània. No obstant això, cal tenir en compte que el RAID 0 no ofereix cap mena de redundància. Per tant, si un dels discs falla, es perdran totes les dades. S’haurien de fer còpies de seguretat regulars per evitar la pèrdua de dades.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
+    "objectID": "modules/unit-03-storage/theory/01-raids.html#cas-pràctic-iii",
+    "href": "modules/unit-03-storage/theory/01-raids.html#cas-pràctic-iii",
+    "title": "Unitat 3 · RAIDs",
+    "section": "Cas Pràctic (III)",
+    "text": "Cas Pràctic (III)\nAssumeix un servidor de bases de dades on la integritat de les dades es crítica i les transaccions han de ser ràpides. Quin RAID recomanaries?\n\nEn aquest cas, el RAID 10 seria la millor opció. Aquest RAID combina les característiques del RAID 1 i del RAID 0, oferint tant redundància com una millora en la velocitat de lectura i escriptura. Això és important per a un servidor de bases de dades on la integritat de les dades és crítica i les transaccions han de ser ràpides.",
+    "crumbs": [
+      "Inici",
+      "Temari",
+      "Unitat 3 · Emmagatzematge",
+      "Teoria",
+      "Unitat 3 · RAIDs"
+    ]
+  },
+  {
     "objectID": "modules/unit-02-arrancada/theory/01-arrancada.html#objectius-daprenentatge",
     "href": "modules/unit-02-arrancada/theory/01-arrancada.html#objectius-daprenentatge",
     "title": "Unitat 2 · Arrencada (Part 1)",
