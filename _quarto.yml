@@ -58,6 +58,8 @@ website:
                 - modules/unit-02-arrancada/theory/02-arrancada.qmd
                 - modules/unit-02-arrancada/theory/03-arrancada.qmd
             - section: "Activitats"
+              contents:
+                - modules/unit-02-arrancada/activities/01-systemd.qmd
             - section: "Pralabs"
               contents:
                 - modules/unit-02-arrancada/pralabs/01_arrencada.qmd

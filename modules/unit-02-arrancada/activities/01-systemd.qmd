@@ -1,0 +1,538 @@
+---
+title: Serveis amb `systemd` 
+lang: ca
+---
+
+## Col·lecció d'exercicis sobre `systemd`.
+
+:::{.concepte title="Recordatori: unitats, tipus i dependències"}
+- `systemctl start` **activa** una unitat ara; `systemctl enable` només crea els **enllaços simbòlics** que la faran activar en arrencar (segons `[Install]`). Són coses independents.
+- `Type=` és el **contracte** entre el programa i systemd: defineix *quan* es considera iniciat el servei. `simple`: just després del `fork()`. `exec`: després de l'`execve()`. `forking`: quan el procés pare **surt**. `oneshot`: quan el procés **acaba**. `notify`: quan el programa envia `READY=1`.
+- `Wants=` (feble) i `Requires=` (fort) diuen **què s'activa**; no ordenen. L'**ordre** el donen `After=` i `Before=`. Són dimensions independents.
+- Tot el que llança un servei queda al seu **grup de control** (*cgroup*). Amb `KillMode=control-group` (per defecte), en aturar el servei es maten **tots** els processos del grup.
+- Un **temporitzador** (`.timer`) activa un servei. 
+- Un **socket**  escolta en nom d'un servei i l'inicia quan arriba trànsit.
+:::
+
+:::{.bonapractica title="Convencions dels enunciats"}
+- Sistema de referència: Debian 12. 
+- Tots els `ExecStart=` s'inicien a l'instant. 
+- La sortida de `echo` i els missatges de systemd van al *journal* (`journalctl -u NOM`). 
+- Els fitxers de les unitats d'administrador viuen a `/etc/systemd/system/`.
+:::
+
+---
+
+::: {.exercici}
+```{.ini}
+# salutacio.service
+[Unit]
+Description=Salutació
+
+[Service]
+Type=oneshot
+ExecStart=/bin/echo hola
+```
+
+S'executa `sudo systemctl start salutacio.service` i després `systemctl status salutacio.service`.
+
+1. Quin valor té la línia `Active:`? Indica un error?
+2. Escriu, en ordre, les línies que apareixen al *journal*.
+
+**Repte:** què canvia si s'afegeix `RemainAfterExit=yes` a `[Service]`?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. `inactive (dead)`. **No** és un error: el procés ha acabat amb codi 0 i, com que un `oneshot` no té cap procés en marxa, la unitat torna a quedar inactiva.
+2. En aquest ordre:
+
+```{.text}
+Starting salutacio.service - Salutació...
+echo[1234]: hola
+salutacio.service: Deactivated successfully.
+Finished salutacio.service - Salutació.
+```
+
+```{mermaid}
+sequenceDiagram
+    autonumber
+    participant S as systemd
+    participant E as echo
+
+    S->>S: Starting salutacio.service
+    S->>E: fork + execve
+    E->>E: escriu hola al journal
+    E-->>S: exit 0
+    S->>S: Deactivated successfully
+    S->>S: Finished salutacio.service
+```
+
+**Repte.** Amb `RemainAfterExit=yes` la unitat es queda **activa** després que el procés acabi: `Active: active (exited)`, i no apareix la línia *Deactivated successfully*. Fins que algú l'aturi amb `systemctl stop`, systemd la considera iniciada.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+```{.ini}
+# /etc/systemd/system/web.service
+[Unit]
+Description=Servidor web
+
+[Service]
+ExecStart=/usr/sbin/webd
+
+[Install]
+WantedBy=multi-user.target graphical.target
+Alias=servidor.service
+Also=web.socket
+```
+
+```{.ini}
+# /etc/systemd/system/web.socket
+[Socket]
+ListenStream=8080
+
+[Install]
+WantedBy=sockets.target
+```
+
+S'executa `sudo systemctl enable web.service`.
+
+1. Quins enllaços simbòlics es creen? On apunta cadascun?
+2. S'ha iniciat `webd`?
+
+**Repte:** què és `servidor.service` després de l'`enable`?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. Quatre enllaços, un per cada línia de `[Install]` (i per `Also=`, que habilita també el `socket` segons el seu propi `[Install]`):
+
+```{.text}
+Created symlink /etc/systemd/system/servidor.service → /etc/systemd/system/web.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/web.service → /etc/systemd/system/web.service.
+Created symlink /etc/systemd/system/graphical.target.wants/web.service → /etc/systemd/system/web.service.
+Created symlink /etc/systemd/system/sockets.target.wants/web.socket → /etc/systemd/system/web.socket.
+```
+
+```{mermaid}
+flowchart LR
+    MU["multi-user.target.wants/web.service"] --> W["web.service"]
+    GR["graphical.target.wants/web.service"] --> W
+    AL["servidor.service"] --> W
+    SO["sockets.target.wants/web.socket"] --> WS["web.socket"]
+```
+
+2. **No.** `enable` només prepara l'arrencada següent. Per activar-lo ara caldria `start` (o `enable --now`).
+
+**Repte.** `servidor.service` és un **nom alternatiu** (àlies) de la mateixa unitat: un enllaç simbòlic cap a `web.service`. No és una segona unitat.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+El programa `infod` és un dimoni clàssic: en arrencar fa `fork()`; el **fill** escriu el seu PID a `/run/infod.pid` i continua en marxa; el **pare** surt amb codi 0. Completa la unitat:
+
+```{.ini}
+[Unit]
+Description=Dimoni clàssic
+
+[Service]
+Type=______(1)______
+PIDFile=______(2)______
+ExecStart=/usr/sbin/infod --pidfile /run/infod.pid
+ExecReload=/bin/kill -HUP ______(3)______
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Pregunta extra:** per què `Type=simple` seria incorrecte aquí?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. `forking`
+2. `/run/infod.pid`
+3. `$MAINPID` (systemd el substitueix pel PID del procés principal, que ha après del fitxer de PID)
+
+```{mermaid}
+sequenceDiagram
+    autonumber
+    participant S as systemd
+    participant P as infod pare
+    participant D as infod fill
+
+    S->>P: fork + execve
+    P->>D: fork
+    D->>D: escriu el PID a /run/infod.pid
+    P-->>S: exit 0
+    S->>S: llegeix PIDFile i el declara principal
+    Note over D: procés principal del servei
+```
+
+Amb `forking`, la sortida del pare és el senyal d'ja estic a punt; `PIDFile=` li diu a systemd **quin** és el procés que queda (el fill).
+
+**Pregunta extra.** Amb `Type=simple`, el procés principal seria el **pare**. Quan surt amb codi 0, systemd considera que el servei ha acabat i el desactiva; en fer-ho, mata els altres processos del grup de control, el fill inclòs. El dimoni moriria pocs mil·lisegons després de néixer (vegeu l'exercici següent).
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+```{.sh}
+#!/bin/sh
+# /usr/local/bin/script.sh
+sleep 600 &
+exit 0
+```
+
+```{.ini}
+# variant A
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/script.sh
+```
+
+```{.ini}
+# variant B
+[Service]
+Type=simple
+KillMode=process
+ExecStart=/usr/local/bin/script.sh
+```
+
+S'inicia cada variant amb `systemctl start` i es mira al cap d'uns segons.
+
+1. A la variant A: en quin estat queda la unitat? Segueix viu `sleep`?
+2. A la variant B: i ara? Qui és el pare de `sleep`?
+
+**Repte:** relaciona-ho amb l'exercici de `fork()` en què el nét sobrevivia al seu pare.
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. **A:** `inactive (dead)`. El procés principal (la *shell*) ha sortit amb codi 0, i amb `Type=simple` això vol dir que el servei ha acabat. Amb `KillMode=control-group` (per defecte), systemd envia `SIGTERM` a **tots** els processos que queden al grup de control: `sleep` mor.
+
+```{mermaid}
+sequenceDiagram
+    autonumber
+    participant S as systemd
+    participant SH as script.sh
+    participant SL as sleep
+
+    S->>SH: fork + execve
+    SH->>SL: fork + execve
+    SH-->>S: exit 0
+    S->>S: servei acabat, neteja del cgroup
+    S->>SL: SIGTERM
+    Note over SL: mor
+```
+
+2. **B:** la unitat també queda inactiva, però amb `KillMode=process` només es mata el procés principal. `sleep` **sobreviu**; com que el seu pare ha mort, l'adopta el PID 1 (systemd). Al *journal* hi apareix un avís com:
+
+```{.text}
+script.service: Unit process 4321 (sleep) remains running after unit stopped.
+```
+
+**Repte.** És exactament el cas del nét **orfe**: en morir el pare, el fill passa a ser fill del PID 1. La diferència és que systemd, per defecte, no deixa que això passi dins d'un servei: li ho impedeix amb el grup de control. Per això `KillMode=process` es desaconsella: permet que processos escapin de la gestió del servei.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+```{.ini}
+# a.service           # b.service           # c.service           # d.service
+[Unit]                [Unit]                [Unit]                [Service]
+Wants=b.service       Wants=c.service       Requires=d.service    Type=oneshot
+                                            After=d.service       ExecStart=/bin/false
+```
+
+Les unitats `a`, `b` i `c` són `Type=simple` i executen `/usr/bin/sleep infinity`. S'executa `sudo systemctl start a.service`.
+
+1. Quines unitats participen en la transacció?
+2. Quin és l'estat final de cadascuna?
+3. `systemctl start` acaba amb error?
+
+**Repte:** canvia `Wants=` per `Requires=` + `After=` a `a` (cap a `b`) i a `b` (cap a `c`). Torna a respondre les tres preguntes.
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. Les **quatre**: `a` arrossega `b` (`Wants=`), `b` arrossega `c`, i `c` arrossega `d` (`Requires=`).
+2. `d` falla (`ExecStart=/bin/false` surt amb codi 1): `failed`. `c` té `After=d` + `Requires=d`, així que **no arriba a iniciar-se**: *Dependency failed for c.service*, i queda `inactive`. En canvi, `b` i `a` només tenen `Wants=`: una fallada no es propaga cap amunt a través d'un requeriment feble, i **s'inicien normalment** (`active (running)`).
+3. **No.** El treball de `a` ha tingut èxit: les fallades de les unitats desitjades amb `Wants=` no compten.
+
+```{mermaid}
+flowchart TD
+    A["a.service · active"] -->|"Wants"| B["b.service · active"]
+    B -->|"Wants"| C["c.service · inactive · Dependency failed"]
+    C -->|"Requires + After"| D["d.service · failed"]
+```
+
+**Repte.** Ara la fallada **puja per tota la cadena**: `d` falla → `c` no s'inicia → `b` (té `Requires=c` + `After=c`) tampoc → `a` tampoc. Les tres queden `inactive`, i `systemctl start` acaba amb error: *A dependency job for a.service failed. See 'journalctl -xe' for details.*
+
+`Requires=` propaga les fallades d'inici **només si** hi ha també `After=` sobre la unitat que falla.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+Un programa pot acabar de cinc maneres. Per a cada causa i per a cada valor de `Restart=`, digues si systemd **reinicia** el servei (sí / no):
+
+| Causa | `always` | `on-success` | `on-failure` | `on-abnormal` |
+|:------|:--------:|:------------:|:------------:|:-------------:|
+| El programa fa `exit(0)` | | | | |
+| El programa fa `exit(1)` | | | | |
+| `kill -9` (`SIGKILL`) des de fora | | | | |
+| `kill -TERM` (`SIGTERM`) des de fora | | | | |
+| `systemctl stop` | | | | |
+
+**Repte:** un programa amb un error surt amb codi 0 just en arrencar. Quin és el resultat amb `Restart=always` i els valors per defecte (`RestartSec=100ms`, 5 inicis cada 10 s)?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+| Causa | `always` | `on-success` | `on-failure` | `on-abnormal` |
+|:------|:--------:|:------------:|:------------:|:-------------:|
+| `exit(0)` | sí | sí | no | no |
+| `exit(1)` | sí | no | sí | no |
+| `SIGKILL` | sí | no | sí | sí |
+| `SIGTERM` | sí | sí | no | no |
+| `systemctl stop` | no | no | no | no |
+
+- Per a systemd, una sortida **neta** és el codi 0 **o** un dels senyals `SIGHUP`, `SIGINT`, `SIGTERM` i `SIGPIPE`. Per això `SIGTERM` es comporta com `exit(0)`, i no com un error.
+- Una aturada explícita amb `systemctl stop` **mai** provoca un reinici, sigui quin sigui el valor.
+
+**Repte.** Bucle: el servei s'inicia, surt amb 0, `always` el torna a iniciar, i així successivament. Amb 0,1 s de retard, es superen els 5 inicis en 10 s en menys d'un segon. La unitat queda `failed` amb el resultat `start-limit-hit`.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+```{.ini}
+# /lib/systemd/system/web.service (instal·lat pel paquet)
+[Service]
+ExecStart=/usr/sbin/webd --port 80
+Environment=MODE=prod
+```
+
+```{.ini}
+# /etc/systemd/system/web.service.d/10-mode.conf
+[Service]
+Environment=MODE=debug
+```
+
+```{.ini}
+# /etc/systemd/system/web.service.d/20-port.conf
+[Service]
+ExecStart=
+ExecStart=/usr/sbin/webd --port 8080
+```
+
+1. Quina ordre s'executa, i amb quin valor de `MODE`?
+2. S'afegeix `30-log.conf` amb `ExecStart=/usr/sbin/webd --port 8080 --verbose` (sense línia buida abans). Què passa?
+
+**Repte:** i si `web.service` fos `Type=oneshot`?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+```{mermaid}
+flowchart LR
+    O["web.service · paquet"] --> D1["10-mode.conf"]
+    D1 --> D2["20-port.conf"]
+    D2 --> E["unitat efectiva"]
+```
+
+1. `/usr/sbin/webd --port 8080` amb `MODE=debug`. Els fragments es llegeixen en **ordre alfabètic** i se superposen a l'original. Per a `Environment=`, si una variable s'assigna dues vegades, preval l'última. Per a `ExecStart=` (que normalment només admet una ordre), la línia **buida** esborra la llista anterior; sense aquesta línia, la nova ordre s'**afegiria** a la de l'original.
+2. Ara hi ha **dues** línies `ExecStart=` (la de `20-port.conf` i la de `30-log.conf`), i el servei no és `oneshot`. La unitat es rebutja:
+
+```{.text}
+web.service: Service has more than one ExecStart= setting, which is only allowed for Type=oneshot services. Refusing.
+```
+
+La unitat efectiva es veu amb `systemctl cat web.service`.
+
+**Repte.** Un `oneshot` admet diverses línies `ExecStart=` i les executa **en seqüència**, en l'ordre en què apareixen. Si una falla, les següents no s'executen.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+El servei `informes.service` té aquesta configuració:
+
+```{.ini}
+[Service]
+User=informes
+WorkingDirectory=/srv/informes
+ExecStart=/opt/informes/bin/informesd
+```
+
+Aquests són tres registres de fallades diferents:
+
+```{.text}
+── Registre A ──
+informes.service: Failed to determine user credentials: No such process
+informes.service: Failed at step USER spawning /opt/informes/bin/informesd: No such process
+informes.service: Main process exited, code=exited, status=217/USER
+informes.service: Failed with result 'exit-code'.
+
+── Registre B ──
+informes.service: Changing to the requested working directory failed: No such file or directory
+informes.service: Failed at step CHDIR spawning /opt/informes/bin/informesd: No such file or directory
+informes.service: Main process exited, code=exited, status=200/CHDIR
+informes.service: Failed with result 'exit-code'.
+
+── Registre C ──
+informes.service: Failed to locate executable /opt/informes/bin/informesd: No such file or directory
+informes.service: Failed at step EXEC spawning /opt/informes/bin/informesd: No such file or directory
+informes.service: Main process exited, code=exited, status=203/EXEC
+informes.service: Failed with result 'exit-code'.
+```
+
+1. Per a cada registre, quina línia de la unitat (o quin element del sistema) és la causa?
+2. Qui genera els codis `200`–`243`: el programa o systemd? S'ha arribat a executar `informesd` en algun cas?
+3. Amb `Type=simple`, `systemctl start` retorna error en algun dels tres casos? I amb `Type=exec`?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. **A:** `User=informes`: l'usuari no existeix. **B:** `WorkingDirectory=/srv/informes`: el directori no existeix. **C:** `ExecStart=`: el binari no existeix o no és executable.
+2. Els genera **systemd**; estan documentats a `systemd.exec(5)`. El pas que ha fallat és al nom (`USER`, `CHDIR`, `EXEC`): el procés fill de systemd ha fallat mentre **es preparava** el context d'execució. `informesd` **no s'ha arribat a executar** en cap cas: el missatge no ve del programa.
+3. Amb `simple`, **no**: `start` només espera que es faci el `fork()`, i l'error només es veu al *journal* o a `systemctl status`. Amb `exec`, **sí**: systemd espera que l'`execve()` tingui èxit, i en els tres casos la fallada ve abans.
+
+Habitualment si el codi de sortida és ≥ 200, no cal llegir el codi del programa; cal repassar la configuració de la unitat.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+Volem que `informe.service` s'executi **cada dilluns a les 04:00** i que, si la màquina estava apagada a aquella hora, s'executi tan bon punt arrenqui. Completa:
+
+```{.ini}
+# informe.timer
+[Unit]
+Description=Informe setmanal
+
+[Timer]
+OnCalendar=______(1)______
+______(2)______=true
+
+[Install]
+WantedBy=______(3)______
+```
+
+Per activar-lo ara i en arrencar: `sudo systemctl ______(4)______ informe.timer`.
+
+**Pregunta extra:** per què `informe.service` no necessita secció `[Install]`? Amb quina ordre comprovaries l'expressió **abans** d'activar-la?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. `Mon *-*-* 04:00:00` (també s'accepta `Mon 04:00`)
+2. `Persistent`
+3. `timers.target`
+4. `enable --now`
+
+```{mermaid}
+sequenceDiagram
+    autonumber
+    participant T as informe.timer
+    participant S as informe.service
+
+    Note over T: dilluns 04:00, màquina apagada
+    Note over T: dilluns 09:00, arrencada
+    T->>S: Persistent=true, s'executa ara
+```
+
+Amb `Persistent=true`, systemd desa a disc l'última execució; quan el temporitzador s'activa, si n'ha perdut alguna, **dispara el servei immediatament**. Només té efecte amb `OnCalendar=`.
+
+**Pregunta extra.** Perquè el servei no s'inicia en arrencar: l'activa el temporitzador. S'habilita el `.timer`, no el `.service`. L'expressió es comprova amb `systemd-analyze calendar 'Mon *-*-* 04:00:00'`, que mostra la forma normalitzada i la propera execució.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+Un servei `oneshot` triga **3 minuts** a executar-se. Dos temporitzadors s'activen en arrencar (minut 0), amb `AccuracySec=1s`:
+
+```{.ini}
+# Temporitzador A                    # Temporitzador B
+[Timer]                              [Timer]
+OnBootSec=2min                       OnBootSec=2min
+OnUnitActiveSec=10min                OnUnitInactiveSec=10min
+```
+
+En quin minut comença cadascuna de les **quatre primeres execucions** de A i de B?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+`OnUnitActiveSec=` compta des del moment en què el servei **es va activar**; `OnUnitInactiveSec=` des que es va **desactivar** (és a dir, des que va acabar).
+
+| Execució | A (`ActiveSec`) | B (`InactiveSec`) |
+|:--------:|:---------------:|:-----------------:|
+| 1 | minut 2 | minut 2 (acaba al 5) |
+| 2 | minut 12 | minut 15 (acaba al 18) |
+| 3 | minut 22 | minut 28 (acaba al 31) |
+| 4 | minut 32 | minut 41 |
+
+```{mermaid}
+gantt
+    dateFormat HH:mm
+    axisFormat %M
+    section A
+    execució 1 :a1, 00:02, 3m
+    execució 2 :a2, 00:12, 3m
+    execució 3 :a3, 00:22, 3m
+    execució 4 :a4, 00:32, 3m
+    section B
+    execució 1 :b1, 00:02, 3m
+    execució 2 :b2, 00:15, 3m
+    execució 3 :b3, 00:28, 3m
+    execució 4 :b4, 00:41, 3m
+```
+
+A dóna un **període** fix de 10 minuts entre inicis. B dóna un **descans** de 10 minuts entre el final d'una execució i l'inici de la següent, de manera que el període real és de 13 minuts. Si el que importa és no solapar-se amb l'execució anterior, B és el que es vol.
+:::
+
+</details>
+
