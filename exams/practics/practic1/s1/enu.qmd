@@ -23,7 +23,7 @@ L'associació d'estudiants organitza una LAN party. El seu servidor de joc corri
 1. **Enunciat** (PDF): [Simulacre 1](./enunciat.pdf)
 2. **Fitxers de l'examen** (discs, firmware i scripts): [descarrega'ls aquí](https://udlcat-my.sharepoint.com/:f:/g/personal/jordi_mateo_udl_cat/IgD48p6cIOQDS6gBeM6HEo3PAcfVlv9wC1OxNQBn9msAdVM?e=rbqNC0)
 
-Baixa tots els fitxers en **una sola carpeta** i no moguis fitxers de lloc: els discs es referencien amb ruta relativa. Ha de contenir `base.qcow2`, `tpl_p12.qcow2`, `tpl_p3.qcow2`, `firmware/` i els scripts `run.sh`, `run.bat`, `reset.sh` i `reset.bat`.
+Baixa tots els fitxers en **una sola carpeta** i no moguis fitxers de lloc: els discs es referencien amb ruta relativa. Ha de contenir `base.qcow2`, `tpl_p12.qcow2`, `tpl_p3.qcow2`, `firmware/` i els scripts `run.sh`.
 
 ## Com s'usa
 
