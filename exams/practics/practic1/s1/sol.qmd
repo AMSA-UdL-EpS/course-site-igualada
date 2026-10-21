@@ -3,9 +3,7 @@ title: "Solució: arrencada, initramfs i systemd"
 subtitle: "Model A · El servidor de la LAN party"
 lang: ca
 ---
-
-Aquesta guia explica **què** es troba a cada pregunta, **com** es troba, **per què** és així i **quins errors** s'han d'evitar. 
-
+ 
 # Part 1 · Inspecció de la màquina antiga
 
 Principi: **només mires**. Cada pregunta té una ordre que dona la dada i una interpretació que la fa útil. Respondre només el valor és la meitat de la resposta.
