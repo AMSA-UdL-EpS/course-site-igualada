@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ca" xml:lang="ca"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Serveis amb systemd – Administració i Manteniment de Sistemes i Aplicacions</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html" rel="next">
+<link href="../../../modules/unit-02-arrancada/theory/03-arrancada.html" rel="prev">
+<link href="../../../assets/logo.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-13ad4839ea57b7f705e8de5833b7831b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-71d11ad18b64fb8e65d87cc5e3220546.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-13ad4839ea57b7f705e8de5833b7831b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Cap resultat",
+    "search-matching-documents-text": "documents que coincideixen",
+    "search-copy-link-title": "Copia l'enllaç a la cerca",
+    "search-hide-matches-text": "Amaga les coincidències addicionals",
+    "search-more-match-text": "altra coincidència en aquest document",
+    "search-more-matches-text": "altres coincidències en aquest document",
+    "search-clear-button-title": "Neteja",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel·la",
+    "search-submit-button-title": "Envia",
+    "search-label": "Cerca"
+  }
+}</script>
+<script src="../../../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../../../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../../../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">AMSA</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Cerca"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Commuta la navegació" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html"> 
+<span class="menu-text">Inici</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://guiadocent.udl.cat/html/2026-27_105013"> 
+<span class="menu-text">Guia docent</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/AMSA-UdL-EpS/course-site-igualada"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Commuta el mode fosc"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Commuta la navegació de la barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 2 · Arrancada</li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/activities/01-systemd.html">Activitats</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/activities/01-systemd.html">Serveis amb <code>systemd</code></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Commuta la navegació de la barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="../../../index.html" class="sidebar-logo-link">
+      <img src="../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../course-info/presentation-slides.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentació del curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../course-info/contributions/contribute.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contribueix al curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Temari</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fitxa de la unitat</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/theory/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/activities/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activitats tèoriques · Unitat 1</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/pralab/01-aws-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Laboratori de preparació i comandes bàsiques d’administració</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/pralab/02-aws-wordpress.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Desplegament d’una aplicació web amb AWS</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 2 · Arrancada</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/theory/01-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/theory/02-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/theory/03-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 3)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth3 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/activities/01-systemd.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Serveis amb <code>systemd</code></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (I) · BIOS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (II) · UEFI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/03_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (III) · De GRUB a Linux</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/04_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (IV) · Migració a LUKS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/05_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (IV) · Migració a LUKS (Part 2)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 3 · Emmagatzematge</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-03-storage/theory/01-raids.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 3 · RAIDs</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Exàmens</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true">
+ <span class="menu-text">Competencials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../exams/practics/practic1/s1/enu.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examen simulacre: arrencada, initramfs i systemd</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En aquesta pàgina</h2>
+   
+  <ul>
+  <li><a href="#collecció-dexercicis-sobre-systemd." id="toc-collecció-dexercicis-sobre-systemd." class="nav-link active" data-scroll-target="#collecció-dexercicis-sobre-systemd.">Col·lecció d’exercicis sobre <code>systemd</code>.</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 2 · Arrancada</li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/activities/01-systemd.html">Activitats</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-02-arrancada/activities/01-systemd.html">Serveis amb <code>systemd</code></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Serveis amb <code>systemd</code></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="collecció-dexercicis-sobre-systemd." class="level2">
+<h2 class="anchored" data-anchor-id="collecció-dexercicis-sobre-systemd.">Col·lecció d’exercicis sobre <code>systemd</code>.</h2>
+<div class="concepte udl-component udl-concepte" title="Recordatori: unitats, tipus i dependències">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-concepte"></use></svg><span>Concepte — Recordatori: unitats, tipus i dependències</span></div>
+<ul>
+<li><code>systemctl start</code> <strong>activa</strong> una unitat ara; <code>systemctl enable</code> només crea els <strong>enllaços simbòlics</strong> que la faran activar en arrencar (segons <code>[Install]</code>). Són coses independents.</li>
+<li><code>Type=</code> és el <strong>contracte</strong> entre el programa i systemd: defineix <em>quan</em> es considera iniciat el servei. <code>simple</code>: just després del <code>fork()</code>. <code>exec</code>: després de l’<code>execve()</code>. <code>forking</code>: quan el procés pare <strong>surt</strong>. <code>oneshot</code>: quan el procés <strong>acaba</strong>. <code>notify</code>: quan el programa envia <code>READY=1</code>.</li>
+<li><code>Wants=</code> (feble) i <code>Requires=</code> (fort) diuen <strong>què s’activa</strong>; no ordenen. L’<strong>ordre</strong> el donen <code>After=</code> i <code>Before=</code>. Són dimensions independents.</li>
+<li>Tot el que llança un servei queda al seu <strong>grup de control</strong> (<em>cgroup</em>). Amb <code>KillMode=control-group</code> (per defecte), en aturar el servei es maten <strong>tots</strong> els processos del grup.</li>
+<li>Un <strong>temporitzador</strong> (<code>.timer</code>) activa un servei.</li>
+<li>Un <strong>socket</strong> escolta en nom d’un servei i l’inicia quan arriba trànsit.</li>
+</ul>
+</div>
+<div class="bonapractica udl-component udl-bonapractica" title="Convencions dels enunciats">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-bonapractica"></use></svg><span>Bona Pràctica — Convencions dels enunciats</span></div>
+<ul>
+<li>Sistema de referència: Debian 12.</li>
+<li>Tots els <code>ExecStart=</code> s’inicien a l’instant.</li>
+<li>La sortida de <code>echo</code> i els missatges de systemd van al <em>journal</em> (<code>journalctl -u NOM</code>).</li>
+<li>Els fitxers de les unitats d’administrador viuen a <code>/etc/systemd/system/</code>.</li>
+</ul>
+</div>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Un administrador crea la unitat següent:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/cua-treball.service</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Procés de treball de llarga durada</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">simple</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/sleep infinity</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A continuació executa:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start cua-treball.service</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El servei queda actiu. Després de reiniciar la màquina, però, el servei no s’ha iniciat.</p>
+<ol type="1">
+<li>Per què pot estar actiu ara però no iniciar-se automàticament després d’un reinici?</li>
+<li>Quina diferència hi ha entre <code>start</code>, <code>enable</code> i <code>enable --now</code>?</li>
+<li>Quina ordre utilitzaries per configurar l’inici automàtic i activar el servei immediatament? Què cal canviar a la unitat?</li>
+<li>Com comprovaries si està habilitat i si està en execució?</li>
+</ol>
+<p><strong>Repte:</strong> si s’edita el fitxer d’una unitat ja carregada, quina ordre fa que systemd en torni a llegir la configuració? Què passa si no es fa?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><p><code>systemctl start</code> inicia la unitat en la sessió actual, però no crea cap enllaç d’arrencada. A més, la unitat no té secció <code>[Install]</code>: no diu a quin objectiu s’ha d’enllaçar, i per tant <code>enable</code> no té res a fer.</p></li>
+<li><p><code>start</code> activa la unitat <strong>ara</strong>; <code>enable</code> crea els enllaços definits a <code>[Install]</code> perquè s’activi <strong>en arrencar</strong>; <code>enable --now</code> fa les dues coses.</p></li>
+<li><p>Cal afegir a la unitat:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>i després habilitar-la i iniciar-la:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable <span class="at">--now</span> cua-treball.service</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p>Per comprovar-ho:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-enabled cua-treball.service</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-active cua-treball.service</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> status cua-treball.service</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>is-enabled</code> retorna <code>enabled</code>, <code>disabled</code>, <code>static</code> (la unitat no té <code>[Install]</code>; només s’activa per dependència) o <code>masked</code>, entre d’altres.</p></li>
+</ol>
+<p><strong>Repte.</strong> <code>sudo systemctl daemon-reload</code> fa que systemd torni a llegir els fitxers de les unitats i reconstrueixi les dependències. Sense aquesta ordre, systemd continua usant la versió en memòria i avisa que el fitxer ha canviat al disc. No reinicia cap servei: un servei en marxa continua executant-se amb la configuració antiga fins que es faci <code>restart</code>.</p>
+<p><code>enable</code> també recarrega la configuració en acabar, però és bona pràctica fer el <code>daemon-reload</code> explícit després d’editar un fitxer i abans del <code>start</code> o <code>restart</code>.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># salutacio.service</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Salutació</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/bin/echo hola</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>S’executa <code>sudo systemctl start salutacio.service</code> i després <code>systemctl status salutacio.service</code>.</p>
+<ol type="1">
+<li>Quin valor té la línia <code>Active:</code>? Indica un error?</li>
+<li>Descriu, en ordre, els esdeveniments que apareixen al <em>journal</em> (no cal el text literal).</li>
+</ol>
+<p><strong>Repte:</strong> què canvia si s’afegeix <code>RemainAfterExit=yes</code> a <code>[Service]</code>?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><code>inactive (dead)</code>. <strong>No</strong> és un error: el procés ha acabat amb codi 0 i, com que un <code>oneshot</code> no té cap procés en marxa, la unitat torna a quedar inactiva. <code>status</code> mostra també <code>status=0/SUCCESS</code> a la línia del procés.</li>
+<li>Ordre dels esdeveniments: (1) systemd anuncia l’inici de la unitat; (2) <code>echo</code> escriu <code>hola</code>; (3) systemd informa que la unitat s’ha desactivat correctament; (4) systemd informa que la unitat ha acabat. Un exemple de sortida:</li>
+</ol>
+<pre class="text"><code>Starting salutacio.service - Salutació...
+echo[1234]: hola
+salutacio.service: Deactivated successfully.
+Finished salutacio.service - Salutació.</code></pre>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">sequenceDiagram
+    autonumber
+    participant S as systemd
+    participant E as echo
+
+    S-&gt;&gt;S: Starting salutacio.service
+    S-&gt;&gt;E: fork + execve
+    E-&gt;&gt;E: escriu hola al journal
+    E--&gt;&gt;S: exit 0
+    S-&gt;&gt;S: Deactivated successfully
+    S-&gt;&gt;S: Finished salutacio.service
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p><strong>Repte.</strong> Amb <code>RemainAfterExit=yes</code> la unitat es queda <strong>activa</strong> després que el procés acabi: <code>Active: active (exited)</code>, i no apareix la línia <em>Deactivated successfully</em>. Fins que algú l’aturi amb <code>systemctl stop</code>, systemd la considera iniciada.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/web.service</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Servidor web</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/sbin/webd</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target graphical.target</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="dt">Alias</span><span class="ot">=</span><span class="st">servidor.service</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="dt">Also</span><span class="ot">=</span><span class="st">web.socket</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/web.socket</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Socket]</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenStream</span><span class="ot">=</span><span class="dv">8080</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">sockets.target</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>S’executa <code>sudo systemctl enable web.service</code>.</p>
+<ol type="1">
+<li>Quins enllaços simbòlics es creen? On apunta cadascun?</li>
+<li>S’ha iniciat <code>webd</code>?</li>
+</ol>
+<p><strong>Repte:</strong> què és <code>servidor.service</code> després de l’<code>enable</code>? Com ho comprovaries?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li>Quatre enllaços: un per <strong>cada objectiu</strong> de <code>WantedBy=</code> (dos: <code>multi-user.target</code> i <code>graphical.target</code>), un per l’àlies (<code>Alias=</code>) i un pel <code>[Install]</code> del socket, que habilita <code>Also=</code>.</li>
+</ol>
+<pre class="text"><code>Created symlink /etc/systemd/system/servidor.service → /etc/systemd/system/web.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/web.service → /etc/systemd/system/web.service.
+Created symlink /etc/systemd/system/graphical.target.wants/web.service → /etc/systemd/system/web.service.
+Created symlink /etc/systemd/system/sockets.target.wants/web.socket → /etc/systemd/system/web.socket.</code></pre>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+    MU["multi-user.target.wants/web.service"] --&gt; W["web.service"]
+    GR["graphical.target.wants/web.service"] --&gt; W
+    AL["servidor.service"] --&gt; W
+    SO["sockets.target.wants/web.socket"] --&gt; WS["web.socket"]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<ol start="2" type="1">
+<li><strong>No.</strong> <code>enable</code> només prepara l’arrencada següent. Per activar-lo ara caldria <code>start</code> (o <code>enable --now</code>).</li>
+</ol>
+<p><strong>Repte.</strong> <code>servidor.service</code> és un <strong>nom alternatiu</strong> (àlies) de la mateixa unitat: un enllaç simbòlic cap a <code>web.service</code>. No és una segona unitat. Es pot comprovar amb <code>ls -l /etc/systemd/system/servidor.service</code> i amb <code>systemctl status servidor.service</code>, que mostra la unitat <code>web.service</code>.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>El programa <code>infod</code> és un dimoni clàssic: en arrencar fa <code>fork()</code>; el <strong>fill</strong> escriu el seu PID a <code>/run/infod.pid</code> i continua en marxa; el <strong>pare</strong> surt amb codi 0. Completa la unitat:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Dimoni clàssic</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">______(1)______</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="dt">PIDFile</span><span class="ot">=</span><span class="st">______(2)______</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/sbin/infod --pidfile /run/infod.pid</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecReload</span><span class="ot">=</span><span class="st">/bin/kill -HUP ______(3)______</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Pregunta extra:</strong> per què <code>Type=simple</code> seria incorrecte aquí?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><code>forking</code></li>
+<li><code>/run/infod.pid</code></li>
+<li><code>$MAINPID</code> (systemd el substitueix pel PID del procés principal, que ha après del fitxer de PID)</li>
+</ol>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">sequenceDiagram
+    autonumber
+    participant S as systemd
+    participant P as infod pare
+    participant D as infod fill
+
+    S-&gt;&gt;P: fork + execve
+    P-&gt;&gt;D: fork
+    D-&gt;&gt;D: escriu el PID a /run/infod.pid
+    P--&gt;&gt;S: exit 0
+    S-&gt;&gt;S: llegeix PIDFile i el declara principal
+    Note over D: procés principal del servei
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>Amb <code>forking</code>, la sortida del pare és el senyal ja estic a punt; <code>PIDFile=</code> li diu a systemd <strong>quin</strong> és el procés que queda (el fill).</p>
+<p><strong>Pregunta extra.</strong> Amb <code>Type=simple</code>, el procés principal seria el <strong>pare</strong>. Quan surt amb codi 0, systemd considera que el servei ha acabat i el desactiva; en fer-ho, neteja el grup de control i el fill també es mata.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># a.service           # b.service           # c.service           # d.service</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span><span class="dt">                </span><span class="kw">[Unit]</span><span class="dt">                </span><span class="kw">[Unit]</span><span class="dt">                </span><span class="kw">[Service]</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">b.service       Wants=c.service       Requires=d.service    Type=oneshot</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">                                            After</span><span class="ot">=</span><span class="st">d.service       ExecStart=/bin/false</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Les unitats <code>a</code>, <code>b</code> i <code>c</code> són <code>Type=simple</code> i executen <code>/usr/bin/sleep infinity</code>. S’executa <code>sudo systemctl start a.service</code>.</p>
+<ol type="1">
+<li>Quines unitats participen en la transacció?</li>
+<li>Quin és l’estat final de cadascuna?</li>
+<li><code>systemctl start</code> acaba amb error?</li>
+</ol>
+<p><strong>Repte:</strong> canvia <code>Wants=</code> per <code>Requires=</code> + <code>After=</code> a <code>a</code> (cap a <code>b</code>) i a <code>b</code> (cap a <code>c</code>). Torna a respondre les tres preguntes.</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li>Les <strong>quatre</strong>: <code>a</code> arrossega <code>b</code> (<code>Wants=</code>), <code>b</code> arrossega <code>c</code>, i <code>c</code> arrossega <code>d</code> (<code>Requires=</code>).</li>
+<li><code>d</code> falla (<code>ExecStart=/bin/false</code> surt amb codi 1): <code>failed</code>. <code>c</code> té <code>Requires=d</code> + <code>After=d</code>: espera que <code>d</code> acabi i, com que falla, <strong>no s’arriba a iniciar</strong> (<em>Dependency failed for c.service</em>); <code>systemctl status c</code> el mostra com <code>failed (Result: dependency)</code>. En canvi, <code>b</code> i <code>a</code> només tenen <code>Wants=</code>: una fallada no es propaga cap amunt a través d’un requeriment feble, i <strong>s’inicien normalment</strong> (<code>active (running)</code>).</li>
+<li><strong>No.</strong> El treball de <code>a</code> ha tingut èxit: les fallades de les unitats desitjades amb <code>Wants=</code> no compten.</li>
+</ol>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A["a.service · active"] --&gt;|"Wants"| B["b.service · active"]
+    B --&gt;|"Wants"| C["c.service · failed (dependency)"]
+    C --&gt;|"Requires + After"| D["d.service · failed"]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p><strong>Repte.</strong> Ara la fallada <strong>puja per tota la cadena</strong>: <code>d</code> falla → <code>c</code> no s’inicia → <code>b</code> (té <code>Requires=c</code> + <code>After=c</code>) tampoc → <code>a</code> tampoc. Les tres queden <code>failed (Result: dependency)</code>, i <code>systemctl start</code> acaba amb error: <em>A dependency job for a.service failed. See ‘journalctl -xe’ for details.</em></p>
+<p>Amb <code>After=</code>, la unitat dependent espera que la requerida acabi d’iniciar-se i, si falla, el seu inici es cancel·la. <strong>Sense</strong> <code>After=</code>, les dues unitats s’inicien en paral·lel i el resultat és menys previsible. Per això, a la pràctica, <code>Requires=</code> es combina gairebé sempre amb <code>After=</code>.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Un programa pot acabar de cinc maneres. Per a cada causa i per a cada valor de <code>Restart=</code>, digues si systemd <strong>reinicia</strong> el servei (sí / no). El servei és <code>Type=simple</code>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Causa</th>
+<th style="text-align: center;"><code>always</code></th>
+<th style="text-align: center;"><code>on-success</code></th>
+<th style="text-align: center;"><code>on-failure</code></th>
+<th style="text-align: center;"><code>on-abnormal</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">El programa fa <code>exit(0)</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">El programa fa <code>exit(1)</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>kill -9</code> (<code>SIGKILL</code>) des de fora</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>kill -TERM</code> (<code>SIGTERM</code>) des de fora</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>systemctl stop</code></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Repte:</strong> un programa amb un error surt amb codi 0 just en arrencar. Quin és el resultat amb <code>Restart=always</code> i els valors per defecte (<code>RestartSec=100ms</code>, 5 inicis cada 10 s)?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Causa</th>
+<th style="text-align: center;"><code>always</code></th>
+<th style="text-align: center;"><code>on-success</code></th>
+<th style="text-align: center;"><code>on-failure</code></th>
+<th style="text-align: center;"><code>on-abnormal</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>exit(0)</code></td>
+<td style="text-align: center;">sí</td>
+<td style="text-align: center;">sí</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>exit(1)</code></td>
+<td style="text-align: center;">sí</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">sí</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>SIGKILL</code></td>
+<td style="text-align: center;">sí</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">sí</td>
+<td style="text-align: center;">sí</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>SIGTERM</code></td>
+<td style="text-align: center;">sí</td>
+<td style="text-align: center;">sí</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>systemctl stop</code></td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+<td style="text-align: center;">no</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Per a systemd, una sortida <strong>neta</strong> és el codi 0 <strong>o</strong> un dels senyals <code>SIGHUP</code>, <code>SIGINT</code>, <code>SIGTERM</code> i <code>SIGPIPE</code>. Per això <code>SIGTERM</code> es comporta com <code>exit(0)</code>, i no com un error.</li>
+<li>Una aturada explícita amb <code>systemctl stop</code> <strong>mai</strong> provoca un reinici, sigui quin sigui el valor.</li>
+</ul>
+<p><strong>Repte.</strong> Bucle: el servei s’inicia, surt amb 0, <code>always</code> el torna a iniciar, i així successivament. Amb 0,1 s de retard, es superen els 5 inicis en 10 s en menys d’un segon. La unitat queda <code>failed</code> amb el resultat <code>start-limit-hit</code>. Per recuperar-la, cal corregir la causa i executar <code>systemctl reset-failed</code>.</p>
+<p>Cal tenir en compte que <code>Restart=always</code> <strong>no</strong> és vàlid per a <code>Type=oneshot</code>.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /lib/systemd/system/web.service (instal·lat pel paquet)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/sbin/webd --port 80</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">MODE=prod</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/web.service.d/10-mode.conf</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Environment</span><span class="ot">=</span><span class="st">MODE=debug</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/web.service.d/20-port.conf</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/sbin/webd --port 8080</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<ol type="1">
+<li>Quina ordre s’executa, i amb quin valor de <code>MODE</code>?</li>
+<li>S’afegeix <code>30-log.conf</code> amb <code>ExecStart=/usr/sbin/webd --port 8080 --verbose</code> (sense línia buida abans). Què passa?</li>
+<li>Amb quina ordre es veu la unitat efectiva? Amb quina ordre es crearia un fragment com <code>20-port.conf</code> sense escriure el camí a mà?</li>
+</ol>
+<p><strong>Repte:</strong> i si <code>web.service</code> fos <code>Type=oneshot</code>?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart LR
+    O["web.service · paquet"] --&gt; D1["10-mode.conf"]
+    D1 --&gt; D2["20-port.conf"]
+    D2 --&gt; E["unitat efectiva"]
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<ol type="1">
+<li><code>/usr/sbin/webd --port 8080</code> amb <code>MODE=debug</code>. Els fragments es llegeixen en <strong>ordre alfabètic</strong> i se superposen a l’original. Per a <code>Environment=</code>, si una variable s’assigna dues vegades, preval l’última. Per a <code>ExecStart=</code> (que normalment només admet una ordre), la línia <strong>buida</strong> esborra la llista anterior; sense aquesta línia, la nova ordre s’<strong>afegiria</strong> a la de l’original.</li>
+<li>Ara hi ha <strong>dues</strong> línies <code>ExecStart=</code> (la de <code>20-port.conf</code> i la de <code>30-log.conf</code>), i el servei no és <code>oneshot</code>. La unitat es rebutja:</li>
+</ol>
+<pre class="text"><code>web.service: Service has more than one ExecStart= setting, which is only allowed for Type=oneshot services. Refusing.</code></pre>
+<ol start="3" type="1">
+<li>La unitat efectiva (fitxer original i fragments) es veu amb <code>systemctl cat web.service</code>. L’ordre <code>sudo systemctl edit web.service</code> obre un editor i desa el fragment com <code>/etc/systemd/system/web.service.d/override.conf</code>; en acabar fa el <code>daemon-reload</code> automàticament. Així no es modifica mai el fitxer del paquet, que una actualització sobreescriuria.</li>
+</ol>
+<p><strong>Repte.</strong> Un <code>oneshot</code> admet diverses línies <code>ExecStart=</code> i les executa <strong>en seqüència</strong>, en l’ordre en què apareixen. Si una falla, les següents no s’executen.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>El servei <code>informes.service</code> no s’inicia. La unitat és:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/informes.service</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Generació d'informes</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">exec</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="dt">User</span><span class="ot">=</span><span class="st">informes</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="dt">WorkingDirectory</span><span class="ot">=</span><span class="st">/srv/informes</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/opt/informes/bin/informesd</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Aquests són tres registres de fallades <strong>diferents</strong> (cada un correspon a un escenari diferent):</p>
+<pre class="text"><code>── Registre A ──
+informes.service: Failed to determine user credentials: No such process
+informes.service: Failed at step USER spawning /opt/informes/bin/informesd: No such process
+informes.service: Main process exited, code=exited, status=217/USER
+informes.service: Failed with result 'exit-code'.
+
+── Registre B ──
+informes.service: Changing to the requested working directory failed: No such file or directory
+informes.service: Failed at step CHDIR spawning /opt/informes/bin/informesd: No such file or directory
+informes.service: Main process exited, code=exited, status=200/CHDIR
+informes.service: Failed with result 'exit-code'.
+
+── Registre C ──
+informes.service: Failed to locate executable /opt/informes/bin/informesd: No such file or directory
+informes.service: Failed at step EXEC spawning /opt/informes/bin/informesd: No such file or directory
+informes.service: Main process exited, code=exited, status=203/EXEC
+informes.service: Failed with result 'exit-code'.</code></pre>
+<ol type="1">
+<li>Per a cada registre, quina línia de la unitat (o quin element del sistema) és la causa?</li>
+<li>Qui genera els codis <code>217/USER</code>, <code>200/CHDIR</code> i <code>203/EXEC</code>: el programa o systemd? S’ha arribat a executar <code>informesd</code> en algun cas?</li>
+<li>Amb <code>Type=simple</code>, <code>systemctl start</code> retorna error en algun dels tres casos? I amb <code>Type=exec</code>?</li>
+<li>Per al registre A: quines ordres utilitzaries per comprovar si l’usuari existeix, validar la unitat, corregir el problema i tornar a provar el servei?</li>
+</ol>
+<p><strong>Repte:</strong> el registre C també apareix si el fitxer existeix però no té permís d’execució. Quin canvi hi ha al missatge i com ho corregiries?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><p><strong>A:</strong> <code>User=informes</code>: l’usuari no existeix (el missatge <em>No such process</em> és un <code>ESRCH</code> poc intuïtiu). <strong>B:</strong> <code>WorkingDirectory=/srv/informes</code>: el directori no existeix. <strong>C:</strong> <code>ExecStart=</code>: el binari no existeix.</p></li>
+<li><p>Els genera <strong>systemd</strong>: formen una família de codis a partir del 200 (<code>200/CHDIR</code>, <code>203/EXEC</code>, <code>217/USER</code>…) documentada a <code>systemd.exec(5)</code>. El nom indica el <strong>pas</strong> que ha fallat: el procés fill de systemd ha fallat mentre <strong>es preparava</strong> el context d’execució. <code>informesd</code> <strong>no s’ha arribat a executar</strong> en cap cas: el missatge no ve del programa.</p>
+<p>El criteri fiable no és el número, sinó la línia <code>Failed at step X spawning</code>, perquè un programa pot sortir amb qualsevol codi, també amb valors alts.</p></li>
+<li><p>Amb <code>simple</code>, <strong>no</strong>: <code>start</code> només espera que es faci el <code>fork()</code>, i l’error només es veu al <em>journal</em> o a <code>systemctl status</code>. Amb <code>exec</code>, <strong>sí</strong>: systemd espera que l’<code>execve()</code> tingui èxit, i en els tres casos la fallada ve abans.</p></li>
+<li><p>Per al registre A:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">getent</span> passwd informes                      <span class="co"># no retorna res (codi de sortida 2) si no existeix</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemd-analyze verify /etc/systemd/system/informes.service</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">--system</span> <span class="at">--no-create-home</span> <span class="at">--shell</span> /usr/sbin/nologin informes</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start informes.service</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> status informes.service</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> informes.service <span class="at">-b</span> <span class="at">--no-pager</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>systemd-analyze verify</code> detecta errors de la unitat (sintaxi, directives desconegudes, fitxers que falten), però no substitueix la lectura del <em>journal</em>, perquè no comprova l’entorn real d’execució. No cal <code>daemon-reload</code> perquè el fitxer de la unitat no s’ha modificat; només caldria si s’hagués editat. Una alternativa a crear l’usuari és <code>DynamicUser=yes</code>, amb implicacions sobre els permisos dels directoris.</p></li>
+</ol>
+<p><strong>Repte.</strong> Si el fitxer existeix però no és executable, el pas continua sent <code>EXEC</code>, però l’error passa a ser <code>Permission denied</code>. La correcció és <code>sudo chmod +x /opt/informes/bin/informesd</code> (i comprovar també que els directoris del camí són accessibles per a l’usuari del servei).</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Volem que el servei <code>copia.service</code> es comprovi abans d’executar-se i que, si falla, s’enregistri un avís mitjançant un segon servei.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/copia.service</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Còpia de seguretat</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="dt">OnFailure</span><span class="ot">=</span><span class="st">avis@%n.service</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStartPre</span><span class="ot">=</span><span class="st">/usr/bin/test -d /srv/dades</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/local/bin/copia</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/avis@.service</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Avís de fallada de %i</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/logger -t avis -p user.err "Ha fallat %i"</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El directori <code>/srv/dades</code> <strong>no existeix</strong>. S’executa <code>sudo systemctl start copia.service</code>.</p>
+<ol type="1">
+<li>S’executa <code>ExecStart=</code>? Quin és l’estat final de <code>copia.service</code>?</li>
+<li>Què fa <code>OnFailure=</code>? Quina unitat s’activa exactament i què valen <code>%n</code> i <code>%i</code>?</li>
+<li>Com es consulta l’avís?</li>
+</ol>
+<p><strong>Repte:</strong> què canviaria si la línia fos <code>ExecStartPre=-/usr/bin/test -d /srv/dades</code>?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><strong>No.</strong> <code>test -d</code> surt amb codi 1; una fallada d’<code>ExecStartPre=</code> avorta l’inici: no s’executa <code>ExecStart=</code> i la unitat queda <code>failed</code> (<code>Result: exit-code</code>).</li>
+<li><code>OnFailure=</code> activa les unitats indicades quan la unitat entra a l’estat <code>failed</code>. <code>%n</code> és el nom complet de la unitat (<code>copia.service</code>), de manera que s’activa la instància <code>avis@copia.service.service</code> de la plantilla <code>avis@.service</code>, on <code>%i</code> val <code>copia.service</code>.</li>
+<li>Amb <code>journalctl -t avis</code> (el <code>-t</code> del <code>logger</code> és l’identificador) o <code>journalctl -u 'avis@*'</code>.</li>
+</ol>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">sequenceDiagram
+    autonumber
+    participant S as systemd
+    participant C as copia.service
+    participant A as avis@copia.service
+
+    S-&gt;&gt;C: ExecStartPre: test -d /srv/dades
+    C--&gt;&gt;S: codi 1
+    S-&gt;&gt;C: marca failed (ExecStart no s'executa)
+    S-&gt;&gt;A: OnFailure=
+    A-&gt;&gt;A: logger "Ha fallat copia.service"
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p><strong>Repte.</strong> El prefix <code>-</code> fa que systemd <strong>ignori</strong> el resultat de l’ordre: la comprovació deixa de ser una condició, <code>ExecStart=</code> s’executaria igualment i <code>OnFailure=</code> no s’activaria per aquesta causa. Si el que es vol és <em>saltar-se</em> el servei sense considerar-ho un error, la directiva adequada és <code>ConditionPathIsDirectory=/srv/dades</code>.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Volem que <code>informe.service</code> s’executi <strong>cada dilluns a les 04:00</strong> i que, si la màquina estava apagada a aquella hora, s’executi tan bon punt arrenqui. Completa:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># informe.timer</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Informe setmanal</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Timer]</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="dt">OnCalendar</span><span class="ot">=</span><span class="st">______(1)______</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="dt">______(2)______</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">______(3)______</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Per activar-lo ara i en arrencar: <code>sudo systemctl ______(4)______ informe.timer</code>.</p>
+<p><strong>Pregunta extra:</strong> per què <code>informe.service</code> no necessita secció <code>[Install]</code>? Amb quina ordre comprovaries l’expressió <strong>abans</strong> d’activar-la?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><code>Mon *-*-* 04:00:00</code> (també s’accepta <code>Mon 04:00</code>)</li>
+<li><code>Persistent</code></li>
+<li><code>timers.target</code></li>
+<li><code>enable --now</code></li>
+</ol>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">sequenceDiagram
+    autonumber
+    participant T as informe.timer
+    participant S as informe.service
+
+    Note over T: dilluns 04:00, màquina apagada
+    Note over T: dilluns 09:00, arrencada
+    T-&gt;&gt;S: Persistent=true, s'executa ara
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>Amb <code>Persistent=true</code>, systemd desa a disc l’instant de l’última execució (a <code>/var/lib/systemd/timers/</code>); quan el temporitzador s’activa, si n’ha perdut alguna, <strong>dispara el servei immediatament</strong>. Només té efecte amb <code>OnCalendar=</code>.</p>
+<p><strong>Pregunta extra.</strong> Perquè el servei no s’inicia en arrencar: l’activa el temporitzador. S’habilita el <code>.timer</code>, no el <code>.service</code>. L’expressió es comprova amb <code>systemd-analyze calendar 'Mon *-*-* 04:00:00'</code>, que mostra la forma normalitzada i la propera execució. Els temporitzadors actius i la propera execució es veuen amb <code>systemctl list-timers</code>.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Dos serveis <strong>independents</strong>, <code>treball-a.service</code> i <code>treball-b.service</code>, són <code>Type=oneshot</code> i executen <code>/usr/bin/sleep 180</code> (triguen <strong>3 minuts</strong>). Cadascun té el seu temporitzador, activat en arrencar (minut 0):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># treball-a.timer                    # treball-b.timer</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Timer]</span><span class="dt">                              </span><span class="kw">[Timer]</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="dt">OnBootSec</span><span class="ot">=</span><span class="st">2min                       OnBootSec=2min</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="dt">OnUnitActiveSec</span><span class="ot">=</span><span class="st">10min                OnUnitInactiveSec=10min</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="dt">AccuracySec</span><span class="ot">=</span><span class="st">1s                       AccuracySec=1s</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>En quin minut comença cadascuna de les <strong>quatre primeres execucions</strong> de A i de B?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<p><code>OnUnitActiveSec=</code> compta des del moment en què el servei <strong>comença a activar-se</strong> (surt de l’estat inactiu); <code>OnUnitInactiveSec=</code> des que es va <strong>desactivar</strong> (és a dir, des que va acabar). Pots veure el resultat amb <code>systemctl list-timers</code>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: center;">Execució</th>
+<th style="text-align: center;">A (<code>ActiveSec</code>)</th>
+<th style="text-align: center;">B (<code>InactiveSec</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">minut 2</td>
+<td style="text-align: center;">minut 2 (acaba al 5)</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">minut 12</td>
+<td style="text-align: center;">minut 15 (acaba al 18)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">minut 22</td>
+<td style="text-align: center;">minut 28 (acaba al 31)</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">minut 32</td>
+<td style="text-align: center;">minut 41</td>
+</tr>
+</tbody>
+</table>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">gantt
+    dateFormat HH:mm
+    axisFormat %M
+    section A
+    execució 1 :a1, 00:02, 3m
+    execució 2 :a2, 00:12, 3m
+    execució 3 :a3, 00:22, 3m
+    execució 4 :a4, 00:32, 3m
+    section B
+    execució 1 :b1, 00:02, 3m
+    execució 2 :b2, 00:15, 3m
+    execució 3 :b3, 00:28, 3m
+    execució 4 :b4, 00:41, 3m
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>A dóna un <strong>període</strong> fix de 10 minuts entre inicis. B dóna un <strong>descans</strong> de 10 minuts entre el final d’una execució i l’inici de la següent, de manera que el període real és de 13 minuts. Si el que importa és no solapar-se amb l’execució anterior, B és el que es vol.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/eco.socket</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Socket]</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="dt">ListenStream</span><span class="ot">=</span><span class="st">127.0.0.1:9000</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">sockets.target</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/eco.service</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/local/bin/eco</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>eco</code> és un servidor que, si ha estat iniciat per un socket, usa el socket que li passa systemd. S’executa <code>sudo systemctl enable --now eco.socket</code>.</p>
+<ol type="1">
+<li>Quin és l’estat de <code>eco.service</code> just després? Qui escolta al port 9000? Amb quina ordre ho comprovaries?</li>
+<li>Un client es connecta amb <code>nc 127.0.0.1 9000</code>. Què passa?</li>
+<li>Per què s’habilita <code>eco.socket</code> i no <code>eco.service</code>? Per què <code>eco.service</code> no té <code>[Install]</code>?</li>
+</ol>
+<p><strong>Repte:</strong> què canvia amb <code>Accept=yes</code> al <code>.socket</code>?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><code>eco.service</code> és <code>inactive (dead)</code>: encara no s’ha iniciat. El que escolta al port 9000 és <strong>systemd</strong> (PID 1), en nom del servei. Es comprova amb <code>sudo ss -ltnp 'sport = :9000'</code> i <code>systemctl status eco.socket</code> (<code>Active: active (listening)</code>).</li>
+<li>En arribar la primera connexió, systemd <strong>inicia <code>eco.service</code></strong> (per defecte, el servei amb el mateix nom que el socket) i li passa el socket que escolta; el programa agafa la connexió pendent.</li>
+<li>Perquè qui ha d’estar actiu des de l’arrencada és el socket; el servei s’activa sota demanda. No necessita <code>[Install]</code> perquè l’activa el socket.</li>
+</ol>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">sequenceDiagram
+    autonumber
+    participant C as client
+    participant S as systemd (eco.socket)
+    participant E as eco.service
+
+    S-&gt;&gt;S: escolta a 127.0.0.1:9000
+    C-&gt;&gt;S: connexió
+    S-&gt;&gt;E: inicia el servei i li passa el socket
+    E-&gt;&gt;C: respon
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>Si <code>eco.service</code> s’atura, el socket continua escoltant i la propera connexió el torna a iniciar. Les connexions que arriben mentre no és viu queden en cua, de manera que no es perden.</p>
+<p><strong>Repte.</strong> Amb <code>Accept=yes</code>, systemd accepta ell mateix cada connexió i inicia <strong>una instància nova per connexió</strong>, que rep la connexió ja acceptada. Això obliga que el servei sigui una plantilla (<code>eco@.service</code>) i que el programa llegeixi de l’entrada estàndard (<code>StandardInput=socket</code>).</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>El servei <code>processa-dades.service</code> llegeix i escriu fitxers a <code>/srv/dades</code>. Aquest directori correspon a un volum separat (per exemple, un disc extern) que es munta des de <code>/etc/fstab</code> amb l’opció <code>nofail</code>:</p>
+<pre class="text"><code>UUID=&lt;uuid&gt;  /srv/dades  ext4  defaults,nofail  0  2</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/processa-dades.service</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Processament de dades</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="dt">User</span><span class="ot">=</span><span class="st">processador</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Group</span><span class="ot">=</span><span class="st">processador</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/local/bin/processa-dades --entrada /srv/dades/entrada --sortida /srv/dades/sortida</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<ol type="1">
+<li>Quin problema pot aparèixer si el servei s’inicia quan el volum no està muntat?</li>
+<li>Quina directiva de systemd permet expressar que el servei necessita els muntatges requerits per accedir a <code>/srv/dades</code>?</li>
+<li>Completa la secció <code>[Unit]</code> amb aquesta directiva.</li>
+<li>Per què no és equivalent afegir només <code>After=local-fs.target</code>?</li>
+<li>Com comprovaries si el sistema de fitxers està muntat i si el servei ha fallat per aquesta causa?</li>
+</ol>
+<p><strong>Repte:</strong> si el volum no està muntat però <code>/srv/dades</code> existeix al sistema de fitxers arrel, què passa? Quines mesures el protegeixen? Canviaria alguna cosa si s’afegís <code>WorkingDirectory=/srv/dades</code> a la unitat?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><p>El programa podria no trobar les dades esperades o, si el punt de muntatge buit és accessible i escrivible, podria escriure al sistema de fitxers arrel en lloc del volum previst, sense cap error visible.</p></li>
+<li><p><code>RequiresMountsFor=</code>.</p></li>
+<li><p>La secció queda així:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Processament de dades</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="dt">RequiresMountsFor</span><span class="ot">=</span><span class="st">/srv/dades</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>systemd afegeix <code>Requires=</code> i <code>After=</code> sobre totes les unitats de muntatge necessàries per accedir a aquest camí.</p></li>
+<li><p>Amb <code>nofail</code>, el muntatge no és un requisit de <code>local-fs.target</code>: aquest objectiu no exigeix que tingui èxit. <code>After=local-fs.target</code> és, per tant, només una relació d’<strong>ordre</strong> i no declara que el muntatge sigui un requisit del servei: si el muntatge falla, el servei s’iniciaria igualment. <code>RequiresMountsFor=</code> el converteix en un requisit: si el muntatge no es pot fer, el servei no s’inicia (<em>dependency failed</em>).</p>
+<p>Amb muntatges d’arrencada <strong>sense</strong> <code>nofail</code>, el sistema ja depèn de <code>local-fs.target</code> i l’<code>After=</code> seria sovint redundant. <code>RequiresMountsFor=</code> continua sent útil per a muntatges tardans (<code>x-systemd.automount</code>, <code>_netdev</code>) i per expressar la intenció.</p></li>
+<li><p>Per exemple:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> /srv/dades</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-escape</span> <span class="at">-p</span> <span class="at">--suffix</span><span class="op">=</span>mount /srv/dades     <span class="co"># srv-dades.mount</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> status srv-dades.mount</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> status processa-dades.service</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> processa-dades.service <span class="at">-b</span> <span class="at">--no-pager</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ol>
+<p><strong>Repte.</strong> El servei llegiria dades incorrectes o escriuria al lloc equivocat. Mesures de protecció:</p>
+<ul>
+<li><code>RequiresMountsFor=/srv/dades</code> (el servei no s’inicia si el volum no es pot muntar);</li>
+<li><code>ConditionPathIsMountPoint=/srv/dades</code> (el servei <strong>s’omet</strong> sense error si no és un punt de muntatge);</li>
+<li><code>sudo chattr +i /srv/dades</code> <strong>amb el volum desmuntat</strong> (el directori buit del sistema arrel deixa de ser escrivible).</li>
+</ul>
+<p>Segons <code>systemd.exec(5)</code>, <code>WorkingDirectory=</code> també afegeix automàticament dependències sobre els muntatges d’aquest camí, però <strong>no</strong> ho fa per camins que només apareixen com a arguments de l’ordre, com en aquest enunciat. Per això aquí <code>RequiresMountsFor=</code> és necessari.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Volem que el servei <code>informe-segur.service</code> generi un fitxer de resultat a <code>/var/lib/informes/</code> sense executar-se com a <code>root</code> i sense poder modificar lliurement la resta del sistema. L’usuari i el grup <code>informes</code> <strong>existeixen</strong>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/informe-segur.service</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Generació segura d'un informe</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="dt">User</span><span class="ot">=</span><span class="st">informes</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Group</span><span class="ot">=</span><span class="st">informes</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="dt">StateDirectory</span><span class="ot">=</span><span class="st">informes</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectSystem</span><span class="ot">=</span><span class="st">strict</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="dt">PrivateTmp</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="dt">NoNewPrivileges</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/bin/sh -c 'date &gt; /var/lib/informes/resultat.txt'</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<ol type="1">
+<li>Quin usuari executa el procés?</li>
+<li>Quin directori crea i prepara <code>StateDirectory=informes</code>?</li>
+<li>Per què l’escriptura a <code>/var/lib/informes/resultat.txt</code> pot funcionar malgrat <code>ProtectSystem=strict</code>?</li>
+<li>Quina funció tenen <code>PrivateTmp=yes</code> i <code>NoNewPrivileges=yes</code>?</li>
+<li>Com comprovaries que el servei ha acabat correctament i que el fitxer existeix? Quina ordre avalua el nivell d’aïllament de la unitat?</li>
+</ol>
+<p><strong>Repte:</strong> es canvia la sortida a <code>/etc/resultat.txt</code>. Per aïllar l’efecte de <code>ProtectSystem=strict</code>, es proven tres variants: (a) la unitat tal com està; (b) sense <code>User=</code> ni <code>Group=</code> (com a <code>root</code>), amb <code>ProtectSystem=strict</code>; (c) com a <code>root</code> i sense <code>ProtectSystem</code>. Quin resultat esperes a cada una?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><p>El procés s’executa com a usuari <code>informes</code> i grup <code>informes</code>, no com a <code>root</code>.</p></li>
+<li><p><code>StateDirectory=informes</code> demana a systemd que creï i prepari el directori d’estat <code>/var/lib/informes</code>, amb propietat de l’usuari i el grup configurats.</p></li>
+<li><p><code>ProtectSystem=strict</code> fa que tota la jerarquia del sistema de fitxers sigui de només lectura per al servei, però systemd deixa escrivible el directori declarat amb <code>StateDirectory=</code>.</p></li>
+<li><p><code>PrivateTmp=yes</code> dóna al servei un <code>/tmp</code> i un <code>/var/tmp</code> privats, invisibles per a la resta del sistema. <code>NoNewPrivileges=yes</code> impedeix que el procés guanyi privilegis addicionals en executar altres programes (per exemple, els que tenen el bit set-user-ID).</p></li>
+<li><p>Es pot fer servir:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start informe-segur.service</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> status informe-segur.service</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> journalctl <span class="at">-u</span> informe-segur.service <span class="at">-b</span> <span class="at">--no-pager</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cat /var/lib/informes/resultat.txt</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span> security informe-segur.service</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Com que és <code>Type=oneshot</code> i no hi ha <code>RemainAfterExit=yes</code>, després d’una execució correcta la unitat queda <code>inactive (dead)</code>; això no és una fallada. <code>systemd-analyze security</code> mostra una puntuació d’exposició i les directives que encara es poden endurir.</p></li>
+</ol>
+<p><strong>Repte.</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 66%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Variant</th>
+<th style="text-align: left;">Resultat esperat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(a) <code>informes</code> + <code>strict</code></td>
+<td style="text-align: left;">Falla. El sistema de fitxers és de només lectura abans que es comprovin els permisos: <code>Read-only file system</code>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(b) <code>root</code> + <code>strict</code></td>
+<td style="text-align: left;">Falla amb <code>Read-only file system</code>: ni <code>root</code> pot escriure.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">(c) <code>root</code>, sense <code>ProtectSystem</code></td>
+<td style="text-align: left;">Funciona.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">(a’) <code>informes</code>, sense <code>ProtectSystem</code></td>
+<td style="text-align: left;">Falla per permisos: <code>Permission denied</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Comparant (b) amb (c) s’aïlla l’efecte de <code>ProtectSystem=strict</code>. Comparant (a’) amb (c), l’efecte de <code>User=</code>. La diferència entre els dos missatges (<code>Read-only file system</code> davant <code>Permission denied</code>) mostra que són dues barreres independents: el muntatge de només lectura i els permisos de fitxer.</p>
+</div>
+</details>
+<hr>
+<div class="exercici udl-component udl-exercici">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-exercici"></use></svg><span>Exercici</span></div>
+<p>Escriu l’ordre (o ordres) adequada per a cada situació. Totes es refereixen a <code>web.service</code>.</p>
+<ol type="1">
+<li>Canviar un paràmetre sense tocar el fitxer del paquet.</li>
+<li>Veure la configuració <strong>efectiva</strong>, incloent-hi els fragments.</li>
+<li>Veure només els errors del servei des de l’últim arrencada.</li>
+<li>Seguir el <em>journal</em> del servei en temps real.</li>
+<li>Veure els missatges dels últims 10 minuts.</li>
+<li>Mostrar l’estat actiu, el subestat i el resultat com a propietats.</li>
+<li>Trobar la propera execució dels temporitzadors.</li>
+</ol>
+<p><strong>Repte:</strong> per què <code>systemctl status</code> no es suficient per diagnosticar una fallada ocorreguda fa tres dies?</p>
+</div>
+<details>
+<summary>
+<b>Pots veure el raonament</b>
+</summary>
+<div class="solucio udl-component udl-solucio">
+<div class="udl-component-title"><svg class="udl-icon" aria-hidden="true"><use href="../../../assets/icons.svg#icon-solucio"></use></svg><span>Solució</span></div>
+<ol type="1">
+<li><code>sudo systemctl edit web.service</code> (crea <code>override.conf</code> i recarrega).</li>
+<li><code>systemctl cat web.service</code></li>
+<li><code>journalctl -u web.service -b -p err</code> (<code>-p err</code> inclou <code>err</code> i més greus).</li>
+<li><code>journalctl -u web.service -f</code></li>
+<li><code>journalctl -u web.service --since "10 min ago"</code></li>
+<li><code>systemctl show -p ActiveState,SubState,Result web.service</code></li>
+<li><code>systemctl list-timers</code></li>
+</ol>
+<p><strong>Repte.</strong> <code>status</code> només mostra les últimes línies del <em>journal</em> i l’estat <strong>actual</strong> de la unitat. Per a un historial cal <code>journalctl</code>, amb filtres de temps (<code>--since</code>, <code>--until</code>) o d’arrencada (<code>-b -1</code> per a l’arrencada anterior). Aquest últim exigeix que el <em>journal</em> sigui persistent (<code>/var/log/journal/</code> existent o <code>Storage=persistent</code> a <code>journald.conf</code>).</p>
+</div>
+</details>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiat!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiat!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/igualada\.amsa\.udl\.cat");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../modules/unit-02-arrancada/theory/03-arrancada.html" class="pagination-link" aria-label="Unitat 2 · Arrencada (Part 3)">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Unitat 2 · Arrencada (Part 3)</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html" class="pagination-link" aria-label="Arrencada (I) · BIOS">
+        <span class="nav-page-text">Arrencada (I) · BIOS</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

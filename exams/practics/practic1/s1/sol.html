@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ca" xml:lang="ca"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Solució: arrencada, initramfs i systemd – Administració i Manteniment de Sistemes i Aplicacions</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../assets/logo.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-13ad4839ea57b7f705e8de5833b7831b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-71d11ad18b64fb8e65d87cc5e3220546.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-13ad4839ea57b7f705e8de5833b7831b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Cap resultat",
+    "search-matching-documents-text": "documents que coincideixen",
+    "search-copy-link-title": "Copia l'enllaç a la cerca",
+    "search-hide-matches-text": "Amaga les coincidències addicionals",
+    "search-more-match-text": "altra coincidència en aquest document",
+    "search-more-matches-text": "altres coincidències en aquest document",
+    "search-clear-button-title": "Neteja",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel·la",
+    "search-submit-button-title": "Envia",
+    "search-label": "Cerca"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">AMSA</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Cerca"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Commuta la navegació" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Inici</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://guiadocent.udl.cat/html/2026-27_105013"> 
+<span class="menu-text">Guia docent</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/AMSA-UdL-EpS/course-site-igualada"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Commuta el mode fosc"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Commuta la navegació de la barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Solució: arrencada, initramfs i systemd</li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Commuta la navegació de la barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="../../../../index.html" class="sidebar-logo-link">
+      <img src="../../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="../../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../course-info/presentation-slides.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentació del curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../course-info/contributions/contribute.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contribueix al curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Temari</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fitxa de la unitat</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/theory/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/activities/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activitats tèoriques · Unitat 1</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/pralab/01-aws-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Laboratori de preparació i comandes bàsiques d’administració</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/pralab/02-aws-wordpress.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Desplegament d’una aplicació web amb AWS</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 2 · Arrancada</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/theory/01-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/theory/02-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/theory/03-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 3)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/activities/01-systemd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Serveis amb <code>systemd</code></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/01_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (I) · BIOS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (II) · UEFI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/03_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (III) · De GRUB a Linux</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/04_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (IV) · Migració a LUKS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/05_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (IV) · Migració a LUKS (Part 2)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 3 · Emmagatzematge</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-03-storage/theory/01-raids.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 3 · RAIDs</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Exàmens</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true">
+ <span class="menu-text">Competencials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../exams/practics/practic1/s1/enu.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examen simulacre: arrencada, initramfs i systemd</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En aquesta pàgina</h2>
+   
+  <ul>
+  <li><a href="#part-1-inspecció-de-la-màquina-antiga" id="toc-part-1-inspecció-de-la-màquina-antiga" class="nav-link active" data-scroll-target="#part-1-inspecció-de-la-màquina-antiga">Part 1 · Inspecció de la màquina antiga</a>
+  <ul class="collapse">
+  <li><a href="#firmware-esp-i-lanomalia-shim-grub" id="toc-firmware-esp-i-lanomalia-shim-grub" class="nav-link" data-scroll-target="#firmware-esp-i-lanomalia-shim-grub">1. Firmware, ESP i l’anomalia shim / GRUB</a></li>
+  <li><a href="#grub-entrada-per-defecte-temps-i-fitxers" id="toc-grub-entrada-per-defecte-temps-i-fitxers" class="nav-link" data-scroll-target="#grub-entrada-per-defecte-temps-i-fitxers">2. GRUB: entrada per defecte, temps i fitxers</a></li>
+  <li><a href="#nucli-i-línia-dordres" id="toc-nucli-i-línia-dordres" class="nav-link" data-scroll-target="#nucli-i-línia-dordres">3. Nucli i línia d’ordres</a></li>
+  <li><a href="#el-disc-nom-tipus-particions-i-controlador" id="toc-el-disc-nom-tipus-particions-i-controlador" class="nav-link" data-scroll-target="#el-disc-nom-tipus-particions-i-controlador">4. El disc: nom, tipus, particions i controlador</a></li>
+  <li><a href="#linitramfs-què-conté-i-què-decideix-el-contingut" id="toc-linitramfs-què-conté-i-què-decideix-el-contingut" class="nav-link" data-scroll-target="#linitramfs-què-conté-i-què-decideix-el-contingut">5. L’initramfs: què conté i què decideix el contingut</a></li>
+  <li><a href="#què-sexecuta-en-fer-login-i-en-quin-ordre" id="toc-què-sexecuta-en-fer-login-i-en-quin-ordre" class="nav-link" data-scroll-target="#què-sexecuta-en-fer-login-i-en-quin-ordre">6. Què s’executa en fer login (i en quin ordre)</a></li>
+  </ul></li>
+  <li><a href="#part-2-diagnòstic-i-reparació" id="toc-part-2-diagnòstic-i-reparació" class="nav-link" data-scroll-target="#part-2-diagnòstic-i-reparació">Part 2 · Diagnòstic i reparació</a>
+  <ul class="collapse">
+  <li><a href="#bug-què-veus-i-quin-component-falla" id="toc-bug-què-veus-i-quin-component-falla" class="nav-link" data-scroll-target="#bug-què-veus-i-quin-component-falla">Bug: què veus i quin component falla</a></li>
+  <li><a href="#why-per-què-passa-si-el-disc-funcionava-a-la-màquina-antiga" id="toc-why-per-què-passa-si-el-disc-funcionava-a-la-màquina-antiga" class="nav-link" data-scroll-target="#why-per-què-passa-si-el-disc-funcionava-a-la-màquina-antiga">Why: per què passa, si el disc funcionava a la màquina antiga</a></li>
+  <li><a href="#fix-reparació-persistent-des-de-la-mateixa-màquina" id="toc-fix-reparació-persistent-des-de-la-mateixa-màquina" class="nav-link" data-scroll-target="#fix-reparació-persistent-des-de-la-mateixa-màquina">Fix: reparació persistent des de la mateixa màquina</a></li>
+  <li><a href="#robustesa-quina-solució-triar-i-com-ho-faries-en-un-servidor-real" id="toc-robustesa-quina-solució-triar-i-com-ho-faries-en-un-servidor-real" class="nav-link" data-scroll-target="#robustesa-quina-solució-triar-i-com-ho-faries-en-un-servidor-real">Robustesa: quina solució triar, i com ho faries en un servidor real</a></li>
+  <li><a href="#evidence-com-es-demostra-que-ha-funcionat" id="toc-evidence-com-es-demostra-que-ha-funcionat" class="nav-link" data-scroll-target="#evidence-com-es-demostra-que-ha-funcionat">Evidence: com es demostra que ha funcionat</a></li>
+  </ul></li>
+  <li><a href="#part-3-configuració-el-servidor-de-joc-arrenca-ràpid" id="toc-part-3-configuració-el-servidor-de-joc-arrenca-ràpid" class="nav-link" data-scroll-target="#part-3-configuració-el-servidor-de-joc-arrenca-ràpid">Part 3 · Configuració: el servidor de joc arrenca ràpid</a>
+  <ul class="collapse">
+  <li><a href="#fonaments-ordenació-i-requeriment-són-coses-diferents" id="toc-fonaments-ordenació-i-requeriment-són-coses-diferents" class="nav-link" data-scroll-target="#fonaments-ordenació-i-requeriment-són-coses-diferents">Fonaments: ordenació i requeriment són coses diferents</a></li>
+  <li><a href="#mesurar-la-situació-inicial" id="toc-mesurar-la-situació-inicial" class="nav-link" data-scroll-target="#mesurar-la-situació-inicial">1. Mesurar la situació inicial</a></li>
+  <li><a href="#diagnosi-quines-línies-causen-lespera-i-per-què" id="toc-diagnosi-quines-línies-causen-lespera-i-per-què" class="nav-link" data-scroll-target="#diagnosi-quines-línies-causen-lespera-i-per-què">2. Diagnosi: quines línies causen l’espera i per què</a></li>
+  <li><a href="#implementació-persistent" id="toc-implementació-persistent" class="nav-link" data-scroll-target="#implementació-persistent">3. Implementació persistent</a></li>
+  <li><a href="#verificar-reiniciar-i-tornar-a-mesurar" id="toc-verificar-reiniciar-i-tornar-a-mesurar" class="nav-link" data-scroll-target="#verificar-reiniciar-i-tornar-a-mesurar">4. Verificar: reiniciar i tornar a mesurar</a></li>
+  <li><a href="#quina-garantia-has-cedit-i-per-què-és-acceptable" id="toc-quina-garantia-has-cedit-i-per-què-és-acceptable" class="nav-link" data-scroll-target="#quina-garantia-has-cedit-i-per-què-és-acceptable">5. Quina garantia has cedit, i per què és acceptable</a></li>
+  </ul></li>
+  <li><a href="#resum-dordres-per-estudiar" id="toc-resum-dordres-per-estudiar" class="nav-link" data-scroll-target="#resum-dordres-per-estudiar">Resum d’ordres per estudiar</a>
+  <ul class="collapse">
+  <li><a href="#autoavaluació" id="toc-autoavaluació" class="nav-link" data-scroll-target="#autoavaluació">Autoavaluació</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Solució: arrencada, initramfs i systemd</h1>
+<p class="subtitle lead">Model A · El servidor de la LAN party</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Aquesta guia explica <strong>què</strong> es troba a cada pregunta, <strong>com</strong> es troba, <strong>per què</strong> és així i <strong>quins errors</strong> s’han d’evitar.</p>
+<section id="part-1-inspecció-de-la-màquina-antiga" class="level1">
+<h1>Part 1 · Inspecció de la màquina antiga</h1>
+<p>Principi: <strong>només mires</strong>. Cada pregunta té una ordre que dona la dada i una interpretació que la fa útil. Respondre només el valor és la meitat de la resposta.</p>
+<section id="firmware-esp-i-lanomalia-shim-grub" class="level2">
+<h2 class="anchored" data-anchor-id="firmware-esp-i-lanomalia-shim-grub">1. Firmware, ESP i l’anomalia shim / GRUB</h2>
+<p><strong>Concepte.</strong> Amb UEFI el firmware no llegeix un sector d’arrencada: llegeix la <strong>NVRAM</strong>, que guarda entrades <code>Boot####</code> i una llista d’ordre <code>BootOrder</code>. Cada entrada és un nom més un camí: <em>partició GPT + fitxer <code>.efi</code></em> dins l’<strong>ESP</strong> (EFI System Partition, en FAT; aquí <code>vfat</code>). El firmware prova les entrades en l’ordre de <code>BootOrder</code> fins que una arrenca.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">efibootmgr</span> <span class="at">-v</span>          <span class="co"># entrades, ordre i loaders</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> /boot/efi      <span class="co"># on és muntada l'ESP i de quin tipus</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-f</span>               <span class="co"># particions i sistemes d'arxius</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-R</span> /boot/efi/EFI    <span class="co"># què hi ha dins l'ESP</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Sortida esquemàtica (els números poden variar):</p>
+<pre class="text"><code>BootCurrent: 0004
+BootOrder: 0004,0003,0000,0002,0001
+Boot0000* UiApp                 FvVol(...)/FvFile(...)
+Boot0001* UEFI Misc Device      PciRoot(0x0)/Pci(0x2,0x0)
+Boot0002* EFI Internal Shell    FvVol(...)/FvFile(...)
+Boot0003* debian   HD(1,GPT,...)/File(\EFI\debian\shimx64.efi)
+Boot0004* debian   HD(1,GPT,...)/File(\EFI\debian\grubx64.efi)</code></pre>
+<p><strong>Interpretació.</strong> Hi ha cinc entrades. Tres les crea el firmware (OVMF) i no apunten a cap <code>.efi</code> de l’ESP: el menú d’UEFI (<em>UiApp</em>), l’<em>EFI Internal Shell</em> i una entrada de dispositiu. Les altres dues, totes dues anomenades <em>debian</em>, sí que carreguen un fitxer de l’ESP (la primera partició GPT, muntada a <code>/boot/efi</code>): una el <strong>shim</strong> (<code>shimx64.efi</code>) i l’altra el <strong>GRUB directament</strong> (<code>grubx64.efi</code>).</p>
+<p><strong>Per què és una anomalia.</strong> Hi ha dues entrades pel mateix sistema amb cadenes d’arrencada <em>diferents</em>, i la que té prioritat a <code>BootOrder</code> és la que <strong>se salta el shim</strong>. Amb <em>Secure Boot</em> el firmware només confia en binaris signats amb claus que coneix: carrega el shim, el shim verifica el GRUB i aquest el nucli. Un GRUB carregat directament no entra per aquesta cadena de confiança, i amb Secure Boot activat no arrencaria. Aquí Secure Boot és desactivat (el log del nucli diu <em>Secure boot disabled</em>), per això arrenca; però és una configuració fràgil i confusa.</p>
+<p><strong>Com es corregeix</strong> (només cal explicar-ho; no s’executa). Dues maneres:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">efibootmgr</span> <span class="at">-o</span> 0003,0004,0000,0002,0001   <span class="co"># shim (0003) primer; usa els TEUS números</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">efibootmgr</span> <span class="at">-B</span> <span class="at">-b</span> 0004                    <span class="co"># o eliminar la del GRUB directe (-B esborra)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">efibootmgr</span> <span class="at">-v</span>                            <span class="co"># comprovar el resultat</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="grub-entrada-per-defecte-temps-i-fitxers" class="level2">
+<h2 class="anchored" data-anchor-id="grub-entrada-per-defecte-temps-i-fitxers">2. GRUB: entrada per defecte, temps i fitxers</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">'^GRUB_(DEFAULT|TIMEOUT|CMDLINE)'</span> /etc/default/grub</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-n</span> menuentry /boot/grub/grub.cfg <span class="kw">|</span> <span class="fu">head</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Resposta.</strong> Es defineix a <code>/etc/default/grub</code>: <code>GRUB_DEFAULT=0</code> (la primera entrada del menú, Debian GNU/Linux) i <code>GRUB_TIMEOUT=8</code> (8 segons de compte enrere abans d’arrencar-la; amb <code>GRUB_TIMEOUT_STYLE=menu</code> el menú és visible). El fitxer que GRUB <strong>llegeix de veritat</strong> és <code>/boot/grub/grub.cfg</code>.</p>
+<p><strong>Per què no s’edita <code>grub.cfg</code>.</strong> Perquè és un fitxer <em>generat</em>: <code>update-grub</code> (equivalent a <code>grub-mkconfig -o /boot/grub/grub.cfg</code>) el reescriu a partir de <code>/etc/default/grub</code> i dels scripts de <code>/etc/grub.d/</code>. Qualsevol retoc manual es perdria al proper <code>update-grub</code> o a la propera actualització del nucli.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nano</span> /etc/default/grub     </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">update-grub</span>               </span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="nucli-i-línia-dordres" class="level2">
+<h2 class="anchored" data-anchor-id="nucli-i-línia-dordres">3. Nucli i línia d’ordres</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">uname</span> <span class="at">-r</span>              <span class="co"># 6.12.107+deb13-amd64</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /proc/cmdline</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>BOOT_IMAGE=/boot/vmlinuz-6.12.107+deb13-amd64 root=UUID=17fa0a9f-3d22-4da7-84f3-99205a278029 ro console=tty0 console=ttyS0,115200n8 rootdelay=5</code></pre>
+<ul>
+<li><strong><code>root=UUID=…</code></strong>: la partició arrel, identificada per UUID (més estable que <code>/dev/sda2</code>, que depèn de l’ordre en què el nucli descobreix els discs). No el fa servir GRUB sinó el <strong>nucli i l’initramfs</strong>, que són qui ha de muntar-la. Aquí és <code>sda2</code>.</li>
+<li><strong><code>ro</code></strong>: l’arrel es munta primer en només lectura; systemd la remunta després en lectura i escriptura.</li>
+<li><strong><code>console=</code></strong>: on envia els missatges el nucli. Aquí a la pantalla (<code>tty0</code>) i al port sèrie (<code>ttyS0</code>). Per això en un QEMU sense pantalla també pots veure l’arrencada.</li>
+<li><strong><code>rootdelay=</code></strong>: espera que aparegui el disc arrel. <strong>Però</strong> l’initramfs d’aquesta Debian espera com a mínim 30 s (el temps és el màxim entre 30 i <code>rootdelay</code>), de manera que un valor de 5 no escurça res: és un paràmetre decoratiu.</li>
+</ul>
+</section>
+<section id="el-disc-nom-tipus-particions-i-controlador" class="level2">
+<h2 class="anchored" data-anchor-id="el-disc-nom-tipus-particions-i-controlador">4. El disc: nom, tipus, particions i controlador</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-o</span> NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>NAME   TYPE  SIZE FSTYPE MOUNTPOINT
+sda    disk   20G
+|-sda1 part  ~1G  vfat   /boot/efi      (ESP)
+|-sda2 part  ~18G ext4   /              (arrel)
+`-sda3 part  ~1G  swap   [SWAP]</code></pre>
+<p><strong>Resposta.</strong> El disc és <code>sda</code>, un disc <strong>SATA</strong> (QEMU emula un QEMU HARDDISK sobre un controlador <strong>AHCI</strong>), de 20 GiB amb tres particions: ESP, arrel i swap.</p>
+</section>
+<section id="linitramfs-què-conté-i-què-decideix-el-contingut" class="level2">
+<h2 class="anchored" data-anchor-id="linitramfs-què-conté-i-què-decideix-el-contingut">5. L’initramfs: què conté i què decideix el contingut</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lsinitramfs</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span>       <span class="co"># la llista és llarga: cal filtrar</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">lsinitramfs</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span> <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'/(ahci|nvme|virtio_blk|virtio_scsi|vmw_pvscsi|hv_storvsc|ext4|xfs|btrfs|zfs)\.ko'</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Resposta (taula sí/no).</strong> Només hi surten <code>ahci</code> i <code>ext4</code> (amb les seves dependències). De la resta de la llista, <strong>cap és a l’initramfs</strong>: <code>nvme</code>, <code>virtio_blk</code>, <code>virtio_scsi</code>, <code>vmw_pvscsi</code>, <code>hv_storvsc</code>, <code>xfs</code>, <code>btrfs</code> i <code>zfs</code>.</p>
+<p><strong>Qui ho decideix.</strong> La directiva <code>MODULES=</code> de <code>/etc/initramfs-tools/initramfs.conf</code>; es verifica amb <code>grep -r '^MODULES' /etc/initramfs-tools/</code>. Té quatre valors:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Valor</th>
+<th style="text-align: left;">Què porta l’initramfs</th>
+<th style="text-align: left;">Quan té sentit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>most</code></td>
+<td style="text-align: left;">Gairebé tots els controladors de disc i sistemes d’arxius</td>
+<td style="text-align: left;">Valor per defecte de Debian: serveix per a qualsevol màquina i hipervisor</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>dep</code></td>
+<td style="text-align: left;">Només els de <em>la màquina on es genera</em> (ho dedueix de <code>/sys</code>)</td>
+<td style="text-align: left;">Initramfs petit, però lligat a aquell maquinari</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>netboot</code></td>
+<td style="text-align: left;">Mòduls base i de xarxa, sense discs</td>
+<td style="text-align: left;">Arrencada per xarxa</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>list</code></td>
+<td style="text-align: left;">Només els de <code>/etc/initramfs-tools/modules</code></td>
+<td style="text-align: left;">Control total i manual</td>
+</tr>
+</tbody>
+</table>
+<p>Aquesta imatge està en <code>dep</code>: es va generar a la màquina antiga, amb disc SATA, i per això només porta <code>ahci</code> i <code>ext4</code>.</p>
+</section>
+<section id="què-sexecuta-en-fer-login-i-en-quin-ordre" class="level2">
+<h2 class="anchored" data-anchor-id="què-sexecuta-en-fer-login-i-en-quin-ordre">6. Què s’executa en fer login (i en quin ordre)</h2>
+<p>Un <em>login shell</em> de bash llegeix primer <code>/etc/profile</code> (que carrega <code>/etc/bash.bashrc</code> i, en un bucle, tots els <code>*.sh</code> de <code>/etc/profile.d/</code>) i després <strong>el primer</strong> que trobi de <code>~/.bash_profile</code>, <code>~/.bash_login</code> i <code>~/.profile</code>. Aquí només hi ha <code>~/.profile</code>, i aquest, per costum de Debian, carrega <code>~/.bashrc</code> si el shell és bash. Per això l’ordre va del més general al més particular.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-n</span> <span class="st">'lan-'</span> /etc/profile /etc/profile.d/<span class="pp">*</span> ~/.profile ~/.bashrc   <span class="co"># on apareix cada programa</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.profile <span class="kw">;</span> <span class="fu">cat</span> ~/.bashrc                                       <span class="co"># i en quin ordre es crida</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span> <span class="kw">|</span> <span class="fu">grep</span> SSH_CONNECTION                                            <span class="co"># buit a la consola</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>[lan-motd]  Servidor de la LAN party - associacio...   &lt;- /etc/profile.d/lan.sh
+[mount-check] arrel muntada: /dev/sda2                 &lt;- ~/.bashrc (cridat des de ~/.profile)
+[lan-banner]  Normes: no tocar el servidor...          &lt;- ~/.profile (DESPRÉS del ~/.bashrc)</code></pre>
+<p><strong>Què no s’executa mai.</strong> <code>lan-reset</code>: la línia és <em>comentada</em> amb <code>#</code> a <code>~/.bashrc</code>. <code>lan-ssh-notice</code>: la crida és dins un <code>if [ -n "$SSH_CONNECTION" ]</code> que només es compleix en una sessió <strong>SSH</strong> (la variable no existeix a la consola).</p>
+</section>
+</section>
+<section id="part-2-diagnòstic-i-reparació" class="level1">
+<h1>Part 2 · Diagnòstic i reparació</h1>
+<section id="bug-què-veus-i-quin-component-falla" class="level2">
+<h2 class="anchored" data-anchor-id="bug-què-veus-i-quin-component-falla">Bug: què veus i quin component falla</h2>
+<p>Amb <code>./run.sh 2</code> la màquina arrenca GRUB i el nucli, però no passa d’aquí. Passats uns 30 segons apareix:</p>
+<pre class="text"><code>Begin: Waiting for suspend/resume device ...
+Gave up waiting for suspend/resume device
+Begin: Waiting for root file system ...
+Gave up waiting for root file system device.  Common problems:
+ - Boot args (cat /proc/cmdline)
+   - Check rootdelay= (did the system wait long enough?)
+ - Missing modules (cat /proc/modules; ls /dev)
+ALERT!  UUID=17fa0a9f-3d22-4da7-84f3-99205a278029 does not exist.  Dropping to a shell!
+(initramfs)</code></pre>
+<p><strong>Lectura.</strong> L’ordre dels missatges és una pista: primer espera el dispositiu de <em>reprendre</em> (el swap, també per UUID, al mateix disc) i després l’arrel. Les dues esperes fallen pel mateix motiu: <strong>el nucli no veu el disc</strong>. El component que falla no és GRUB (el nucli ha carregat i ha arrencat) ni el <code>root=</code> (és correcte: el disc és el mateix): és <strong>l’initramfs</strong>, que no porta el controlador d’aquest disc.</p>
+<p>Des del prompt <code>(initramfs)</code> ho pots comprovar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /proc/cmdline         <span class="co"># el root=UUID és correcte</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /proc/modules         <span class="co"># mòduls carregats: no hi ha virtio_blk</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> /dev                   <span class="co"># no hi ha cap vda</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="why-per-què-passa-si-el-disc-funcionava-a-la-màquina-antiga" class="level2">
+<h2 class="anchored" data-anchor-id="why-per-què-passa-si-el-disc-funcionava-a-la-màquina-antiga">Why: per què passa, si el disc funcionava a la màquina antiga</h2>
+<p>El disc no ha canviat, però <strong>el bus sí</strong>: de SATA a virtio. L’initramfs es va generar a la màquina antiga amb <code>MODULES=dep</code>, que només hi posa els controladors del maquinari <em>d’aquella màquina</em> (<code>ahci</code>). El controlador del disc virtio és <code>virtio_blk</code>, i no hi és. El nucli tampoc el pot carregar després, perquè els mòduls són a <code>/lib/modules</code> dins l’arrel, que és precisament el que encara no pot muntar: <strong>el cercle viciós de la Part 1</strong>.</p>
+<p>El transport PCI de virtio és integrat al nucli, i per això només hi falta <code>virtio_blk</code>. Ho pots comprovar amb:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> CONFIG_VIRTIO_PCI /boot/config-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="fix-reparació-persistent-des-de-la-mateixa-màquina" class="level2">
+<h2 class="anchored" data-anchor-id="fix-reparació-persistent-des-de-la-mateixa-màquina">Fix: reparació persistent des de la mateixa màquina</h2>
+<p>L’arrel no es munta amb virtio, però sí amb SATA: per això existeix <code>./run.sh 2 rescue</code> (el mateix disc, connectat com a SATA, amb l’initramfs actual, que sí que porta <code>ahci</code>).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lsinitramfs</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'virtio|ahci'</span>   <span class="co"># confirmar: ahci hi és, virtio no</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-r</span> <span class="st">'^MODULES'</span> /etc/initramfs-tools/                            <span class="co"># MODULES=dep</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">'s/^MODULES=.*/MODULES=most/'</span> /etc/initramfs-tools/initramfs.conf</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="ex">update-initramfs</span> <span class="at">-u</span>                                                 <span class="co"># regenerar l'initramfs actual</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">lsinitramfs</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span> <span class="kw">|</span> <span class="fu">grep</span> virtio              <span class="co"># ara virtio_blk.ko hi és</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">poweroff</span>                                                            <span class="co"># i ./run.sh 2</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Variant equivalent</strong>, més mínima:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> virtio_blk <span class="op">&gt;&gt;</span> /etc/initramfs-tools/modules</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">update-initramfs</span> <span class="at">-u</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Per què cal <code>update-initramfs -u</code>.</strong> Construeix un initramfs <em>nou</em> a <code>/boot/initrd.img-&lt;versió&gt;</code> a partir de la configuració actual. Sense regenerar, el canvi de configuració no es fa servir: és un error molt freqüent.</p>
+</section>
+<section id="robustesa-quina-solució-triar-i-com-ho-faries-en-un-servidor-real" class="level2">
+<h2 class="anchored" data-anchor-id="robustesa-quina-solució-triar-i-com-ho-faries-en-un-servidor-real">Robustesa: quina solució triar, i com ho faries en un servidor real</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Avantatges</th>
+<th style="text-align: left;">Inconvenients</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>MODULES=most</code></td>
+<td style="text-align: left;">Robust: serveix per a SATA, NVMe, virtio, VMware… Si es migra de nou, no es torna a trencar</td>
+<td style="text-align: left;">Initramfs molt més gran i lent de generar</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Llista explícita (<code>virtio_blk</code>)</td>
+<td style="text-align: left;">Mínima i explícita: es veu què s’ha afegit i per què</td>
+<td style="text-align: left;">Fràgil: si torna a canviar el maquinari, caldrà afegir-ne un altre</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sense <code>rescue</code>.</strong> En un servidor real no tens aquesta facilitat. Arrenques un <strong>sistema viu</strong> (live/rescat) i entres a la màquina amb <code>chroot</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> /dev/sda2 /mnt                    <span class="co"># l'arrel (el nom el decideix el sistema viu)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> /dev/sda1 /mnt/boot/efi           <span class="co"># l'ESP, si cal tocar el carregador</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> d <span class="kw">in</span> dev dev/pts proc sys<span class="kw">;</span> <span class="cf">do</span> <span class="fu">mount</span> <span class="at">--bind</span> /<span class="va">$d</span> /mnt/<span class="va">$d</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">chroot</span> /mnt</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="ex">update-initramfs</span> <span class="at">-u</span>                     <span class="co"># ara ja estàs dins del sistema trencat</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> <span class="kw">;</span> <span class="fu">umount</span> <span class="at">-R</span> /mnt <span class="kw">;</span> <span class="ex">reboot</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="evidence-com-es-demostra-que-ha-funcionat" class="level2">
+<h2 class="anchored" data-anchor-id="evidence-com-es-demostra-que-ha-funcionat">Evidence: com es demostra que ha funcionat</h2>
+<p>Arrenca amb <code>./run.sh 2</code> (virtio, sense <code>rescue</code>) i fes login com a <code>jordi</code>. El programa <code>mount-check</code> de la Part 1 ara ensenya el dispositiu virtio:</p>
+<pre class="text"><code>[mount-check] arrel muntada: /dev/vda2          </code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span>                                                       <span class="co"># vda, vda1, vda2, vda3</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lsinitramfs</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span> <span class="kw">|</span> <span class="fu">grep</span> virtio      <span class="co"># virtio_blk.ko a l'initramfs</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-r</span> <span class="st">'^MODULES'</span> /etc/initramfs-tools/                    <span class="co"># MODULES=most (o virtio_blk a modules)</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Una evidència bona porta <strong>l’abans i el després</strong>: què havia mostrat <code>lsinitramfs</code> abans (sense virtio) i què mostra ara.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Errors típics
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Intentar arreglar-ho pel cantó equivocat: <strong>tocar GRUB</strong> o reinstal·lar-lo (no és la causa); <strong>augmentar <code>rootdelay</code></strong> (el nucli segueix sense el controlador); fer <code>modprobe</code> al prompt <code>(initramfs)</code> (el mòdul no hi és i el canvi és volàtil); o regenerar amb <code>MODULES=dep</code> sense comprovar-ho amb <code>lsinitramfs</code>.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="part-3-configuració-el-servidor-de-joc-arrenca-ràpid" class="level1">
+<h1>Part 3 · Configuració: el servidor de joc arrenca ràpid</h1>
+<p>Problema típic d’administració: una arrencada lenta.</p>
+<section id="fonaments-ordenació-i-requeriment-són-coses-diferents" class="level2">
+<h2 class="anchored" data-anchor-id="fonaments-ordenació-i-requeriment-són-coses-diferents">Fonaments: ordenació i requeriment són coses diferents</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Directiva</th>
+<th style="text-align: left;">Significat</th>
+<th style="text-align: left;">Efecte</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>After=</code> / <code>Before=</code></td>
+<td style="text-align: left;"><strong>Ordre</strong>: aquesta unitat comença després / abans de l’altra</td>
+<td style="text-align: left;">Només importa si totes dues arrenquen; fa que una <em>esperi</em> l’altra</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>Wants=</code></td>
+<td style="text-align: left;"><strong>Requeriment feble</strong>: vull que l’altra s’arrenqui</td>
+<td style="text-align: left;">Si falla, jo segueixo. No implica ordre</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>Requires=</code></td>
+<td style="text-align: left;"><strong>Requeriment fort</strong>: l’altra s’ha d’arrencar</td>
+<td style="text-align: left;">Si no arrenca o falla, jo tampoc. No implica ordre</td>
+</tr>
+</tbody>
+</table>
+<p>Les dues coses són independents: <code>Requires=</code> no ordena res i <code>After=</code> no obliga a res. Per això, per dir <em>arrenca X i espera que acabi Y</em> calen les <strong>dues</strong>. A més, un servei <code>Type=oneshot</code> es considera <strong>activant-se</strong> fins que l’script acaba, i un <code>Before=</code> que hi vagi <em>abans</em> farà esperar tot el que en depengui.</p>
+</section>
+<section id="mesurar-la-situació-inicial" class="level2">
+<h2 class="anchored" data-anchor-id="mesurar-la-situació-inicial">1. Mesurar la situació inicial</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span>                                   <span class="co"># temps total (nucli + espai d'usuari)</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span> blame                             <span class="co"># unitats més lentes (no vol dir culpables)</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span> critical-chain multi-user.target  <span class="co"># la cadena que de veritat retarda el target</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span> critical-chain game.service</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> cat mod-sync.service game.service       <span class="co"># com estan definides</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>multi-user.target @52.1s                          &lt;- esquemàtic; el valor depèn de la màquina
+`-mod-sync.service @22.0s +30.0s
+  `-basic.target @21.9s
+    `-...</code></pre>
+<p><strong>Lectura.</strong> A la màquina de proves, sense reparar, el target i el servidor arriben als ~52 s (≈ 30 s del <code>sleep</code> + ~22 s de base). El que importa és la <strong>relació</strong>: el target no s’assoleix fins que <code>mod-sync</code> acaba, i el servidor tampoc.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>blame no és critical-chain
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>blame</code> ordena per <em>durada</em>: <code>stats-report</code> (40 s) hi apareix més amunt que <code>mod-sync</code> (30 s), però corre en paral·lel i <strong>ningú no l’espera</strong>: arreglar-lo no avançaria el servidor ni un segon. <code>critical-chain</code> mostra només el que <em>bloqueja</em> el target. Qui arregla la unitat més lenta de <code>blame</code> s’ha equivocat de cadena.</p>
+</div>
+</div>
+</section>
+<section id="diagnosi-quines-línies-causen-lespera-i-per-què" class="level2">
+<h2 class="anchored" data-anchor-id="diagnosi-quines-línies-causen-lespera-i-per-què">2. Diagnosi: quines línies causen l’espera i per què</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/mod-sync.service</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">basic.target</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="dt">Before</span><span class="ot">=</span><span class="st">multi-user.target          # &lt;-- el target ha d'esperar que mod-sync acabi (Type=oneshot, 30 s)</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/local/bin/mod-sync.sh</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="dt">RemainAfterExit</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/game.service</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">mod-sync.service            # &lt;-- el servidor espera que acabi (ordre)</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="dt">Requires</span><span class="ot">=</span><span class="st">mod-sync.service         # &lt;-- i en depèn (requeriment fort)</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Hi ha <strong>dos</strong> retards encadenats. (1) <code>Before=multi-user.target</code> a <code>mod-sync</code> fa que <code>multi-user.target</code> no s’assoleixi fins que la sincronització acabi. (2) <code>After=</code> i <code>Requires=</code> a <code>game</code> fan que el servidor no comenci fins que acabi i, a més, en depengui. Cal tocar les dues: si només es treu el <code>Before=</code>, el target és ràpid però el servidor encara espera 30 s.</p>
+</section>
+<section id="implementació-persistent" class="level2">
+<h2 class="anchored" data-anchor-id="implementació-persistent">3. Implementació persistent</h2>
+<p>Les unitats ja són a <code>/etc/systemd/system</code>, així que <code>systemctl edit --full</code> edita el fitxer allà mateix:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> edit <span class="at">--full</span> mod-sync.service     <span class="co"># esborrar la línia  Before=multi-user.target</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> edit <span class="at">--full</span> game.service         <span class="co"># esborrar After= i Requires= de mod-sync</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span> verify /etc/systemd/system/mod-sync.service /etc/systemd/system/game.service</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="ex">reboot</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Edició amb un <em>drop-in</em> (no toca el fitxer original; assignar buit <strong>reinicia</strong> la llista de la directiva):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># systemctl edit mod-sync.service</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Before</span><span class="ot">=</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co"># systemctl edit game.service</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="dt">Requires</span><span class="ot">=</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Si edites el fitxer <em>a mà</em> (amb <code>nano</code>), recorda <code>systemctl daemon-reload</code>; sense recarregar, systemd segueix amb la definició vella. La persistència es demostra <strong>reiniciant</strong>: el que sobreviu al reinici és persistent.</p>
+<p><strong>Les condicions de l’enunciat, una per una.</strong> <code>mod-sync</code> ha de seguir executant-se i acabar (no s’ha desactivat, emmascarat ni esborrat; els scripts són intactes). <code>game.service</code> ha de quedar <em>habilitat</em> (<code>systemctl is-enabled game</code>) i <em>actiu</em> (<code>systemctl is-active game</code>).</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Errors típics
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Maneres de passar la prova que trenquen l’enunciat: <strong>emmascarar o desactivar</strong> <code>mod-sync</code> (deixa d’acabar), <strong>escurçar el <code>sleep</code></strong> de l’script (no es pot tocar), editar només una de les dues unitats, o oblidar el <code>daemon-reload</code>.</p>
+</div>
+</div>
+</section>
+<section id="verificar-reiniciar-i-tornar-a-mesurar" class="level2">
+<h2 class="anchored" data-anchor-id="verificar-reiniciar-i-tornar-a-mesurar">4. Verificar: reiniciar i tornar a mesurar</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span> critical-chain multi-user.target        <span class="co"># mod-sync ja NO hi surt</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span> critical-chain game.service</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-active game.service <span class="kw">;</span> <span class="ex">systemctl</span> is-enabled game.service</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /var/lib/mod-sync/last                              <span class="co"># boot_id de l'arrencada actual</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /proc/sys/kernel/random/boot_id                     <span class="co"># ha de coincidir: mod-sync ha acabat</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Resultat esperat.</strong> El target i el servidor es veuen actius uns 30 s abans que abans (a la màquina de proves, ~22 s en lloc de ~52 s) i <code>mod-sync</code> encara acaba a cada arrencada: el seu fitxer porta el <code>boot_id</code> de l’arrencada actual. El que compta és la comparació abans/després a <em>la teva</em> màquina, no els números d’aquest text.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Atenció
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>systemd-analyze</code> sense arguments pot dir Bootup is not yet finished mentre <code>mod-sync</code> i <code>stats-report</code> encara corren. No vol dir que hagis fallat: mesura el moment en què s’assoleix <code>multi-user.target</code> i en què el servidor és actiu.</p>
+</div>
+</div>
+</section>
+<section id="quina-garantia-has-cedit-i-per-què-és-acceptable" class="level2">
+<h2 class="anchored" data-anchor-id="quina-garantia-has-cedit-i-per-què-és-acceptable">5. Quina garantia has cedit, i per què és acceptable</h2>
+<p>Abans, <strong>el servidor no arrencava fins que els mods i el món eren sincronitzats</strong>: les dades eren sempre noves. Ara el servidor pot arrencar <strong>abans</strong> que acabi la sincronització i, durant uns 30 s, servir mods o món <em>antics</em>. Hem canviat la <em>consistència en arrencar</em> per la <em>disponibilitat ràpida</em>.</p>
+<p><strong>És acceptable</strong> si els jugadors no entren de seguida (el comitè vol que puguin connectar-se abans, però la partida no comença a l’instant) o si una dada antiga durant uns segons és poc greu. <strong>No ho és</strong> si una partida començada amb mods antics pot corrompre l’estat del món o desincronitzar els jugadors.</p>
+<p><strong>Alternatives que cedeixen menys.</strong></p>
+<ul>
+<li><code>Wants=</code> a <code>game.service</code> (sense <code>After=</code>) en lloc de <code>Requires=</code>: el servidor s’arrenca amb la sincronització, però sense esperar-la ni dependre’n.</li>
+<li>Fer que, acabada la sincronització, s’avisi el servidor que recarregui els mods, si el joc ho suporta.</li>
+<li><code>Type=simple</code> a <code>mod-sync</code>: el <em>job</em> d’inici acaba a l’instant i res no l’espera, però perds l’estat actiu de la unitat.</li>
+</ul>
+</section>
+</section>
+<section id="resum-dordres-per-estudiar" class="level1">
+<h1>Resum d’ordres per estudiar</h1>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Àrea</th>
+<th style="text-align: left;">Ordre</th>
+<th style="text-align: left;">Què respon</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">UEFI</td>
+<td style="text-align: left;"><code>efibootmgr -v</code>, <code>efibootmgr -o ...</code>, <code>-B -b N</code></td>
+<td style="text-align: left;">Entrades, ordre i loaders; reordenar o esborrar</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ESP</td>
+<td style="text-align: left;"><code>findmnt /boot/efi</code>, <code>lsblk -f</code></td>
+<td style="text-align: left;">On és muntada i quin sistema d’arxius té</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GRUB</td>
+<td style="text-align: left;"><code>/etc/default/grub</code>, <code>update-grub</code></td>
+<td style="text-align: left;">Configuració editable i fitxer generat</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nucli</td>
+<td style="text-align: left;"><code>uname -r</code>, <code>cat /proc/cmdline</code></td>
+<td style="text-align: left;">Versió i línia d’ordres</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Disc i controlador</td>
+<td style="text-align: left;"><code>lsblk</code>, <code>lsmod \| grep ahci</code></td>
+<td style="text-align: left;">Nom, tipus, particions i mòdul</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Initramfs</td>
+<td style="text-align: left;"><code>lsinitramfs &lt;img&gt; \| grep -E ...</code>, <code>grep -r '^MODULES' /etc/initramfs-tools/</code></td>
+<td style="text-align: left;">Què conté i què decideix el contingut</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Regenerar</td>
+<td style="text-align: left;"><code>update-initramfs -u</code></td>
+<td style="text-align: left;">Reconstrueix l’initramfs del nucli actual</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Login</td>
+<td style="text-align: left;"><code>grep -n 'lan-' /etc/profile /etc/profile.d/* ~/.profile ~/.bashrc</code></td>
+<td style="text-align: left;">Qui crida cada programa i en quin ordre</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Mesurar systemd</td>
+<td style="text-align: left;"><code>systemd-analyze [blame \| critical-chain X]</code></td>
+<td style="text-align: left;">Quant triga i què és a la cadena crítica</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Unitats</td>
+<td style="text-align: left;"><code>systemctl cat U</code>, <code>systemctl edit [--full] U</code></td>
+<td style="text-align: left;">Veure i canviar la definició</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Verificar</td>
+<td style="text-align: left;"><code>systemd-analyze verify F</code>, <code>systemctl is-active/is-enabled U</code></td>
+<td style="text-align: left;">Sintaxi i estat</td>
+</tr>
+</tbody>
+</table>
+<section id="autoavaluació" class="level2">
+<h2 class="anchored" data-anchor-id="autoavaluació">Autoavaluació</h2>
+<ol type="1">
+<li>Quina diferència hi ha entre el <code>BootOrder</code> d’UEFI i el <code>GRUB_DEFAULT</code> de GRUB?</li>
+<li>Per què un initramfs generat amb <code>MODULES=dep</code> pot trencar-se en canviar de màquina, i per què no n’hi ha prou amb <code>modprobe</code> al prompt?</li>
+<li>Per què <code>rootdelay=5</code> no canvia el temps d’espera quan l’arrel no apareix?</li>
+<li>Explica la diferència entre <code>Requires=</code> i <code>After=</code>, i digues per què per arrenca A i espera B calen les dues.</li>
+<li>Per què <code>systemd-analyze blame</code> pot enganyar-te en un diagnòstic d’arrencada lenta?</li>
+<li>Quina garantia deixes de tenir si el servidor no espera la sincronització, i quina alternativa en cedeix menys?</li>
+</ol>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiat!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiat!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/igualada\.amsa\.udl\.cat");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
