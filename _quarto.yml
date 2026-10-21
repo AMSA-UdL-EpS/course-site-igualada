@@ -13,10 +13,6 @@ website:
     left:
       - text: "Inici"
         href: index.qmd
-      - text: "Temari"
-        menu:
-          - text : "Unitat 1 · Fonaments de l'Administració de Sistemes"
-            href: modules/unit-01-fonaments/index.qmd
       - text: "Guia docent"
         href: https://guiadocent.udl.cat/html/2026-27_105013
       
