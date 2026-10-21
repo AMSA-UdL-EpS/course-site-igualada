@@ -1,0 +1,382 @@
+---
+title: "Solució: arrencada, initramfs i systemd"
+subtitle: "Model A · El servidor de la LAN party"
+lang: ca
+---
+
+Aquesta guia explica **què** es troba a cada pregunta, **com** es troba, **per què** és així i **quins errors** s'han d'evitar. 
+
+# Part 1 · Inspecció de la màquina antiga
+
+Principi: **només mires**. Cada pregunta té una ordre que dona la dada i una interpretació que la fa útil. Respondre només el valor és la meitat de la resposta.
+
+## 1. Firmware, ESP i l'anomalia shim / GRUB
+
+**Concepte.** Amb UEFI el firmware no llegeix un sector d'arrencada: llegeix la **NVRAM**, que guarda entrades `Boot####` i una llista d'ordre `BootOrder`. Cada entrada és un nom més un camí: *partició GPT + fitxer `.efi`* dins l'**ESP** (EFI System Partition, en FAT; aquí `vfat`). El firmware prova les entrades en l'ordre de `BootOrder` fins que una arrenca.
+
+```bash
+efibootmgr -v          # entrades, ordre i loaders
+findmnt /boot/efi      # on és muntada l'ESP i de quin tipus
+lsblk -f               # particions i sistemes d'arxius
+ls -R /boot/efi/EFI    # què hi ha dins l'ESP
+```
+
+Sortida esquemàtica (els números poden variar):
+
+```text
+BootCurrent: 0004
+BootOrder: 0004,0003,0000,0002,0001
+Boot0000* UiApp                 FvVol(...)/FvFile(...)
+Boot0001* UEFI Misc Device      PciRoot(0x0)/Pci(0x2,0x0)
+Boot0002* EFI Internal Shell    FvVol(...)/FvFile(...)
+Boot0003* debian   HD(1,GPT,...)/File(\EFI\debian\shimx64.efi)
+Boot0004* debian   HD(1,GPT,...)/File(\EFI\debian\grubx64.efi)
+```
+
+**Interpretació.** Hi ha cinc entrades. Tres les crea el firmware (OVMF) i no apunten a cap `.efi` de l'ESP: el menú d'UEFI (*UiApp*), l'*EFI Internal Shell* i una entrada de dispositiu. Les altres dues, totes dues anomenades *debian*, sí que carreguen un fitxer de l'ESP (la primera partició GPT, muntada a `/boot/efi`): una el **shim** (`shimx64.efi`) i l'altra el **GRUB directament** (`grubx64.efi`).
+
+**Per què és una anomalia.** Hi ha dues entrades pel mateix sistema amb cadenes d'arrencada *diferents*, i la que té prioritat a `BootOrder` és la que **se salta el shim**. Amb *Secure Boot* el firmware només confia en binaris signats amb claus que coneix: carrega el shim, el shim verifica el GRUB i aquest el nucli. Un GRUB carregat directament no entra per aquesta cadena de confiança, i amb Secure Boot activat no arrencaria. Aquí Secure Boot és desactivat (el log del nucli diu *Secure boot disabled*), per això arrenca; però és una configuració fràgil i confusa.
+
+**Com es corregeix** (només cal explicar-ho; no s'executa). Dues maneres:
+
+```bash
+efibootmgr -o 0003,0004,0000,0002,0001   # shim (0003) primer; usa els TEUS números
+efibootmgr -B -b 0004                    # o eliminar la del GRUB directe (-B esborra)
+efibootmgr -v                            # comprovar el resultat
+```
+
+## 2. GRUB: entrada per defecte, temps i fitxers
+
+```bash
+grep -E '^GRUB_(DEFAULT|TIMEOUT|CMDLINE)' /etc/default/grub
+grep -n menuentry /boot/grub/grub.cfg | head
+```
+
+**Resposta.** Es defineix a `/etc/default/grub`: `GRUB_DEFAULT=0` (la primera entrada del menú, Debian GNU/Linux) i `GRUB_TIMEOUT=8` (8 segons de compte enrere abans d'arrencar-la; amb `GRUB_TIMEOUT_STYLE=menu` el menú és visible). El fitxer que GRUB **llegeix de veritat** és `/boot/grub/grub.cfg`.
+
+**Per què no s'edita `grub.cfg`.** Perquè és un fitxer *generat*: `update-grub` (equivalent a `grub-mkconfig -o /boot/grub/grub.cfg`) el reescriu a partir de `/etc/default/grub` i dels scripts de `/etc/grub.d/`. Qualsevol retoc manual es perdria al proper `update-grub` o a la propera actualització del nucli.
+
+```bash
+nano /etc/default/grub     
+update-grub               
+```
+
+## 3. Nucli i línia d'ordres
+
+```bash
+uname -r              # 6.12.107+deb13-amd64
+cat /proc/cmdline
+```
+
+```text
+BOOT_IMAGE=/boot/vmlinuz-6.12.107+deb13-amd64 root=UUID=17fa0a9f-3d22-4da7-84f3-99205a278029 ro console=tty0 console=ttyS0,115200n8 rootdelay=5
+```
+
+- **`root=UUID=…`**: la partició arrel, identificada per UUID (més estable que `/dev/sda2`, que depèn de l'ordre en què el nucli descobreix els discs). No el fa servir GRUB sinó el **nucli i l'initramfs**, que són qui ha de muntar-la. Aquí és `sda2`.
+- **`ro`**: l'arrel es munta primer en només lectura; systemd la remunta després en lectura i escriptura.
+- **`console=`**: on envia els missatges el nucli. Aquí a la pantalla (`tty0`) i al port sèrie (`ttyS0`). Per això en un QEMU sense pantalla també pots veure l'arrencada.
+- **`rootdelay=`**: espera que aparegui el disc arrel. **Però** l'initramfs d'aquesta Debian espera com a mínim 30 s (el temps és el màxim entre 30 i `rootdelay`), de manera que un valor de 5 no escurça res: és un paràmetre decoratiu.
+
+## 4. El disc: nom, tipus, particions i controlador
+
+```bash
+lsblk -o NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT
+```
+
+```text
+NAME   TYPE  SIZE FSTYPE MOUNTPOINT
+sda    disk   20G
+|-sda1 part  ~1G  vfat   /boot/efi      (ESP)
+|-sda2 part  ~18G ext4   /              (arrel)
+`-sda3 part  ~1G  swap   [SWAP]
+```
+
+**Resposta.** El disc és `sda`, un disc **SATA** (QEMU emula un QEMU HARDDISK sobre un controlador **AHCI**), de 20 GiB amb tres particions: ESP, arrel i swap.
+
+
+## 5. L'initramfs: què conté i què decideix el contingut
+
+```bash
+ls -l /boot/initrd.img-$(uname -r)
+lsinitramfs /boot/initrd.img-$(uname -r) | wc -l       # la llista és llarga: cal filtrar
+lsinitramfs /boot/initrd.img-$(uname -r) | \
+  grep -E '/(ahci|nvme|virtio_blk|virtio_scsi|vmw_pvscsi|hv_storvsc|ext4|xfs|btrfs|zfs)\.ko'
+```
+
+**Resposta (taula sí/no).** Només hi surten `ahci` i `ext4` (amb les seves dependències). De la resta de la llista, **cap és a l'initramfs**: `nvme`, `virtio_blk`, `virtio_scsi`, `vmw_pvscsi`, `hv_storvsc`, `xfs`, `btrfs` i `zfs`.
+
+**Qui ho decideix.** La directiva `MODULES=` de `/etc/initramfs-tools/initramfs.conf`; es verifica amb `grep -r '^MODULES' /etc/initramfs-tools/`. Té quatre valors:
+
+| Valor | Què porta l'initramfs | Quan té sentit |
+|:--|:--|:--|
+| `most` | Gairebé tots els controladors de disc i sistemes d'arxius | Valor per defecte de Debian: serveix per a qualsevol màquina i hipervisor |
+| `dep` | Només els de *la màquina on es genera* (ho dedueix de `/sys`) | Initramfs petit, però lligat a aquell maquinari |
+| `netboot` | Mòduls base i de xarxa, sense discs | Arrencada per xarxa |
+| `list` | Només els de `/etc/initramfs-tools/modules` | Control total i manual |
+
+Aquesta imatge està en `dep`: es va generar a la màquina antiga, amb disc SATA, i per això només porta `ahci` i `ext4`.
+
+
+## 6. Què s'executa en fer login (i en quin ordre)
+
+Un *login shell* de bash llegeix primer `/etc/profile` (que carrega `/etc/bash.bashrc` i, en un bucle, tots els `*.sh` de `/etc/profile.d/`) i després **el primer** que trobi de `~/.bash_profile`, `~/.bash_login` i `~/.profile`. Aquí només hi ha `~/.profile`, i aquest, per costum de Debian, carrega `~/.bashrc` si el shell és bash. Per això l'ordre va del més general al més particular.
+
+```bash
+grep -n 'lan-' /etc/profile /etc/profile.d/* ~/.profile ~/.bashrc   # on apareix cada programa
+cat ~/.profile ; cat ~/.bashrc                                       # i en quin ordre es crida
+env | grep SSH_CONNECTION                                            # buit a la consola
+```
+
+```text
+[lan-motd]  Servidor de la LAN party - associacio...   <- /etc/profile.d/lan.sh
+[mount-check] arrel muntada: /dev/sda2                 <- ~/.bashrc (cridat des de ~/.profile)
+[lan-banner]  Normes: no tocar el servidor...          <- ~/.profile (DESPRÉS del ~/.bashrc)
+```
+
+**Què no s'executa mai.** `lan-reset`: la línia és *comentada* amb `#` a `~/.bashrc`. `lan-ssh-notice`: la crida és dins un `if [ -n "$SSH_CONNECTION" ]` que només es compleix en una sessió **SSH** (la variable no existeix a la consola).
+
+
+# Part 2 · Diagnòstic i reparació
+
+## Bug: què veus i quin component falla
+
+Amb `./run.sh 2` la màquina arrenca GRUB i el nucli, però no passa d'aquí. Passats uns 30 segons apareix:
+
+```text
+Begin: Waiting for suspend/resume device ...
+Gave up waiting for suspend/resume device
+Begin: Waiting for root file system ...
+Gave up waiting for root file system device.  Common problems:
+ - Boot args (cat /proc/cmdline)
+   - Check rootdelay= (did the system wait long enough?)
+ - Missing modules (cat /proc/modules; ls /dev)
+ALERT!  UUID=17fa0a9f-3d22-4da7-84f3-99205a278029 does not exist.  Dropping to a shell!
+(initramfs)
+```
+
+**Lectura.** L'ordre dels missatges és una pista: primer espera el dispositiu de *reprendre* (el swap, també per UUID, al mateix disc) i després l'arrel. Les dues esperes fallen pel mateix motiu: **el nucli no veu el disc**. El component que falla no és GRUB (el nucli ha carregat i ha arrencat) ni el `root=` (és correcte: el disc és el mateix): és **l'initramfs**, que no porta el controlador d'aquest disc.
+
+Des del prompt `(initramfs)` ho pots comprovar:
+
+```bash
+cat /proc/cmdline         # el root=UUID és correcte
+cat /proc/modules         # mòduls carregats: no hi ha virtio_blk
+ls /dev                   # no hi ha cap vda
+```
+
+## Why: per què passa, si el disc funcionava a la màquina antiga
+
+El disc no ha canviat, però **el bus sí**: de SATA a virtio. L'initramfs es va generar a la màquina antiga amb `MODULES=dep`, que només hi posa els controladors del maquinari *d'aquella màquina* (`ahci`). El controlador del disc virtio és `virtio_blk`, i no hi és. El nucli tampoc el pot carregar després, perquè els mòduls són a `/lib/modules` dins l'arrel, que és precisament el que encara no pot muntar: **el cercle viciós de la Part 1**.
+
+El transport PCI de virtio és integrat al nucli, i per això només hi falta `virtio_blk`. Ho pots comprovar amb:
+
+```bash
+grep CONFIG_VIRTIO_PCI /boot/config-$(uname -r)
+```
+
+## Fix: reparació persistent des de la mateixa màquina
+
+L'arrel no es munta amb virtio, però sí amb SATA: per això existeix `./run.sh 2 rescue` (el mateix disc, connectat com a SATA, amb l'initramfs actual, que sí que porta `ahci`).
+
+```bash
+lsinitramfs /boot/initrd.img-$(uname -r) | grep -E 'virtio|ahci'   # confirmar: ahci hi és, virtio no
+grep -r '^MODULES' /etc/initramfs-tools/                            # MODULES=dep
+sed -i 's/^MODULES=.*/MODULES=most/' /etc/initramfs-tools/initramfs.conf
+update-initramfs -u                                                 # regenerar l'initramfs actual
+lsinitramfs /boot/initrd.img-$(uname -r) | grep virtio              # ara virtio_blk.ko hi és
+poweroff                                                            # i ./run.sh 2
+```
+
+**Variant equivalent**, més mínima: 
+
+```bash
+echo virtio_blk >> /etc/initramfs-tools/modules
+update-initramfs -u
+```
+
+**Per què cal `update-initramfs -u`.** Construeix un initramfs *nou* a `/boot/initrd.img-<versió>` a partir de la configuració actual. Sense regenerar, el canvi de configuració no es fa servir: és un error molt freqüent.
+
+## Robustesa: quina solució triar, i com ho faries en un servidor real
+
+|  | Avantatges | Inconvenients |
+|:--|:--|:--|
+| `MODULES=most` | Robust: serveix per a SATA, NVMe, virtio, VMware... Si es migra de nou, no es torna a trencar | Initramfs molt més gran i lent de generar |
+| Llista explícita (`virtio_blk`) | Mínima i explícita: es veu què s'ha afegit i per què | Fràgil: si torna a canviar el maquinari, caldrà afegir-ne un altre |
+
+
+**Sense `rescue`.** En un servidor real no tens aquesta facilitat. Arrenques un **sistema viu** (live/rescat) i entres a la màquina amb `chroot`:
+
+```bash
+mount /dev/sda2 /mnt                    # l'arrel (el nom el decideix el sistema viu)
+mount /dev/sda1 /mnt/boot/efi           # l'ESP, si cal tocar el carregador
+for d in dev dev/pts proc sys; do mount --bind /$d /mnt/$d; done
+chroot /mnt
+update-initramfs -u                     # ara ja estàs dins del sistema trencat
+exit ; umount -R /mnt ; reboot
+```
+
+## Evidence: com es demostra que ha funcionat
+
+Arrenca amb `./run.sh 2` (virtio, sense `rescue`) i fes login com a `jordi`. El programa `mount-check` de la Part 1 ara ensenya el dispositiu virtio:
+
+```text
+[mount-check] arrel muntada: /dev/vda2          
+```
+
+```bash
+lsblk                                                       # vda, vda1, vda2, vda3
+lsinitramfs /boot/initrd.img-$(uname -r) | grep virtio      # virtio_blk.ko a l'initramfs
+grep -r '^MODULES' /etc/initramfs-tools/                    # MODULES=most (o virtio_blk a modules)
+```
+
+Una evidència bona porta **l'abans i el després**: què havia mostrat `lsinitramfs` abans (sense virtio) i què mostra ara.
+
+::: {.callout-warning}
+## Errors típics
+Intentar arreglar-ho pel cantó equivocat: **tocar GRUB** o reinstal·lar-lo (no és la causa); **augmentar `rootdelay`** (el nucli segueix sense el controlador); fer `modprobe` al prompt `(initramfs)` (el mòdul no hi és i el canvi és volàtil); o regenerar amb `MODULES=dep` sense comprovar-ho amb `lsinitramfs`.
+:::
+
+# Part 3 · Configuració: el servidor de joc arrenca ràpid
+
+Problema típic d'administració: una arrencada lenta. 
+
+## Fonaments: ordenació i requeriment són coses diferents
+
+| Directiva | Significat | Efecte |
+|:--|:--|:--|
+| `After=` / `Before=` | **Ordre**: aquesta unitat comença després / abans de l'altra | Només importa si totes dues arrenquen; fa que una *esperi* l'altra |
+| `Wants=` | **Requeriment feble**: vull que l'altra s'arrenqui | Si falla, jo segueixo. No implica ordre |
+| `Requires=` | **Requeriment fort**: l'altra s'ha d'arrencar | Si no arrenca o falla, jo tampoc. No implica ordre |
+
+Les dues coses són independents: `Requires=` no ordena res i `After=` no obliga a res. Per això, per dir *arrenca X i espera que acabi Y* calen les **dues**. A més, un servei `Type=oneshot` es considera **activant-se** fins que l'script acaba, i un `Before=` que hi vagi *abans* farà esperar tot el que en depengui.
+
+## 1. Mesurar la situació inicial
+
+```bash
+systemd-analyze                                   # temps total (nucli + espai d'usuari)
+systemd-analyze blame                             # unitats més lentes (no vol dir culpables)
+systemd-analyze critical-chain multi-user.target  # la cadena que de veritat retarda el target
+systemd-analyze critical-chain game.service
+systemctl cat mod-sync.service game.service       # com estan definides
+```
+
+```text
+multi-user.target @52.1s                          <- esquemàtic; el valor depèn de la màquina
+`-mod-sync.service @22.0s +30.0s
+  `-basic.target @21.9s
+    `-...
+```
+
+**Lectura.** A la màquina de proves, sense reparar, el target i el servidor arriben als ~52 s (≈ 30 s del `sleep` + ~22 s de base). El que importa és la **relació**: el target no s'assoleix fins que `mod-sync` acaba, i el servidor tampoc.
+
+::: {.callout-note}
+## blame no és critical-chain
+`blame` ordena per *durada*: `stats-report` (40 s) hi apareix més amunt que `mod-sync` (30 s), però corre en paral·lel i **ningú no l'espera**: arreglar-lo no avançaria el servidor ni un segon. `critical-chain` mostra només el que *bloqueja* el target. Qui arregla la unitat més lenta de `blame` s'ha equivocat de cadena.
+:::
+
+## 2. Diagnosi: quines línies causen l'espera i per què
+
+```ini
+# /etc/systemd/system/mod-sync.service
+[Unit]
+After=basic.target
+Before=multi-user.target          # <-- el target ha d'esperar que mod-sync acabi (Type=oneshot, 30 s)
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/mod-sync.sh
+RemainAfterExit=yes
+
+# /etc/systemd/system/game.service
+[Unit]
+After=mod-sync.service            # <-- el servidor espera que acabi (ordre)
+Requires=mod-sync.service         # <-- i en depèn (requeriment fort)
+```
+
+Hi ha **dos** retards encadenats. (1) `Before=multi-user.target` a `mod-sync` fa que `multi-user.target` no s'assoleixi fins que la sincronització acabi. (2) `After=` i `Requires=` a `game` fan que el servidor no comenci fins que acabi i, a més, en depengui. Cal tocar les dues: si només es treu el `Before=`, el target és ràpid però el servidor encara espera 30 s.
+
+## 3. Implementació persistent
+
+Les unitats ja són a `/etc/systemd/system`, així que `systemctl edit --full` edita el fitxer allà mateix:
+
+```bash
+systemctl edit --full mod-sync.service     # esborrar la línia  Before=multi-user.target
+systemctl edit --full game.service         # esborrar After= i Requires= de mod-sync
+systemd-analyze verify /etc/systemd/system/mod-sync.service /etc/systemd/system/game.service
+reboot
+```
+
+Edició amb un *drop-in* (no toca el fitxer original; assignar buit **reinicia** la llista de la directiva):
+
+```ini
+# systemctl edit mod-sync.service
+[Unit]
+Before=
+
+# systemctl edit game.service
+[Unit]
+After=
+Requires=
+```
+
+Si edites el fitxer *a mà* (amb `nano`), recorda `systemctl daemon-reload`; sense recarregar, systemd segueix amb la definició vella. La persistència es demostra **reiniciant**: el que sobreviu al reinici és persistent.
+
+**Les condicions de l'enunciat, una per una.** `mod-sync` ha de seguir executant-se i acabar (no s'ha desactivat, emmascarat ni esborrat; els scripts són intactes). `game.service` ha de quedar *habilitat* (`systemctl is-enabled game`) i *actiu* (`systemctl is-active game`).
+
+::: {.callout-warning}
+## Errors típics
+Maneres de passar la prova que trenquen l'enunciat: **emmascarar o desactivar** `mod-sync` (deixa d'acabar), **escurçar el `sleep`** de l'script (no es pot tocar), editar només una de les dues unitats, o oblidar el `daemon-reload`.
+:::
+
+## 4. Verificar: reiniciar i tornar a mesurar
+
+```bash
+systemd-analyze critical-chain multi-user.target        # mod-sync ja NO hi surt
+systemd-analyze critical-chain game.service
+systemctl is-active game.service ; systemctl is-enabled game.service
+cat /var/lib/mod-sync/last                              # boot_id de l'arrencada actual
+cat /proc/sys/kernel/random/boot_id                     # ha de coincidir: mod-sync ha acabat
+```
+
+**Resultat esperat.** El target i el servidor es veuen actius uns 30 s abans que abans (a la màquina de proves, ~22 s en lloc de ~52 s) i `mod-sync` encara acaba a cada arrencada: el seu fitxer porta el `boot_id` de l'arrencada actual. El que compta és la comparació abans/després a *la teva* màquina, no els números d'aquest text.
+
+::: {.callout-note}
+## Atenció
+`systemd-analyze` sense arguments pot dir Bootup is not yet finished mentre `mod-sync` i `stats-report` encara corren. No vol dir que hagis fallat: mesura el moment en què s'assoleix `multi-user.target` i en què el servidor és actiu.
+:::
+
+## 5. Quina garantia has cedit, i per què és acceptable
+
+Abans, **el servidor no arrencava fins que els mods i el món eren sincronitzats**: les dades eren sempre noves. Ara el servidor pot arrencar **abans** que acabi la sincronització i, durant uns 30 s, servir mods o món *antics*. Hem canviat la *consistència en arrencar* per la *disponibilitat ràpida*.
+
+**És acceptable** si els jugadors no entren de seguida (el comitè vol que puguin connectar-se abans, però la partida no comença a l'instant) o si una dada antiga durant uns segons és poc greu. **No ho és** si una partida començada amb mods antics pot corrompre l'estat del món o desincronitzar els jugadors.
+
+**Alternatives que cedeixen menys.**
+
+- `Wants=` a `game.service` (sense `After=`) en lloc de `Requires=`: el servidor s'arrenca amb la sincronització, però sense esperar-la ni dependre'n.
+- Fer que, acabada la sincronització, s'avisi el servidor que recarregui els mods, si el joc ho suporta.
+- `Type=simple` a `mod-sync`: el *job* d'inici acaba a l'instant i res no l'espera, però perds l'estat actiu de la unitat.
+
+# Resum d'ordres per estudiar
+
+| Àrea | Ordre | Què respon |
+|:--|:--|:--|
+| UEFI | `efibootmgr -v`, `efibootmgr -o ...`, `-B -b N` | Entrades, ordre i loaders; reordenar o esborrar |
+| ESP | `findmnt /boot/efi`, `lsblk -f` | On és muntada i quin sistema d'arxius té |
+| GRUB | `/etc/default/grub`, `update-grub` | Configuració editable i fitxer generat |
+| Nucli | `uname -r`, `cat /proc/cmdline` | Versió i línia d'ordres |
+| Disc i controlador | `lsblk`, `lsmod \| grep ahci` | Nom, tipus, particions i mòdul |
+| Initramfs | `lsinitramfs <img> \| grep -E ...`, `grep -r '^MODULES' /etc/initramfs-tools/` | Què conté i què decideix el contingut |
+| Regenerar | `update-initramfs -u` | Reconstrueix l'initramfs del nucli actual |
+| Login | `grep -n 'lan-' /etc/profile /etc/profile.d/* ~/.profile ~/.bashrc` | Qui crida cada programa i en quin ordre |
+| Mesurar systemd | `systemd-analyze [blame \| critical-chain X]` | Quant triga i què és a la cadena crítica |
+| Unitats | `systemctl cat U`, `systemctl edit [--full] U` | Veure i canviar la definició |
+| Verificar | `systemd-analyze verify F`, `systemctl is-active/is-enabled U` | Sintaxi i estat |
+
+## Autoavaluació
+
+1. Quina diferència hi ha entre el `BootOrder` d'UEFI i el `GRUB_DEFAULT` de GRUB?
+2. Per què un initramfs generat amb `MODULES=dep` pot trencar-se en canviar de màquina, i per què no n'hi ha prou amb `modprobe` al prompt?
+3. Per què `rootdelay=5` no canvia el temps d'espera quan l'arrel no apareix?
+4. Explica la diferència entre `Requires=` i `After=`, i digues per què per arrenca A i espera B calen les dues.
+5. Per què `systemd-analyze blame` pot enganyar-te en un diagnòstic d'arrencada lenta?
+6. Quina garantia deixes de tenir si el servidor no espera la sincronització, i quina alternativa en cedeix menys?

@@ -21,6 +21,72 @@ lang: ca
 - Els fitxers de les unitats d'administrador viuen a `/etc/systemd/system/`.
 :::
 
+
+::: {.exercici}
+Un administrador crea la unitat següent:
+
+```{.ini}
+# /etc/systemd/system/cua-treball.service
+[Unit]
+Description=Procés de treball de llarga durada
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/sleep infinity
+```
+
+A continuació executa:
+
+```bash
+sudo systemctl start cua-treball.service
+```
+
+El servei queda actiu. Després de reiniciar la màquina, però, el servei no s'ha iniciat.
+
+1. Per què pot estar actiu ara però no iniciar-se automàticament després d'un reinici?
+2. Quina diferència hi ha entre `start`, `enable` i `enable --now`?
+3. Quina ordre utilitzaries per configurar l'inici automàtic i activar el servei immediatament? Què cal canviar a la unitat?
+4. Com comprovaries si està habilitat i si està en execució?
+
+**Repte:** si s'edita el fitxer d'una unitat ja carregada, quina ordre fa que systemd en torni a llegir la configuració? Què passa si no es fa?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. `systemctl start` inicia la unitat en la sessió actual, però no crea cap enllaç d'arrencada. A més, la unitat no té secció `[Install]`: no diu a quin objectiu s'ha d'enllaçar, i per tant `enable` no té res a fer.
+2. `start` activa la unitat **ara**; `enable` crea els enllaços definits a `[Install]` perquè s'activi **en arrencar**; `enable --now` fa les dues coses.
+3. Cal afegir a la unitat:
+
+   ```{.ini}
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   i després habilitar-la i iniciar-la:
+
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now cua-treball.service
+   ```
+4. Per comprovar-ho:
+
+   ```bash
+   systemctl is-enabled cua-treball.service
+   systemctl is-active cua-treball.service
+   systemctl status cua-treball.service
+   ```
+
+   `is-enabled` retorna `enabled`, `disabled`, `static` (la unitat no té `[Install]`; només s'activa per dependència) o `masked`, entre d'altres.
+
+**Repte.** `sudo systemctl daemon-reload` fa que systemd torni a llegir els fitxers de les unitats i reconstrueixi les dependències. Sense aquesta ordre, systemd continua usant la versió en memòria i avisa que el fitxer ha canviat al disc. No reinicia cap servei: un servei en marxa continua executant-se amb la configuració antiga fins que es faci `restart`.
+
+`enable` també recarrega la configuració en acabar, però és bona pràctica fer el `daemon-reload` explícit després d'editar un fitxer i abans del `start` o `restart`.
+:::
+
+</details>
+
 ---
 
 ::: {.exercici}
@@ -37,7 +103,7 @@ ExecStart=/bin/echo hola
 S'executa `sudo systemctl start salutacio.service` i després `systemctl status salutacio.service`.
 
 1. Quin valor té la línia `Active:`? Indica un error?
-2. Escriu, en ordre, les línies que apareixen al *journal*.
+2. Descriu, en ordre, els esdeveniments que apareixen al *journal* (no cal el text literal).
 
 **Repte:** què canvia si s'afegeix `RemainAfterExit=yes` a `[Service]`?
 :::
@@ -46,8 +112,8 @@ S'executa `sudo systemctl start salutacio.service` i després `systemctl status 
 <summary><b>Pots veure el raonament</b></summary>
 
 :::{.solucio}
-1. `inactive (dead)`. **No** és un error: el procés ha acabat amb codi 0 i, com que un `oneshot` no té cap procés en marxa, la unitat torna a quedar inactiva.
-2. En aquest ordre:
+1. `inactive (dead)`. **No** és un error: el procés ha acabat amb codi 0 i, com que un `oneshot` no té cap procés en marxa, la unitat torna a quedar inactiva. `status` mostra també `status=0/SUCCESS` a la línia del procés.
+2. Ordre dels esdeveniments: (1) systemd anuncia l'inici de la unitat; (2) `echo` escriu `hola`; (3) systemd informa que la unitat s'ha desactivat correctament; (4) systemd informa que la unitat ha acabat. Un exemple de sortida:
 
 ```{.text}
 Starting salutacio.service - Salutació...
@@ -106,14 +172,14 @@ S'executa `sudo systemctl enable web.service`.
 1. Quins enllaços simbòlics es creen? On apunta cadascun?
 2. S'ha iniciat `webd`?
 
-**Repte:** què és `servidor.service` després de l'`enable`?
+**Repte:** què és `servidor.service` després de l'`enable`? Com ho comprovaries?
 :::
 
 <details>
 <summary><b>Pots veure el raonament</b></summary>
 
 :::{.solucio}
-1. Quatre enllaços, un per cada línia de `[Install]` (i per `Also=`, que habilita també el `socket` segons el seu propi `[Install]`):
+1. Quatre enllaços: un per **cada objectiu** de `WantedBy=` (dos: `multi-user.target` i `graphical.target`), un per l'àlies (`Alias=`) i un pel `[Install]` del socket, que habilita `Also=`.
 
 ```{.text}
 Created symlink /etc/systemd/system/servidor.service → /etc/systemd/system/web.service.
@@ -132,7 +198,7 @@ flowchart LR
 
 2. **No.** `enable` només prepara l'arrencada següent. Per activar-lo ara caldria `start` (o `enable --now`).
 
-**Repte.** `servidor.service` és un **nom alternatiu** (àlies) de la mateixa unitat: un enllaç simbòlic cap a `web.service`. No és una segona unitat.
+**Repte.** `servidor.service` és un **nom alternatiu** (àlies) de la mateixa unitat: un enllaç simbòlic cap a `web.service`. No és una segona unitat. Es pot comprovar amb `ls -l /etc/systemd/system/servidor.service` i amb `systemctl status servidor.service`, que mostra la unitat `web.service`.
 :::
 
 </details>
@@ -182,74 +248,9 @@ sequenceDiagram
     Note over D: procés principal del servei
 ```
 
-Amb `forking`, la sortida del pare és el senyal d'ja estic a punt; `PIDFile=` li diu a systemd **quin** és el procés que queda (el fill).
+Amb `forking`, la sortida del pare és el senyal ja estic a punt; `PIDFile=` li diu a systemd **quin** és el procés que queda (el fill).
 
-**Pregunta extra.** Amb `Type=simple`, el procés principal seria el **pare**. Quan surt amb codi 0, systemd considera que el servei ha acabat i el desactiva; en fer-ho, mata els altres processos del grup de control, el fill inclòs. El dimoni moriria pocs mil·lisegons després de néixer (vegeu l'exercici següent).
-:::
-
-</details>
-
----
-
-::: {.exercici}
-```{.sh}
-#!/bin/sh
-# /usr/local/bin/script.sh
-sleep 600 &
-exit 0
-```
-
-```{.ini}
-# variant A
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/script.sh
-```
-
-```{.ini}
-# variant B
-[Service]
-Type=simple
-KillMode=process
-ExecStart=/usr/local/bin/script.sh
-```
-
-S'inicia cada variant amb `systemctl start` i es mira al cap d'uns segons.
-
-1. A la variant A: en quin estat queda la unitat? Segueix viu `sleep`?
-2. A la variant B: i ara? Qui és el pare de `sleep`?
-
-**Repte:** relaciona-ho amb l'exercici de `fork()` en què el nét sobrevivia al seu pare.
-:::
-
-<details>
-<summary><b>Pots veure el raonament</b></summary>
-
-:::{.solucio}
-1. **A:** `inactive (dead)`. El procés principal (la *shell*) ha sortit amb codi 0, i amb `Type=simple` això vol dir que el servei ha acabat. Amb `KillMode=control-group` (per defecte), systemd envia `SIGTERM` a **tots** els processos que queden al grup de control: `sleep` mor.
-
-```{mermaid}
-sequenceDiagram
-    autonumber
-    participant S as systemd
-    participant SH as script.sh
-    participant SL as sleep
-
-    S->>SH: fork + execve
-    SH->>SL: fork + execve
-    SH-->>S: exit 0
-    S->>S: servei acabat, neteja del cgroup
-    S->>SL: SIGTERM
-    Note over SL: mor
-```
-
-2. **B:** la unitat també queda inactiva, però amb `KillMode=process` només es mata el procés principal. `sleep` **sobreviu**; com que el seu pare ha mort, l'adopta el PID 1 (systemd). Al *journal* hi apareix un avís com:
-
-```{.text}
-script.service: Unit process 4321 (sleep) remains running after unit stopped.
-```
-
-**Repte.** És exactament el cas del nét **orfe**: en morir el pare, el fill passa a ser fill del PID 1. La diferència és que systemd, per defecte, no deixa que això passi dins d'un servei: li ho impedeix amb el grup de control. Per això `KillMode=process` es desaconsella: permet que processos escapin de la gestió del servei.
+**Pregunta extra.** Amb `Type=simple`, el procés principal seria el **pare**. Quan surt amb codi 0, systemd considera que el servei ha acabat i el desactiva; en fer-ho, neteja el grup de control i el fill també es mata.
 :::
 
 </details>
@@ -278,19 +279,19 @@ Les unitats `a`, `b` i `c` són `Type=simple` i executen `/usr/bin/sleep infinit
 
 :::{.solucio}
 1. Les **quatre**: `a` arrossega `b` (`Wants=`), `b` arrossega `c`, i `c` arrossega `d` (`Requires=`).
-2. `d` falla (`ExecStart=/bin/false` surt amb codi 1): `failed`. `c` té `After=d` + `Requires=d`, així que **no arriba a iniciar-se**: *Dependency failed for c.service*, i queda `inactive`. En canvi, `b` i `a` només tenen `Wants=`: una fallada no es propaga cap amunt a través d'un requeriment feble, i **s'inicien normalment** (`active (running)`).
+2. `d` falla (`ExecStart=/bin/false` surt amb codi 1): `failed`. `c` té `Requires=d` + `After=d`: espera que `d` acabi i, com que falla, **no s'arriba a iniciar** (*Dependency failed for c.service*); `systemctl status c` el mostra com `failed (Result: dependency)`. En canvi, `b` i `a` només tenen `Wants=`: una fallada no es propaga cap amunt a través d'un requeriment feble, i **s'inicien normalment** (`active (running)`).
 3. **No.** El treball de `a` ha tingut èxit: les fallades de les unitats desitjades amb `Wants=` no compten.
 
 ```{mermaid}
 flowchart TD
     A["a.service · active"] -->|"Wants"| B["b.service · active"]
-    B -->|"Wants"| C["c.service · inactive · Dependency failed"]
+    B -->|"Wants"| C["c.service · failed (dependency)"]
     C -->|"Requires + After"| D["d.service · failed"]
 ```
 
-**Repte.** Ara la fallada **puja per tota la cadena**: `d` falla → `c` no s'inicia → `b` (té `Requires=c` + `After=c`) tampoc → `a` tampoc. Les tres queden `inactive`, i `systemctl start` acaba amb error: *A dependency job for a.service failed. See 'journalctl -xe' for details.*
+**Repte.** Ara la fallada **puja per tota la cadena**: `d` falla → `c` no s'inicia → `b` (té `Requires=c` + `After=c`) tampoc → `a` tampoc. Les tres queden `failed (Result: dependency)`, i `systemctl start` acaba amb error: *A dependency job for a.service failed. See 'journalctl -xe' for details.*
 
-`Requires=` propaga les fallades d'inici **només si** hi ha també `After=` sobre la unitat que falla.
+Amb `After=`, la unitat dependent espera que la requerida acabi d'iniciar-se i, si falla, el seu inici es cancel·la. **Sense** `After=`, les dues unitats s'inicien en paral·lel i el resultat és menys previsible. Per això, a la pràctica, `Requires=` es combina gairebé sempre amb `After=`.
 :::
 
 </details>
@@ -298,7 +299,7 @@ flowchart TD
 ---
 
 ::: {.exercici}
-Un programa pot acabar de cinc maneres. Per a cada causa i per a cada valor de `Restart=`, digues si systemd **reinicia** el servei (sí / no):
+Un programa pot acabar de cinc maneres. Per a cada causa i per a cada valor de `Restart=`, digues si systemd **reinicia** el servei (sí / no). El servei és `Type=simple`.
 
 | Causa | `always` | `on-success` | `on-failure` | `on-abnormal` |
 |:------|:--------:|:------------:|:------------:|:-------------:|
@@ -326,7 +327,9 @@ Un programa pot acabar de cinc maneres. Per a cada causa i per a cada valor de `
 - Per a systemd, una sortida **neta** és el codi 0 **o** un dels senyals `SIGHUP`, `SIGINT`, `SIGTERM` i `SIGPIPE`. Per això `SIGTERM` es comporta com `exit(0)`, i no com un error.
 - Una aturada explícita amb `systemctl stop` **mai** provoca un reinici, sigui quin sigui el valor.
 
-**Repte.** Bucle: el servei s'inicia, surt amb 0, `always` el torna a iniciar, i així successivament. Amb 0,1 s de retard, es superen els 5 inicis en 10 s en menys d'un segon. La unitat queda `failed` amb el resultat `start-limit-hit`.
+**Repte.** Bucle: el servei s'inicia, surt amb 0, `always` el torna a iniciar, i així successivament. Amb 0,1 s de retard, es superen els 5 inicis en 10 s en menys d'un segon. La unitat queda `failed` amb el resultat `start-limit-hit`. Per recuperar-la, cal corregir la causa i executar `systemctl reset-failed`.
+
+Cal tenir en compte que `Restart=always` **no** és vàlid per a `Type=oneshot`.
 :::
 
 </details>
@@ -356,6 +359,7 @@ ExecStart=/usr/sbin/webd --port 8080
 
 1. Quina ordre s'executa, i amb quin valor de `MODE`?
 2. S'afegeix `30-log.conf` amb `ExecStart=/usr/sbin/webd --port 8080 --verbose` (sense línia buida abans). Què passa?
+3. Amb quina ordre es veu la unitat efectiva? Amb quina ordre es crearia un fragment com `20-port.conf` sense escriure el camí a mà?
 
 **Repte:** i si `web.service` fos `Type=oneshot`?
 :::
@@ -378,7 +382,7 @@ flowchart LR
 web.service: Service has more than one ExecStart= setting, which is only allowed for Type=oneshot services. Refusing.
 ```
 
-La unitat efectiva es veu amb `systemctl cat web.service`.
+3. La unitat efectiva (fitxer original i fragments) es veu amb `systemctl cat web.service`. L'ordre `sudo systemctl edit web.service` obre un editor i desa el fragment com `/etc/systemd/system/web.service.d/override.conf`; en acabar fa el `daemon-reload` automàticament. Així no es modifica mai el fitxer del paquet, que una actualització sobreescriuria.
 
 **Repte.** Un `oneshot` admet diverses línies `ExecStart=` i les executa **en seqüència**, en l'ordre en què apareixen. Si una falla, les següents no s'executen.
 :::
@@ -388,16 +392,24 @@ La unitat efectiva es veu amb `systemctl cat web.service`.
 ---
 
 ::: {.exercici}
-El servei `informes.service` té aquesta configuració:
+El servei `informes.service` no s'inicia. La unitat és:
 
 ```{.ini}
+# /etc/systemd/system/informes.service
+[Unit]
+Description=Generació d'informes
+
 [Service]
+Type=exec
 User=informes
 WorkingDirectory=/srv/informes
 ExecStart=/opt/informes/bin/informesd
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-Aquests són tres registres de fallades diferents:
+Aquests són tres registres de fallades **diferents** (cada un correspon a un escenari diferent):
 
 ```{.text}
 ── Registre A ──
@@ -420,19 +432,99 @@ informes.service: Failed with result 'exit-code'.
 ```
 
 1. Per a cada registre, quina línia de la unitat (o quin element del sistema) és la causa?
-2. Qui genera els codis `200`–`243`: el programa o systemd? S'ha arribat a executar `informesd` en algun cas?
+2. Qui genera els codis `217/USER`, `200/CHDIR` i `203/EXEC`: el programa o systemd? S'ha arribat a executar `informesd` en algun cas?
 3. Amb `Type=simple`, `systemctl start` retorna error en algun dels tres casos? I amb `Type=exec`?
+4. Per al registre A: quines ordres utilitzaries per comprovar si l'usuari existeix, validar la unitat, corregir el problema i tornar a provar el servei?
+
+**Repte:** el registre C també apareix si el fitxer existeix però no té permís d'execució. Quin canvi hi ha al missatge i com ho corregiries?
 :::
 
 <details>
 <summary><b>Pots veure el raonament</b></summary>
 
 :::{.solucio}
-1. **A:** `User=informes`: l'usuari no existeix. **B:** `WorkingDirectory=/srv/informes`: el directori no existeix. **C:** `ExecStart=`: el binari no existeix o no és executable.
-2. Els genera **systemd**; estan documentats a `systemd.exec(5)`. El pas que ha fallat és al nom (`USER`, `CHDIR`, `EXEC`): el procés fill de systemd ha fallat mentre **es preparava** el context d'execució. `informesd` **no s'ha arribat a executar** en cap cas: el missatge no ve del programa.
-3. Amb `simple`, **no**: `start` només espera que es faci el `fork()`, i l'error només es veu al *journal* o a `systemctl status`. Amb `exec`, **sí**: systemd espera que l'`execve()` tingui èxit, i en els tres casos la fallada ve abans.
+1. **A:** `User=informes`: l'usuari no existeix (el missatge *No such process* és un `ESRCH` poc intuïtiu). **B:** `WorkingDirectory=/srv/informes`: el directori no existeix. **C:** `ExecStart=`: el binari no existeix.
+2. Els genera **systemd**: formen una família de codis a partir del 200 (`200/CHDIR`, `203/EXEC`, `217/USER`…) documentada a `systemd.exec(5)`. El nom indica el **pas** que ha fallat: el procés fill de systemd ha fallat mentre **es preparava** el context d'execució. `informesd` **no s'ha arribat a executar** en cap cas: el missatge no ve del programa.
 
-Habitualment si el codi de sortida és ≥ 200, no cal llegir el codi del programa; cal repassar la configuració de la unitat.
+   El criteri fiable no és el número, sinó la línia `Failed at step X spawning`, perquè un programa pot sortir amb qualsevol codi, també amb valors alts.
+3. Amb `simple`, **no**: `start` només espera que es faci el `fork()`, i l'error només es veu al *journal* o a `systemctl status`. Amb `exec`, **sí**: systemd espera que l'`execve()` tingui èxit, i en els tres casos la fallada ve abans.
+4. Per al registre A:
+
+   ```bash
+   getent passwd informes                      # no retorna res (codi de sortida 2) si no existeix
+   sudo systemd-analyze verify /etc/systemd/system/informes.service
+   sudo useradd --system --no-create-home --shell /usr/sbin/nologin informes
+   sudo systemctl start informes.service
+   systemctl status informes.service
+   sudo journalctl -u informes.service -b --no-pager
+   ```
+
+   `systemd-analyze verify` detecta errors de la unitat (sintaxi, directives desconegudes, fitxers que falten), però no substitueix la lectura del *journal*, perquè no comprova l'entorn real d'execució. No cal `daemon-reload` perquè el fitxer de la unitat no s'ha modificat; només caldria si s'hagués editat. Una alternativa a crear l'usuari és `DynamicUser=yes`, amb implicacions sobre els permisos dels directoris.
+
+**Repte.** Si el fitxer existeix però no és executable, el pas continua sent `EXEC`, però l'error passa a ser `Permission denied`. La correcció és `sudo chmod +x /opt/informes/bin/informesd` (i comprovar també que els directoris del camí són accessibles per a l'usuari del servei).
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+Volem que el servei `copia.service` es comprovi abans d'executar-se i que, si falla, s'enregistri un avís mitjançant un segon servei.
+
+```{.ini}
+# /etc/systemd/system/copia.service
+[Unit]
+Description=Còpia de seguretat
+OnFailure=avis@%n.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/test -d /srv/dades
+ExecStart=/usr/local/bin/copia
+```
+
+```{.ini}
+# /etc/systemd/system/avis@.service
+[Unit]
+Description=Avís de fallada de %i
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/logger -t avis -p user.err "Ha fallat %i"
+```
+
+El directori `/srv/dades` **no existeix**. S'executa `sudo systemctl start copia.service`.
+
+1. S'executa `ExecStart=`? Quin és l'estat final de `copia.service`?
+2. Què fa `OnFailure=`? Quina unitat s'activa exactament i què valen `%n` i `%i`?
+3. Com es consulta l'avís?
+
+**Repte:** què canviaria si la línia fos `ExecStartPre=-/usr/bin/test -d /srv/dades`?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. **No.** `test -d` surt amb codi 1; una fallada d'`ExecStartPre=` avorta l'inici: no s'executa `ExecStart=` i la unitat queda `failed` (`Result: exit-code`).
+2. `OnFailure=` activa les unitats indicades quan la unitat entra a l'estat `failed`. `%n` és el nom complet de la unitat (`copia.service`), de manera que s'activa la instància `avis@copia.service.service` de la plantilla `avis@.service`, on `%i` val `copia.service`.
+3. Amb `journalctl -t avis` (el `-t` del `logger` és l'identificador) o `journalctl -u 'avis@*'`.
+
+```{mermaid}
+sequenceDiagram
+    autonumber
+    participant S as systemd
+    participant C as copia.service
+    participant A as avis@copia.service
+
+    S->>C: ExecStartPre: test -d /srv/dades
+    C-->>S: codi 1
+    S->>C: marca failed (ExecStart no s'executa)
+    S->>A: OnFailure=
+    A->>A: logger "Ha fallat copia.service"
+```
+
+**Repte.** El prefix `-` fa que systemd **ignori** el resultat de l'ordre: la comprovació deixa de ser una condició, `ExecStart=` s'executaria igualment i `OnFailure=` no s'activaria per aquesta causa. Si el que es vol és *saltar-se* el servei sense considerar-ho un error, la directiva adequada és `ConditionPathIsDirectory=/srv/dades`.
 :::
 
 </details>
@@ -480,9 +572,9 @@ sequenceDiagram
     T->>S: Persistent=true, s'executa ara
 ```
 
-Amb `Persistent=true`, systemd desa a disc l'última execució; quan el temporitzador s'activa, si n'ha perdut alguna, **dispara el servei immediatament**. Només té efecte amb `OnCalendar=`.
+Amb `Persistent=true`, systemd desa a disc l'instant de l'última execució (a `/var/lib/systemd/timers/`); quan el temporitzador s'activa, si n'ha perdut alguna, **dispara el servei immediatament**. Només té efecte amb `OnCalendar=`.
 
-**Pregunta extra.** Perquè el servei no s'inicia en arrencar: l'activa el temporitzador. S'habilita el `.timer`, no el `.service`. L'expressió es comprova amb `systemd-analyze calendar 'Mon *-*-* 04:00:00'`, que mostra la forma normalitzada i la propera execució.
+**Pregunta extra.** Perquè el servei no s'inicia en arrencar: l'activa el temporitzador. S'habilita el `.timer`, no el `.service`. L'expressió es comprova amb `systemd-analyze calendar 'Mon *-*-* 04:00:00'`, que mostra la forma normalitzada i la propera execució. Els temporitzadors actius i la propera execució es veuen amb `systemctl list-timers`.
 :::
 
 </details>
@@ -490,13 +582,14 @@ Amb `Persistent=true`, systemd desa a disc l'última execució; quan el temporit
 ---
 
 ::: {.exercici}
-Un servei `oneshot` triga **3 minuts** a executar-se. Dos temporitzadors s'activen en arrencar (minut 0), amb `AccuracySec=1s`:
+Dos serveis **independents**, `treball-a.service` i `treball-b.service`, són `Type=oneshot` i executen `/usr/bin/sleep 180` (triguen **3 minuts**). Cadascun té el seu temporitzador, activat en arrencar (minut 0):
 
 ```{.ini}
-# Temporitzador A                    # Temporitzador B
+# treball-a.timer                    # treball-b.timer
 [Timer]                              [Timer]
 OnBootSec=2min                       OnBootSec=2min
 OnUnitActiveSec=10min                OnUnitInactiveSec=10min
+AccuracySec=1s                       AccuracySec=1s
 ```
 
 En quin minut comença cadascuna de les **quatre primeres execucions** de A i de B?
@@ -506,7 +599,7 @@ En quin minut comença cadascuna de les **quatre primeres execucions** de A i de
 <summary><b>Pots veure el raonament</b></summary>
 
 :::{.solucio}
-`OnUnitActiveSec=` compta des del moment en què el servei **es va activar**; `OnUnitInactiveSec=` des que es va **desactivar** (és a dir, des que va acabar).
+`OnUnitActiveSec=` compta des del moment en què el servei **comença a activar-se** (surt de l'estat inactiu); `OnUnitInactiveSec=` des que es va **desactivar** (és a dir, des que va acabar). Pots veure el resultat amb `systemctl list-timers`.
 
 | Execució | A (`ActiveSec`) | B (`InactiveSec`) |
 |:--------:|:---------------:|:-----------------:|
@@ -536,3 +629,229 @@ A dóna un **període** fix de 10 minuts entre inicis. B dóna un **descans** de
 
 </details>
 
+---
+
+::: {.exercici}
+```{.ini}
+# /etc/systemd/system/eco.socket
+[Socket]
+ListenStream=127.0.0.1:9000
+
+[Install]
+WantedBy=sockets.target
+```
+
+```{.ini}
+# /etc/systemd/system/eco.service
+[Service]
+ExecStart=/usr/local/bin/eco
+```
+
+`eco` és un servidor que, si ha estat iniciat per un socket, usa el socket que li passa systemd. S'executa `sudo systemctl enable --now eco.socket`.
+
+1. Quin és l'estat de `eco.service` just després? Qui escolta al port 9000? Amb quina ordre ho comprovaries?
+2. Un client es connecta amb `nc 127.0.0.1 9000`. Què passa?
+3. Per què s'habilita `eco.socket` i no `eco.service`? Per què `eco.service` no té `[Install]`?
+
+**Repte:** què canvia amb `Accept=yes` al `.socket`?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. `eco.service` és `inactive (dead)`: encara no s'ha iniciat. El que escolta al port 9000 és **systemd** (PID 1), en nom del servei. Es comprova amb `sudo ss -ltnp 'sport = :9000'` i `systemctl status eco.socket` (`Active: active (listening)`).
+2. En arribar la primera connexió, systemd **inicia `eco.service`** (per defecte, el servei amb el mateix nom que el socket) i li passa el socket que escolta; el programa agafa la connexió pendent.
+3. Perquè qui ha d'estar actiu des de l'arrencada és el socket; el servei s'activa sota demanda. No necessita `[Install]` perquè l'activa el socket.
+
+```{mermaid}
+sequenceDiagram
+    autonumber
+    participant C as client
+    participant S as systemd (eco.socket)
+    participant E as eco.service
+
+    S->>S: escolta a 127.0.0.1:9000
+    C->>S: connexió
+    S->>E: inicia el servei i li passa el socket
+    E->>C: respon
+```
+
+Si `eco.service` s'atura, el socket continua escoltant i la propera connexió el torna a iniciar. Les connexions que arriben mentre no és viu queden en cua, de manera que no es perden.
+
+**Repte.** Amb `Accept=yes`, systemd accepta ell mateix cada connexió i inicia **una instància nova per connexió**, que rep la connexió ja acceptada. Això obliga que el servei sigui una plantilla (`eco@.service`) i que el programa llegeixi de l'entrada estàndard (`StandardInput=socket`).
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+El servei `processa-dades.service` llegeix i escriu fitxers a `/srv/dades`. Aquest directori correspon a un volum separat (per exemple, un disc extern) que es munta des de `/etc/fstab` amb l'opció `nofail`:
+
+```{.text}
+UUID=<uuid>  /srv/dades  ext4  defaults,nofail  0  2
+```
+
+```{.ini}
+# /etc/systemd/system/processa-dades.service
+[Unit]
+Description=Processament de dades
+
+[Service]
+Type=oneshot
+User=processador
+Group=processador
+ExecStart=/usr/local/bin/processa-dades --entrada /srv/dades/entrada --sortida /srv/dades/sortida
+
+[Install]
+WantedBy=multi-user.target
+```
+
+1. Quin problema pot aparèixer si el servei s'inicia quan el volum no està muntat?
+2. Quina directiva de systemd permet expressar que el servei necessita els muntatges requerits per accedir a `/srv/dades`?
+3. Completa la secció `[Unit]` amb aquesta directiva.
+4. Per què no és equivalent afegir només `After=local-fs.target`?
+5. Com comprovaries si el sistema de fitxers està muntat i si el servei ha fallat per aquesta causa?
+
+**Repte:** si el volum no està muntat però `/srv/dades` existeix al sistema de fitxers arrel, què passa? Quines mesures el protegeixen? Canviaria alguna cosa si s'afegís `WorkingDirectory=/srv/dades` a la unitat?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. El programa podria no trobar les dades esperades o, si el punt de muntatge buit és accessible i escrivible, podria escriure al sistema de fitxers arrel en lloc del volum previst, sense cap error visible.
+2. `RequiresMountsFor=`.
+3. La secció queda així:
+
+   ```{.ini}
+   [Unit]
+   Description=Processament de dades
+   RequiresMountsFor=/srv/dades
+   ```
+
+   systemd afegeix `Requires=` i `After=` sobre totes les unitats de muntatge necessàries per accedir a aquest camí.
+4. Amb `nofail`, el muntatge no és un requisit de `local-fs.target`: aquest objectiu no exigeix que tingui èxit. `After=local-fs.target` és, per tant, només una relació d'**ordre** i no declara que el muntatge sigui un requisit del servei: si el muntatge falla, el servei s'iniciaria igualment. `RequiresMountsFor=` el converteix en un requisit: si el muntatge no es pot fer, el servei no s'inicia (*dependency failed*).
+
+   Amb muntatges d'arrencada **sense** `nofail`, el sistema ja depèn de `local-fs.target` i l'`After=` seria sovint redundant. `RequiresMountsFor=` continua sent útil per a muntatges tardans (`x-systemd.automount`, `_netdev`) i per expressar la intenció.
+5. Per exemple:
+
+   ```bash
+   findmnt /srv/dades
+   systemd-escape -p --suffix=mount /srv/dades     # srv-dades.mount
+   systemctl status srv-dades.mount
+   systemctl status processa-dades.service
+   sudo journalctl -u processa-dades.service -b --no-pager
+   ```
+
+**Repte.** El servei llegiria dades incorrectes o escriuria al lloc equivocat. Mesures de protecció:
+
+- `RequiresMountsFor=/srv/dades` (el servei no s'inicia si el volum no es pot muntar);
+- `ConditionPathIsMountPoint=/srv/dades` (el servei **s'omet** sense error si no és un punt de muntatge);
+- `sudo chattr +i /srv/dades` **amb el volum desmuntat** (el directori buit del sistema arrel deixa de ser escrivible).
+
+Segons `systemd.exec(5)`, `WorkingDirectory=` també afegeix automàticament dependències sobre els muntatges d'aquest camí, però **no** ho fa per camins que només apareixen com a arguments de l'ordre, com en aquest enunciat. Per això aquí `RequiresMountsFor=` és necessari.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+Volem que el servei `informe-segur.service` generi un fitxer de resultat a `/var/lib/informes/` sense executar-se com a `root` i sense poder modificar lliurement la resta del sistema. L'usuari i el grup `informes` **existeixen**.
+
+```{.ini}
+# /etc/systemd/system/informe-segur.service
+[Unit]
+Description=Generació segura d'un informe
+
+[Service]
+Type=oneshot
+User=informes
+Group=informes
+StateDirectory=informes
+ProtectSystem=strict
+PrivateTmp=yes
+NoNewPrivileges=yes
+ExecStart=/bin/sh -c 'date > /var/lib/informes/resultat.txt'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+1. Quin usuari executa el procés?
+2. Quin directori crea i prepara `StateDirectory=informes`?
+3. Per què l'escriptura a `/var/lib/informes/resultat.txt` pot funcionar malgrat `ProtectSystem=strict`?
+4. Quina funció tenen `PrivateTmp=yes` i `NoNewPrivileges=yes`?
+5. Com comprovaries que el servei ha acabat correctament i que el fitxer existeix? Quina ordre avalua el nivell d'aïllament de la unitat?
+
+**Repte:** es canvia la sortida a `/etc/resultat.txt`. Per aïllar l'efecte de `ProtectSystem=strict`, es proven tres variants: (a) la unitat tal com està; (b) sense `User=` ni `Group=` (com a `root`), amb `ProtectSystem=strict`; (c) com a `root` i sense `ProtectSystem`. Quin resultat esperes a cada una?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. El procés s'executa com a usuari `informes` i grup `informes`, no com a `root`.
+2. `StateDirectory=informes` demana a systemd que creï i prepari el directori d'estat `/var/lib/informes`, amb propietat de l'usuari i el grup configurats.
+3. `ProtectSystem=strict` fa que tota la jerarquia del sistema de fitxers sigui de només lectura per al servei, però systemd deixa escrivible el directori declarat amb `StateDirectory=`.
+4. `PrivateTmp=yes` dóna al servei un `/tmp` i un `/var/tmp` privats, invisibles per a la resta del sistema. `NoNewPrivileges=yes` impedeix que el procés guanyi privilegis addicionals en executar altres programes (per exemple, els que tenen el bit set-user-ID).
+5. Es pot fer servir:
+
+   ```bash
+   sudo systemctl start informe-segur.service
+   systemctl status informe-segur.service
+   sudo journalctl -u informe-segur.service -b --no-pager
+   sudo cat /var/lib/informes/resultat.txt
+   systemd-analyze security informe-segur.service
+   ```
+
+   Com que és `Type=oneshot` i no hi ha `RemainAfterExit=yes`, després d'una execució correcta la unitat queda `inactive (dead)`; això no és una fallada. `systemd-analyze security` mostra una puntuació d'exposició i les directives que encara es poden endurir.
+
+**Repte.**
+
+| Variant | Resultat esperat |
+|:--------|:-----------------|
+| (a) `informes` + `strict` | Falla. El sistema de fitxers és de només lectura abans que es comprovin els permisos: `Read-only file system`. |
+| (b) `root` + `strict` | Falla amb `Read-only file system`: ni `root` pot escriure. |
+| (c) `root`, sense `ProtectSystem` | Funciona. |
+| (a') `informes`, sense `ProtectSystem` | Falla per permisos: `Permission denied`. |
+
+Comparant (b) amb (c) s'aïlla l'efecte de `ProtectSystem=strict`. Comparant (a') amb (c), l'efecte de `User=`. La diferència entre els dos missatges (`Read-only file system` davant `Permission denied`) mostra que són dues barreres independents: el muntatge de només lectura i els permisos de fitxer.
+:::
+
+</details>
+
+---
+
+::: {.exercici}
+Escriu l'ordre (o ordres) adequada per a cada situació. Totes es refereixen a `web.service`.
+
+1. Canviar un paràmetre sense tocar el fitxer del paquet.
+2. Veure la configuració **efectiva**, incloent-hi els fragments.
+3. Veure només els errors del servei des de l'últim arrencada.
+4. Seguir el *journal* del servei en temps real.
+5. Veure els missatges dels últims 10 minuts.
+6. Mostrar l'estat actiu, el subestat i el resultat com a propietats.
+7. Trobar la propera execució dels temporitzadors.
+
+**Repte:** per què `systemctl status` no es suficient per diagnosticar una fallada ocorreguda fa tres dies?
+:::
+
+<details>
+<summary><b>Pots veure el raonament</b></summary>
+
+:::{.solucio}
+1. `sudo systemctl edit web.service` (crea `override.conf` i recarrega).
+2. `systemctl cat web.service`
+3. `journalctl -u web.service -b -p err` (`-p err` inclou `err` i més greus).
+4. `journalctl -u web.service -f`
+5. `journalctl -u web.service --since "10 min ago"`
+6. `systemctl show -p ActiveState,SubState,Result web.service`
+7. `systemctl list-timers`
+
+**Repte.** `status` només mostra les últimes línies del *journal* i l'estat **actual** de la unitat. Per a un historial cal `journalctl`, amb filtres de temps (`--since`, `--until`) o d'arrencada (`-b -1` per a l'arrencada anterior). Aquest últim exigeix que el *journal* sigui persistent (`/var/log/journal/` existent o `Storage=persistent` a `journald.conf`).
+:::
+
+</details>

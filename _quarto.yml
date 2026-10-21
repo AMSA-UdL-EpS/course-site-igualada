@@ -72,6 +72,11 @@ website:
             - section: Teoria
               contents:
                 - modules/unit-03-storage/theory/01-raids.qmd
+    - section: "Exàmens"
+      contents:
+        - section: "Competencials"
+          contents:
+            - exams/practics/practic1/s1/enu.qmd
 
 
 

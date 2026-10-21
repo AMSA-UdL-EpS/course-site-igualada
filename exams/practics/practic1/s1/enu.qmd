@@ -1,0 +1,46 @@
+---
+title: "Examen simulacre: arrencada, initramfs i systemd"
+subtitle: "Model A · El servidor de la LAN party"
+lang: ca
+resources:
+  - enunciat.pdf
+---
+
+## De què va
+
+L'associació d'estudiants organitza una LAN party. El seu servidor de joc corria en un PC vell amb disc SATA i s'ha migrat a una màquina virtual amb disc *virtio*, que **no arrenca**. L'examen té tres parts, cadascuna amb el seu propi disc independent:
+
+| Part | Contingut | Temps orientatiu |
+|:--:|:--|:--:|
+| 1 | Inspecció de la màquina antiga (UEFI, GRUB, nucli, initramfs, login) | 20 min |
+| 2 | Diagnòstic i reparació: el servidor no arrenca | 35 min |
+| 3 | Configuració: els jugadors esperen massa | 35 min |
+
+És un **simulacre per fer a casa**: les respostes s'escriuen en paper, però tot el que fas a la màquina ho has de poder demostrar amb ordres, línies i sortides. Intenta-ho abans de mirar la [solució](sol.qmd).
+
+## Descàrrega
+
+1. **Enunciat** (PDF): [Simulacre 1](./enunciat.pdf)
+2. **Fitxers de l'examen** (discs, firmware i scripts): [descarrega'ls aquí](https://udlcat-my.sharepoint.com/:f:/g/personal/jordi_mateo_udl_cat/IgD48p6cIOQDS6gBeM6HEo3PAcfVlv9wC1OxNQBn9msAdVM?e=rbqNC0)
+
+Baixa tots els fitxers en **una sola carpeta** i no moguis fitxers de lloc: els discs es referencien amb ruta relativa. Ha de contenir `base.qcow2`, `tpl_p12.qcow2`, `tpl_p3.qcow2`, `firmware/` i els scripts `run.sh`, `run.bat`, `reset.sh` i `reset.bat`.
+
+## Com s'usa
+
+Necessites [QEMU](https://www.qemu.org/) instal·lat (`qemu-system-x86_64` i `qemu-img`).
+
+```bash
+./run.sh 1          # Part 1: màquina antiga (disc SATA)
+./run.sh 2          # Part 2: màquina nova (disc virtio)
+./run.sh 2 rescue   # Part 2: el mateix disc connectat com a SATA, per entrar-hi i reparar
+./run.sh 3          # Part 3: servidor de joc
+```
+
+Usuaris `jordi` i `root`, contrasenya `1234`. No hi ha xarxa: tens `man`, `--help` i el full d'ordres de l'enunciat. Les arrencades poden ser lentes, sobretot sense acceleració per maquinari.
+
+> Si la pantalla sembla congelada en el `./run.sh 2` i  s'atura a la línia de `bochs-drm`, espera uns 30 segons i mira la consola sèrie (serial0, al menú View de QEMU): els missatges que segueixen surten per allà, no per la pantalla.
+
+::: {.callout-note}
+## Abans de començar
+Cada part crea el seu disc la primera vegada que l'arrenques (`p1.qcow2`, `p2.qcow2`, `p3.qcow2`). Si t'equivoques i vols tornar a començar simplement, elimina aquests fitxers i torna a executar `./run.sh N`.
+:::
