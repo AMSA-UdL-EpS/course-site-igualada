@@ -3873,7 +3873,7 @@
     "href": "exams/practics/practic1/s1/enu.html#descàrrega",
     "title": "Examen simulacre: arrencada, initramfs i systemd",
     "section": "Descàrrega",
-    "text": "Descàrrega\n\nEnunciat (PDF): Simulacre 1\nFitxers de l’examen (discs, firmware i scripts): descarrega’ls aquí\n\nBaixa tots els fitxers en una sola carpeta i no moguis fitxers de lloc: els discs es referencien amb ruta relativa. Ha de contenir base.qcow2, tpl_p12.qcow2, tpl_p3.qcow2, firmware/ i els scripts run.sh, run.bat, reset.sh i reset.bat.",
+    "text": "Descàrrega\n\nEnunciat (PDF): Simulacre 1\nFitxers de l’examen (discs, firmware i scripts): descarrega’ls aquí\n\nBaixa tots els fitxers en una sola carpeta i no moguis fitxers de lloc: els discs es referencien amb ruta relativa. Ha de contenir base.qcow2, tpl_p12.qcow2, tpl_p3.qcow2, firmware/ i els scripts run.sh.",
     "crumbs": [
       "Inici",
       "Exàmens",
