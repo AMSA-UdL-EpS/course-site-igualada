@@ -1,0 +1,660 @@
+---
+title: "Simulacre 2: snapshots i restauració d'un servidor"
+subtitle: "Protegint i recuperant el servidor de la LAN party"
+lang: ca
+---
+
+## Què construiràs
+
+Un servidor de jocs s'ha de poder **protegir i recuperar**: abans d'un canvi arriscat (o cada vegada que s'apaga) es fa una còpia de les dades i la configuració, i si alguna cosa es trenca, es restaura. Ho muntaràs en capes, cadascuna amb una eina diferent de les vistes al curs:
+
+| Pas | Què fas | Què repasses |
+|:--:|:--|:--|
+| 0 | Arrencar la màquina, xarxa i eines | Discs, `lsblk`, `apt` |
+| 1 | Un disc dedicat als snapshots | `fstab`, etiquetes, unitats `.mount`, `nofail` |
+| 2 | Script de snapshot amb `rsync` | Còpies, retenció, permisos |
+| 3 | Script de restauració en viu | Per què no es pot restaurar tot en marxa |
+| 4 | Snapshot automàtic en aturar | **systemd**: ordenació, `RequiresMountsFor=`, `ExecStop=` |
+| 5 | Restauració abans que el sistema arrenqui | **initramfs**: etapes, hooks, consola, depuració |
+| 6 | Activar-la des de GRUB | `/etc/default/grub`, `40_custom`, `update-grub`, línia d'ordres |
+| 7 | Prova final i què passa si... | Predicció i diagnòstic |
+
+
+## Descàrrega i arrencada
+
+Descarrega els fitxers de la pràctica [Simulacre 2](https://udlcat-my.sharepoint.com/:f:/g/personal/jordi_mateo_udl_cat/IgDcsSI4Yrj1RoBgt7Nbm_gnAaG0HiFC3alhQYBGgXdZGrA?e=t8owik) i descomprimeix-los en una carpeta. Hi ha d'haver `base.qcow2`, `firmware/`, `run.sh`. Necessites [QEMU](https://www.qemu.org/) instal·lat.
+
+```bash
+./run.sh
+```
+
+La màquina té **dos discs**: el del sistema (`practica.qcow2`, sobre `base.qcow2`) i un disc buit de 8 GB per als snapshots (`snap.qcow2`). Usuari `jordi` amb contrasenya `1234`. Aquest usuari té `sudo` i si voleu accedir com a root podeu fer `sudo su`. Aquesta vegada la màquina **té xarxa**. Si vols **tornar a començar**, tanca QEMU i esborra `practica.qcow2`, `snap.qcow2` i `vars_practica.fd`.
+
+:::{.callout-tip}
+La màquina no té el servei ssh funcionant, si ho necessiteu podeu activar-lo amb `systemctl unmask ssh`, `systemctl enable ssh` i `systemctl start ssh`.
+:::
+
+::: {.callout-tip}
+## Si la pantalla sembla congelada
+Si la pantalla s'atura en un missatge del nucli, **espera uns segons i mira la consola sèrie** (`serial0`, al menú *View* de QEMU). Al pas 5 entendràs per què passa i ho arreglaràs.
+:::
+
+## Pas 0. Arrencar, xarxa i eines
+
+**Objectiu.** Tenir la màquina en marxa, amb xarxa i amb `rsync` instal·lat.
+
+**Què has de fer.**
+
+1. Arrenca la màquina i entra com a `jordi`.
+2. Comprova que té adreça IP i que arriba a Internet.
+3. Instal·la `rsync`.
+4. Identifica els dos discs: quin és el del sistema i quin el dels snapshots, i com se'n diuen.
+
+**Comprova.** `rsync --version` respon, i `lsblk` mostra un disc de 8 GB **sense particions ni sistema d'arxius**.
+
+::: {.callout-warning collapse="true"}
+## Pista
+`ip -br a` mostra les interfícies amb la seva adreça; `ping -c1` serveix per provar l'accés. Si no hi ha IP, mira quin servei de xarxa té el sistema abans d'inventar-te'n un.
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+```bash
+ip -br a                       # interfícies i adreces
+ping -c1 deb.debian.org        # accés i DNS
+apt update
+apt install -y rsync
+rsync --version | head -1
+lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT
+```
+El disc del sistema és `vda` (virtio); el de snapshots és `sda` (SATA), sense `FSTYPE`.
+:::
+
+**Per pensar.** El disc del sistema és `vda` i el buit és `sda`; a l'examen, el del sistema era `sda`. Què implica això per a com identifiques un disc en un fitxer de configuració?
+
+::: {.callout-note collapse="true"}
+## Resposta
+Que el nom `/dev/sdX` o `/dev/vdX` **depèn del bus i de l'ordre de descobriment**: canvia segons com es connecta el disc. Per això s'identifica per **UUID o etiqueta**, com fa el `root=UUID=` de GRUB i l'`fstab`.
+:::
+
+## Pas 1. Un disc per als snapshots
+
+**Objectiu.** Que el disc buit quedi formatat, muntat a `/mnt/snapshots` i es munti sol a cada arrencada.
+
+**Què has de fer.**
+
+1. Crea un sistema d'arxius `ext4` al disc, amb l'etiqueta `snapshots`.
+2. Crea el punt de muntatge `/mnt/snapshots`.
+3. Fes-lo persistent a `/etc/fstab` **sense dependre del nom del dispositiu** i de manera que, si el disc falta, la màquina arrenqui igualment.
+4. Comprova-ho i reinicia.
+
+**Comprova.** `findmnt /mnt/snapshots` mostra el disc muntat, `findmnt --verify` no es queixa i, després de reiniciar, continua muntat.
+
+::: {.callout-warning collapse="true"}
+## Pista
+`mkfs.ext4 -L etiqueta dispositiu`. A `fstab`, el primer camp pot ser `LABEL=...`. Mira a `man fstab` què fa l'opció `nofail`.
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+```bash
+mkfs.ext4 -L snapshots /dev/sda
+mkdir -p /mnt/snapshots
+echo 'LABEL=snapshots  /mnt/snapshots  ext4  defaults,nofail  0  2' >> /etc/fstab
+systemctl daemon-reload
+mount /mnt/snapshots
+findmnt --verify
+findmnt /mnt/snapshots
+systemctl status mnt-snapshots.mount      # la unitat que systemd ha generat de l'fstab
+```
+:::
+
+**Per pensar.**
+
+1. Per què `LABEL=` (o `UUID=`) i no `/dev/sda`?
+2. Què passaria, sense `nofail`, si arrenques la màquina sense el segon disc?
+3. D'on surt la unitat `mnt-snapshots.mount` si tu no n'has escrit cap?
+
+::: {.callout-note collapse="true"}
+## Respostes
+1. Perquè el nom canvia segons el bus i l'ordre (pas 0).
+2. L'arrencada esperaria el dispositiu i acabaria en mode d'**emergència** (`emergency.target`): un disc de còpies secundari no hauria de poder deixar el servidor sense arrencar.
+3. De `systemd-fstab-generator`, que converteix cada línia de `fstab` en una unitat `.mount` en arrencar.
+:::
+
+## Pas 2. El snapshot amb `rsync`
+
+**Objectiu.** Un script `/usr/local/sbin/snapshot-create` que faci una còpia del servidor dins de `/mnt/snapshots`.
+
+**Dades de prova.** Crea-les abans de començar, perquè hi hagi alguna cosa que protegir:
+
+```bash
+mkdir -p /opt/lan
+echo "món v1" > /opt/lan/world.txt
+echo "max_jugadors=16" > /etc/lan.conf
+echo "apunts v1" > /home/jordi/notes.txt && chown jordi:jordi /home/jordi/notes.txt
+```
+
+**Requisits de l'script.**
+
+1. Copia `/etc`, `/home` i `/opt` a un directori nou dins de `/mnt/snapshots`, amb nom `snapshot_AAAAMMDD_HHMMSS`, **o amb el nom que se li passi com a argument** (per exemple `base`).
+2. Conserva permisos, propietaris, ACL i atributs ampliats, i que el propietari no depengui dels noms d'usuari.
+3. Es nega a treballar si `/mnt/snapshots` no és muntat, i no sobreescriu un snapshot existent.
+4. Anota cada snapshot a `/mnt/snapshots/snapshots.log`.
+5. Conserva només els **3 últims** automàtics; els que tenen nom propi (com `base`) **no s'esborren mai**.
+
+**Comprova.**
+
+```bash
+snapshot-create base
+for i in 1 2 3 4 5; do sleep 1; snapshot-create; done
+ls /mnt/snapshots                      # base + 3 automàtics + el log
+diff -r /opt /mnt/snapshots/base/opt && echo "iguals"
+```
+
+::: {.callout-warning collapse="true"}
+## Pista
+`rsync -aAX` conserva gairebé tot; afegeix `--numeric-ids`. Compte amb la barra final: `rsync /opt/ dest/opt/` copia el *contingut*. Per a la retenció, ordena els noms (el format de data ordena bé alfabèticament) i esborra tots menys els `KEEP` últims. `mountpoint -q` serveix per saber si un directori és un punt de muntatge.
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+```bash
+#!/bin/bash
+# Crea un snapshot (còpia) dels directoris de DIRS dins SNAPSHOT_DIR.
+#   snapshot-create            -> snapshot_AAAAMMDD_HHMMSS (automàtic; en conserva els KEEP últims)
+#   snapshot-create base       -> snapshot amb nom propi (mai s'esborra automaticament)
+
+SNAPSHOT_DIR="${SNAPSHOT_DIR:-/mnt/snapshots}"
+DIRS="${DIRS:-etc home opt}"
+KEEP="${KEEP:-3}"
+
+mountpoint -q "$SNAPSHOT_DIR" || { echo "ERROR: $SNAPSHOT_DIR no està muntat" >&2; exit 1; }
+
+NAME="${1:-snapshot_$(date +%Y%m%d_%H%M%S)}"
+TARGET="$SNAPSHOT_DIR/$NAME"
+[ ! -e "$TARGET" ] || { echo "ERROR: $NAME ja existeix" >&2; exit 1; }
+mkdir -p "$TARGET"
+
+for dir in $DIRS; do
+  [ -d "/$dir" ] || continue
+  echo "  - Copiant /$dir"
+  rsync -aAX --numeric-ids "/$dir/" "$TARGET/$dir/"
+done
+echo "$(date -Is) $NAME" >> "$SNAPSHOT_DIR/snapshots.log"
+echo "[OK] Snapshot creat a: $TARGET"
+
+mapfile -t OLD < <(ls -1d "$SNAPSHOT_DIR"/snapshot_* 2>/dev/null | sort | head -n -"$KEEP")
+if [ "${#OLD[@]}" -gt 0 ]; then
+  echo "[*] Eliminant snapshots antics: ${OLD[*]##*/}"
+  rm -rf -- "${OLD[@]}"
+fi
+```
+```bash
+chmod +x /usr/local/sbin/snapshot-create
+snapshot-create base
+```
+:::
+
+**Per pensar.**
+
+1. Per què `--numeric-ids`?
+2. Per què no es copia `/usr`? Mira `ls -ld /bin` abans de respondre.
+3. Un snapshot fet amb el sistema en marxa, és consistent?
+4. Ampliació: fes que cada snapshot reutilitzi, amb enllaços durs, els fitxers que no han canviat. Quina opció de `rsync` ho fa, i com ho comprovaries amb `stat`?
+
+::: {.callout-note collapse="true"}
+## Respostes
+1. Sense la opció, `rsync` tradueix propietaris per **nom**; en un entorn sense `/etc/passwd` (l'initramfs) no es podria fer i els propietaris es perdrien.
+2. A Debian 13 `/bin` és un enllaç a `/usr/bin`, així que copiar-lo duplicaria `/usr/bin`; i `/usr` és gran i és el que el sistema està usant (pas 3).
+3. No del tot: `rsync` copia fitxer a fitxer mentre altres processos poden escriure; no és una foto atòmica. Per a això hi ha mecanismes del sistema d'arxius o del volum (LVM, btrfs) o de la virtualització (`qemu-img snapshot`).
+4. `--link-dest=<snapshot anterior>/<directori>`. Un fitxer sense canvis surt amb **2 enllaços** a `stat -c '%h %n' fitxer`, i el snapshot ocupa gairebé res.
+:::
+
+## Pas 3. Restaurar en viu
+
+**Objectiu.** Un script `/usr/local/sbin/snapshot-restore` que torni `/etc`, `/home` i `/opt` a l'estat d'un snapshot.
+
+**Requisits.**
+
+1. Primer argument: nom del snapshot. Opcionalment, la llista de directoris a restaurar (per defecte, els tres).
+2. El destí ha de quedar **exactament** com el snapshot: els fitxers que no hi eren, s'esborren.
+3. **Es nega** a restaurar `/usr`, `/bin`, `/sbin`, `/lib` i `/lib64` amb el sistema en marxa, amb un missatge que ho expliqui.
+4. Falla amb un missatge clar si el snapshot no existeix.
+
+**Comprova.**
+
+```bash
+rm -rf /opt/lan/*
+echo trencat > /etc/lan.conf
+snapshot-restore base
+cat /opt/lan/world.txt /etc/lan.conf           # món v1 / max_jugadors=16
+snapshot-restore base usr; echo $?             # refusat, codi diferent de 0
+```
+
+::: {.callout-warning collapse="true"}
+## Pista
+La mateixa eina que al pas 2, però amb la direcció invertida i `--delete`. Un `case` sobre el nom del directori és suficient per a la protecció.
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+```bash
+#!/bin/bash
+# Restaura un snapshot sobre el sistema EN MARXA (només per a directoris de dades i configuració).
+#   snapshot-restore NOM [directori...]      (per defecte: etc home opt)
+
+SNAPSHOT_DIR="${SNAPSHOT_DIR:-/mnt/snapshots}"
+[ $# -ge 1 ] || { echo "Ús: $0 <snapshot> [directori...]" >&2; exit 1; }
+
+SNAP="$SNAPSHOT_DIR/$1"; shift
+[ -d "$SNAP" ] || { echo "Snapshot inexistent: $SNAP" >&2; exit 1; }
+DIRS="${*:-etc home opt}"
+
+for dir in $DIRS; do
+  case "$dir" in
+    usr|bin|sbin|lib|lib64)
+      echo "REFUSAT: /$dir està en ús; es restaura des de l'initramfs" >&2; exit 1 ;;
+  esac
+  [ -d "$SNAP/$dir" ] || { echo "  - /$dir no és al snapshot, el salto"; continue; }
+  echo "  - Restaurant /$dir"
+  rsync -aAX --numeric-ids --delete "$SNAP/$dir/" "/$dir/"
+done
+echo "[OK] Snapshot restaurat."
+```
+:::
+
+**Opcional.** Escriu un menú interactiu (`snapshot-menu`) amb `select` que llisti els snapshots i cridi `snapshot-restore`. Compte: el disc ext4 té un directori `lost+found` que **no** és un snapshot.
+
+::: {.callout-note collapse="true"}
+## Solució del menú
+```bash
+#!/bin/bash
+# Menú interactiu per triar un snapshot i restaurar-lo.
+SNAPSHOT_DIR="${SNAPSHOT_DIR:-/mnt/snapshots}"
+
+mapfile -t SNAPS < <(find "$SNAPSHOT_DIR" -mindepth 1 -maxdepth 1 -type d ! -name lost+found -printf '%f\n' 2>/dev/null | sort)
+[ "${#SNAPS[@]}" -gt 0 ] || { echo "No hi ha snapshots per restaurar."; exit 1; }
+
+PS3="Snapshot a restaurar: "
+select snap in "${SNAPS[@]}" "Cancel·lar"; do
+  case "$snap" in
+    "Cancel·lar") echo "Cancel·lat."; exit 0 ;;
+    "")           echo "Opció no vàlida." ;;
+    *)            exec /usr/local/sbin/snapshot-restore "$snap" ;;
+  esac
+done
+```
+:::
+
+**Per pensar.** Per què és perillós restaurar `/usr` amb el sistema en marxa? Quin altre fitxer hauria de coincidir amb `/usr` i no és al snapshot?
+
+::: {.callout-note collapse="true"}
+## Resposta
+Es sobreescriuen biblioteques i programes **que s'estan usant** (libc, bash, el mateix `rsync`), i `--delete` pot esborrar-ne que el sistema encara necessita. A més, la base de dades de `dpkg` (`/var/lib/dpkg`) no és al snapshot: diria que hi ha paquets instal·lats els fitxers dels quals ja no hi són. Per això la restauració total s'ha de fer **abans que el sistema usi aquests fitxers**: a l'initramfs (pas 5).
+:::
+
+## Pas 4. Snapshot automàtic en aturar (systemd)
+
+**Objectiu.** Que cada vegada que la màquina s'atura o es reinicia, es faci un snapshot.
+
+**Requisits de la unitat `/etc/systemd/system/snapshot-shutdown.service`.**
+
+1. S'executa `snapshot-create` **en aturar-se el sistema**, tant amb `poweroff` com amb `reboot`.
+2. Ha d'executar-se **mentre `/mnt/snapshots` encara és muntat** (systemd desmunta els discs en aturar).
+3. Una còpia pot trigar molt: no ha de morir pel temps d'espera per defecte.
+4. Ha de quedar habilitada i activa.
+
+**Comprova.**
+
+```bash
+systemctl status snapshot-shutdown.service        # active (exited)
+systemctl show -p After -p Requires snapshot-shutdown.service | grep mnt-snapshots
+systemctl reboot
+# ... un cop reiniciat:
+tail -n 3 /mnt/snapshots/snapshots.log            # hi ha un snapshot nou fet en aturar
+```
+
+::: {.callout-warning collapse="true"}
+## Pista
+systemd atura les unitats en **l'ordre invers** de com les ha arrencat (recorda la Part 3 de l'examen). Un servei que no fa res en arrencar però que fa la feina quan s'**atura** té `Type=oneshot`, `RemainAfterExit=yes` i la feina a `ExecStop=`. Per assegurar que el muntatge és viu, busca `RequiresMountsFor=`. El temps d'aturada per defecte és de 90 s.
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+```ini
+[Unit]
+Description=Snapshot en aturar el sistema
+RequiresMountsFor=/mnt/snapshots
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/usr/local/sbin/snapshot-create
+TimeoutStopSec=900
+
+[Install]
+WantedBy=multi-user.target
+```
+```bash
+systemctl daemon-reload
+systemctl enable --now snapshot-shutdown.service
+```
+`ExecStart=/bin/true` + `RemainAfterExit=yes` deixa la unitat «activa» mentre el sistema funciona; en aturar-se, systemd l'**atura**, i en fer-ho executa `ExecStop=`. `RequiresMountsFor=` afegeix `Requires=` i `After=` sobre `mnt-snapshots.mount`: com que l'aturada és en ordre invers, la unitat s'atura **abans** de desmuntar el disc. `TimeoutStopSec` evita que systemd la mati als 90 s.
+:::
+
+**Per pensar.**
+
+1. Per què `WantedBy=poweroff.target` no és una bona manera de fer-ho?
+2. Per què la unitat «no fa res» en arrencar?
+3. Què veuries si afegissis `After=` sense `RequiresMountsFor=`?
+
+::: {.callout-note collapse="true"}
+## Respostes
+1. Només s'activaria amb `poweroff` (no amb `reboot`), i no hi ha garantia que s'executi **abans** de desmuntar `/mnt/snapshots`: no té cap relació d'ordre amb el muntatge. Aprofitar l'ordre invers de l'arrencada és fiable.
+2. Perquè la feina vol fer-se a l'**aturada**: la unitat només ha d'estar activa perquè systemd la tingui a la llista d'unitats a aturar.
+3. `After=mnt-snapshots.mount` ordena, però no obliga que el muntatge existeixi (no és un requeriment): si el disc no és, la unitat s'executaria igualment i fallaria l'script. `RequiresMountsFor=` fa les dues coses (ordre i requeriment).
+:::
+
+## Pas 5. Restaurar abans que el sistema arrenqui (initramfs)
+
+**Objectiu.** Poder restaurar un snapshot **abans** que el sistema usi els fitxers, activant-ho amb un paràmetre del nucli: `snapshot=NOM`.
+
+### 5.1. En quina etapa?
+
+L'initramfs executa els seus scripts en etapes, en aquest ordre: `init-top` → `init-premount` → `local-top` → `local-block` → `local-premount` → **(es munta l'arrel a `/root`)** → `local-bottom` → `init-bottom`. Tria l'etapa on caldria restaurar i justifica-ho.
+
+::: {.callout-note collapse="true"}
+## Resposta
+`local-bottom`: l'arrel ja és muntada (a `/root`, la variable `rootmnt`) però el sistema encara **no hi ha entrat**, així que podem sobreescriure-la sense que res l'estigui usant. A `init-top` encara no s'han carregat els controladors del disc i l'arrel no és muntada. L'arrel arriba muntada en **només lectura** (paràmetre `ro`), per tant s'ha de remuntar en lectura i escriptura i tornar-la a deixar com estava.
+:::
+
+### 5.2. Fer visible l'initramfs
+
+L'initramfs s'executa en uns pocs segons i, després, l'arrencada continua i omple la pantalla: **un missatge normal passa tan de pressa que no el veuràs**. Per això aquest script de prova (provisional) fa dues coses: **atura l'arrencada 15 segons** i **deixa una marca** a `/run`, que sobreviu fins al sistema arrencat.
+
+Crea'l a `/etc/initramfs-tools/scripts/local-bottom/snapshot-restore` amb aquesta capçalera, que **és obligatòria** en qualsevol script d'`initramfs-tools`:
+
+```sh
+#!/bin/sh
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case "$1" in
+    prereqs) prereqs; exit 0 ;;
+esac
+
+. /scripts/functions
+log_begin_msg "snapshot-restore: hola des de l'initramfs (espero 15 s)"
+echo "executat a local-bottom" > /run/hola-initramfs
+sleep 15
+log_end_msg
+```
+
+Fes-lo executable, regenera l'initramfs amb `update-initramfs -u` i reinicia. **Mira la pantalla durant tota l'arrencada** i respon:
+
+1. Veus el missatge? Què fa l'arrencada durant aquests 15 segons?
+2. Un cop dins, `cat /run/hola-initramfs`: s'ha executat o no?
+3. Torna a reiniciar i, durant la pausa, mira la consola sèrie (`serial0`): què hi veus?
+
+::: {.callout-note collapse="true"}
+## Resposta
+1. **No** veus el missatge: la pantalla s'atura 15 s en l'últim missatge del nucli (`bochs-drm`...) i després l'arrencada continua com si res.
+2. **Sí**: el fitxer existeix. L'script s'ha executat, però el missatge no s'ha vist. `/run` es conserva en passar a l'arrel real.
+3. El missatge és a la consola **sèrie** (`serial0`). La línia d'ordres del nucli té `console=tty0 console=ttyS0,115200n8`, i `/dev/console` (el que usen els scripts de l'initramfs) és sempre l'**última** `console=`: `ttyS0`. Els missatges del **nucli** van a totes dues, per això la pantalla s'atura en un missatge del nucli.
+:::
+
+**Arregla-ho** perquè l'initramfs parli per la pantalla, sense treure la consola sèrie: canvia l'ordre de les consoles a `/etc/default/grub` (variable `GRUB_CMDLINE_LINUX`) i regenera la configuració de GRUB. Comprova-ho amb `cat /proc/cmdline` després de reiniciar i, sobretot, **mirant la pantalla**: ara el missatge i la pausa de 15 s s'han de veure sense canviar a la sèrie.
+
+::: {.callout-note collapse="true"}
+## Solució
+A `/etc/default/grub`:
+```text
+GRUB_CMDLINE_LINUX="console=ttyS0,115200n8 console=tty0 rootdelay=5"
+```
+```bash
+update-grub
+reboot
+```
+No s'edita mai `/boot/grub/grub.cfg` a mà.
+:::
+
+### 5.3. L'script i el hook
+
+**Requisits.**
+
+1. Només actua si la línia d'ordres del nucli porta `snapshot=NOM`; si no, no fa res.
+2. Troba el disc per **etiqueta** (`snapshots`) i el munta (en només lectura) en un directori temporal.
+3. Si el snapshot no existeix, o no troba el disc, ho diu i **deixa continuar l'arrencada** (mai ha de deixar la màquina penjada).
+4. Remunta l'arrel en lectura i escriptura, restaura `/etc`, `/home` i `/opt` amb `rsync --delete`, fa `sync`, torna l'arrel a només lectura i desmunta.
+5. Escriu tot el que fa a `/run/snapshot-restore.log` perquè es pugui llegir després d'arrencar.
+6. L'initramfs ha de **portar `rsync`**: cal un *hook*.
+
+**Comprova.**
+
+```bash
+lsinitramfs /boot/initrd.img-$(uname -r) | grep -E 'rsync|snapshot-restore'
+```
+
+::: {.callout-warning collapse="true"}
+## Pistes
+- No hi ha `bash` a l'initramfs: `#!/bin/sh` (busybox) i només sintaxi POSIX.
+- A `/scripts/functions` hi ha helpers: `log_begin_msg`, `wait_for_udev` i `resolve_device` (tradueix `LABEL=...` a un dispositiu).
+- L'arrel es munta a `${rootmnt}`.
+- `/run` **sobreviu** al canvi a l'arrel real: un lloc bo per deixar un log.
+- Per fer arribar un binari (i les seves llibreries) a l'initramfs, un *hook* a `/etc/initramfs-tools/hooks/` amb `copy_exec`, que copia el programa **i les biblioteques dinàmiques** que necessita.
+:::
+
+::: {.callout-note collapse="true"}
+## Solució: el hook
+```sh
+#!/bin/sh
+# /etc/initramfs-tools/hooks/snapshot-restore
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case "$1" in
+    prereqs) prereqs; exit 0 ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+# rsync dinàmic: copy_exec hi copia també les llibreries que necessita
+copy_exec /usr/bin/rsync /usr/bin
+# el disc de snapshots és ext4
+manual_add_modules ext4
+```
+:::
+
+::: {.callout-note collapse="true"}
+## Solució: l'script
+```sh
+#!/bin/sh
+# /etc/initramfs-tools/scripts/local-bottom/snapshot-restore
+# Restaura un snapshot si la línia d'ordres del nucli porta snapshot=NOM.
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case "$1" in
+    prereqs) prereqs; exit 0 ;;
+esac
+
+. /scripts/functions
+
+SNAP=""
+for x in $(cat /proc/cmdline); do
+    case "$x" in
+        snapshot=*) SNAP="${x#snapshot=}" ;;
+    esac
+done
+[ -n "$SNAP" ] || exit 0
+
+LOG=/run/snapshot-restore.log
+DIRS="etc home opt"
+say() { echo "snapshot-restore: $*" >&2; echo "snapshot-restore: $*" >> "$LOG"; }
+
+say "snapshot sol·licitat: $SNAP"
+wait_for_udev 10
+
+# resolve_device (de /scripts/functions) tradueix LABEL=... a /dev/... amb blkid
+DEV="$(resolve_device LABEL=snapshots)"
+if [ -z "$DEV" ] || [ ! -b "$DEV" ]; then
+    say "ERROR: no trobo el disc amb etiqueta 'snapshots' (falta el controlador del disc a l'initramfs?)"
+    exit 0
+fi
+
+mkdir -p /snap
+mount -t ext4 -o ro "$DEV" /snap || { say "ERROR: no puc muntar $DEV"; exit 0; }
+
+if [ ! -d "/snap/$SNAP" ]; then
+    say "ERROR: no existeix el snapshot $SNAP"
+    umount /snap
+    exit 0
+fi
+
+mount -o remount,rw "${rootmnt}" || { say "ERROR: no puc remuntar l'arrel en rw"; umount /snap; exit 0; }
+
+for d in $DIRS; do
+    [ -d "/snap/$SNAP/$d" ] || continue
+    say "restaurant /$d"
+    rsync -aAX --numeric-ids --delete "/snap/$SNAP/$d/" "${rootmnt}/$d/" >> "$LOG" 2>&1 \
+        || say "ATENCIÓ: error restaurant /$d"
+done
+
+sync
+mount -o remount,ro "${rootmnt}"
+umount /snap
+say "fet"
+exit 0
+```
+```bash
+chmod +x /etc/initramfs-tools/hooks/snapshot-restore \
+         /etc/initramfs-tools/scripts/local-bottom/snapshot-restore
+update-initramfs -u
+```
+:::
+
+### 5.4. Provar-ho
+
+**Compte:** si restaures un snapshot **antic** de `/etc`, també hi perdràs els fitxers que has creat després (aquest script, el hook, la unitat del pas 4...). Per això, abans de provar, fes un snapshot nou **amb tot ja fet**:
+
+```bash
+snapshot-create prova
+echo "trencat" > /opt/lan/world.txt ; rm -f /home/jordi/notes.txt
+```
+
+Reinicia i, al menú de GRUB, prem `e` sobre la primera entrada, afegeix `snapshot=prova` al final de la línia que comença per `linux` i arrenca amb `Ctrl+X` (o F10). Un cop dins:
+
+```bash
+cat /run/snapshot-restore.log
+cat /opt/lan/world.txt ; ls /home/jordi
+```
+
+**Si no funciona:**
+
+- Afegeix `break=bottom` a la línia d'ordres: l'arrencada s'atura en un shell de l'initramfs just **després** d'executar `local-bottom`. Allà pots mirar `cat /run/snapshot-restore.log`, `ls /dev/disk/by-label` i `mount`.
+- Comprova que el `lsinitramfs` del pas 5.3 mostra `rsync` i l'script.
+- Mira que el nom del snapshot és exacte (`ls /mnt/snapshots`).
+
+**Per pensar.**
+
+1. Per què l'script acaba sempre amb `exit 0`, fins i tot en cas d'error?
+2. Per què `--numeric-ids` és aquí **imprescindible**?
+3. Per què l'arrel es remunta en `rw` només durant la còpia?
+
+::: {.callout-note collapse="true"}
+## Respostes
+1. Perquè si l'script falla, l'arrencada s'ha de poder continuar: una màquina que no arrenca per culpa de l'eina de recuperació és pitjor que no tenir-la.
+2. Perquè l'initramfs no té `/etc/passwd`: no hi ha noms d'usuari per traduir, i `rsync` no podria assignar els propietaris correctes.
+3. Per minimitzar el temps en què el sistema d'arxius està obert a escriptura i deixar-lo com el nucli l'ha arrencat (`ro`); systemd el remuntarà en `rw` quan toqui.
+:::
+
+## Pas 6. Activar-ho des de GRUB
+
+**Objectiu.** Una entrada del menú de GRUB que **restauri `prova`** una sola vegada, sense haver d'editar la línia a mà.
+
+**Requisits.**
+
+1. Una entrada addicional al menú, «Debian GNU/Linux (restaurar snapshot prova)», amb els mateixos paràmetres que l'entrada normal més `snapshot=prova`.
+2. Sense tocar `/boot/grub/grub.cfg` directament.
+3. Comprova que **no** has afegit `snapshot=` a `GRUB_CMDLINE_LINUX_DEFAULT`.
+
+**Comprova.** `grep -n 'snapshot=' /boot/grub/grub.cfg` mostra l'entrada nova; en reiniciar i triar-la, es restaura; si tries l'entrada normal, no.
+
+::: {.callout-warning collapse="true"}
+## Pista
+Mira en un `less` o `grep` de `/boot/grub/grub.cfg` el bloc `menuentry` de l'entrada normal i **copia'l** a `/etc/grub.d/40_custom`, tot canviant el títol i afegint el paràmetre. El fitxer `40_custom` ja porta dues línies de capçalera que has de respectar. Necessites el UUID de l'arrel (`blkid`) i la versió del nucli (`uname -r`).
+:::
+
+::: {.callout-note collapse="true"}
+## Solució
+A `/etc/grub.d/40_custom`, sota les dues línies que ja hi ha (substitueix `<UUID>` i `<versió>` pels teus valors):
+```text
+menuentry "Debian GNU/Linux (restaurar snapshot prova)" {
+    search --no-floppy --fs-uuid --set=root <UUID>
+    linux  /boot/vmlinuz-<versió> root=UUID=<UUID> ro console=ttyS0,115200n8 console=tty0 rootdelay=5 snapshot=prova
+    initrd /boot/initrd.img-<versió>
+}
+```
+```bash
+update-grub
+grep -n 'snapshot=' /boot/grub/grub.cfg
+```
+:::
+
+**Per pensar.**
+
+1. Per què seria un error posar `snapshot=prova` a `GRUB_CMDLINE_LINUX_DEFAULT`?
+2. Què passa amb aquesta entrada quan s'actualitza el nucli?
+3. Quina diferència hi ha entre editar amb `e` i l'entrada de `40_custom`?
+
+::: {.callout-note collapse="true"}
+## Respostes
+1. S'aplicaria a **cada** arrencada: cada reinici esborraria el treball fet des del snapshot. La restauració ha de ser puntual.
+2. Apunta a una versió **concreta** del nucli i del seu initramfs; si s'esborren en actualitzar, l'entrada deixa de funcionar. És una entrada de rescat, no una configuració permanent.
+3. `e` és temporal (només aquesta arrencada); `40_custom` és persistent i queda al menú. El que **no** és persistent és `snapshot=` mateix: només s'aplica quan tries l'entrada.
+:::
+
+## Pas 7. Prova final i què passa si...
+
+**Escenari.** Un company ha fet una bogeria: ha canviat `/etc/lan.conf`, ha esborrat les dades de `/opt/lan` i ha trencat els apunts. Recupera'l tot amb l'entrada de GRUB i demostra-ho amb ordres.
+
+Un cop ho tens, **respon abans de provar-ho**:
+
+1. **`MODULES=dep` i el disc de snapshots.** Imagina que canvies `MODULES=most` per `MODULES=dep` a `/etc/initramfs-tools/initramfs.conf` i regeneres l'initramfs. El disc del sistema és virtio i el de snapshots és SATA. Què passarà en restaurar? Quin missatge veuràs? Com ho comprovaries amb `lsinitramfs`? Com ho arregles?
+2. **Reboot contra poweroff.** El snapshot del pas 4 es fa en tots dos casos? Com ho demostres?
+3. **El snapshot `base` del pas 2.** Què passa si restaures `base`, que és anterior a la unitat i a l'script?
+
+::: {.callout-note collapse="true"}
+## Respostes
+1. Amb `dep`, l'initramfs només porta els controladors **del disc de l'arrel** (virtio), no els del disc SATA de snapshots. L'script no trobarà el disc, escriurà «no trobo el disc amb etiqueta 'snapshots'» al log i l'arrencada continuarà **sense restaurar res**. Ho comproves amb `lsinitramfs /boot/initrd.img-$(uname -r) | grep -E 'ahci|virtio_blk'`: només hauria de sortir `virtio_blk`. Es resol amb `MODULES=most` o afegint `ahci` a `/etc/initramfs-tools/modules`, i regenerant. És el mateix mecanisme que la Part 2 de l'examen, a l'inrevés.
+2. Sí: la unitat s'atura en tots dos casos. Ho demostres amb una línia nova a `snapshots.log` després de cada un.
+3. Restaurar `/etc` des de `base` esborra la unitat `snapshot-shutdown.service`, el hook i l'script (no existien quan es va fer `base`) i la configuració de GRUB; tens el sistema tornat a un estat anterior a la teva feina. Per això es fa el snapshot **amb tot fet** abans de provar.
+:::
+
+## Preguntes de repàs 
+
+1. Quin fitxer de `fstab` o quina unitat fa que `/mnt/snapshots` es munti en arrencar? Per què `nofail`?
+2. Explica pas a pas què passa, des de GRUB fins al shell, quan s'arrenca amb `snapshot=prova`.
+3. El missatge de l'initramfs no surt per la pantalla. Explica per què i com ho arreglaries sense perdre la consola sèrie.
+4. Per què `snapshot-restore` es nega a restaurar `/usr` en viu, i què fa que l'initramfs sí que ho pugui fer?
+5. Escriu les línies d'una unitat que fa una acció en aturar-se el sistema, i explica per què no és `WantedBy=poweroff.target`.
+6. Quina és la diferència entre `MODULES=dep` i `MODULES=most` i com afecta aquesta pràctica?
+
+::: {.callout-note collapse="true"}
+## Respostes breus
+1. La línia `LABEL=snapshots /mnt/snapshots ext4 defaults,nofail 0 2` de `/etc/fstab`, que `systemd-fstab-generator` converteix en `mnt-snapshots.mount`. `nofail`: si el disc falta, l'arrencada no acaba en emergència.
+2. GRUB carrega el nucli i l'initramfs amb la línia d'ordres (amb `snapshot=prova`); l'initramfs carrega els controladors, munta l'arrel a `/root` en `ro`, executa `local-bottom`; l'script llegeix `/proc/cmdline`, munta el disc per etiqueta, remunta l'arrel en `rw`, restaura amb `rsync --delete`, deixa l'arrel en `ro`; després l'initramfs fa `run-init` cap a `/sbin/init` (systemd) i el sistema arrenca ja restaurat.
+3. `/dev/console` és l'última `console=`; si és `ttyS0`, l'initramfs parla per la sèrie. S'arregla canviant l'ordre a `console=ttyS0,115200n8 console=tty0` a `GRUB_CMDLINE_LINUX` i fent `update-grub`.
+4. `/usr` és en ús (libc, bash, rsync) i el `dpkg` no és al snapshot. A l'initramfs el sistema real encara no ha arrencat: res no usa els fitxers de l'arrel.
+5. `[Service] Type=oneshot`, `RemainAfterExit=yes`, `ExecStart=/bin/true`, `ExecStop=<acció>`, `[Install] WantedBy=multi-user.target`, i `RequiresMountsFor=` si cal un muntatge. `poweroff.target` només s'activa en `poweroff`, no en `reboot`, i no té relació d'ordre amb els desmuntatges.
+6. `dep` només porta els controladors del maquinari de la màquina on es genera; `most` en porta gairebé tots. Aquí, amb `dep` l'initramfs no portaria el controlador del disc de snapshots.
+:::
+
+## Resum d'ordres
+
+| Tema | Ordres |
+|:--|:--|
+| Discs | `lsblk`, `blkid`, `mkfs.ext4 -L`, `findmnt`, `findmnt --verify` |
+| Còpies | `rsync -aAX --numeric-ids [--delete] [--link-dest]`, `diff -r`, `du -sh`, `stat -c '%h %n'` |
+| systemd | `systemctl enable --now`, `systemctl show -p After`, `systemctl status`, `journalctl -b -1 -u` |
+| initramfs | `update-initramfs -u`, `lsinitramfs`, `break=bottom`, `/run/snapshot-restore.log` |
+| GRUB | `/etc/default/grub`, `/etc/grub.d/40_custom`, `update-grub`, `cat /proc/cmdline`, `e` al menú |

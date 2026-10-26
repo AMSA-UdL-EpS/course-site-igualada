@@ -73,6 +73,7 @@ website:
         - section: "Competencials"
           contents:
             - exams/practics/practic1/s1/enu.qmd
+            - exams/practics/practic1/s2/enu.qmd
 
 
 
