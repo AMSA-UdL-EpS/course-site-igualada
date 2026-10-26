@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ca" xml:lang="ca"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Simulacre 2: snapshots i restauració d’un servidor – Administració i Manteniment de Sistemes i Aplicacions</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../exams/practics/practic1/s1/enu.html" rel="prev">
+<link href="../../../../assets/logo.svg" rel="icon" type="image/svg+xml">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-1dfaff2789308095fe41ecae51c32134.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-22a7e036b50e3db51dccb7b2ace09654.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-1dfaff2789308095fe41ecae51c32134.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Cap resultat",
+    "search-matching-documents-text": "documents que coincideixen",
+    "search-copy-link-title": "Copia l'enllaç a la cerca",
+    "search-hide-matches-text": "Amaga les coincidències addicionals",
+    "search-more-match-text": "altra coincidència en aquest document",
+    "search-more-matches-text": "altres coincidències en aquest document",
+    "search-clear-button-title": "Neteja",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel·la",
+    "search-submit-button-title": "Envia",
+    "search-label": "Cerca"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../../index.html">
+    <span class="navbar-title">AMSA</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Cerca"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Commuta la navegació" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../../index.html"> 
+<span class="menu-text">Inici</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://guiadocent.udl.cat/html/2026-27_105013"> 
+<span class="menu-text">Guia docent</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/AMSA-UdL-EpS/course-site-igualada"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Commuta el mode fosc"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Commuta la navegació de la barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exàmens</li><li class="breadcrumb-item"><a href="../../../../exams/practics/practic1/s1/enu.html">Competencials</a></li><li class="breadcrumb-item"><a href="../../../../exams/practics/practic1/s2/enu.html">Simulacre 2: snapshots i restauració d’un servidor</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Commuta la navegació de la barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="../../../../index.html" class="sidebar-logo-link">
+      <img src="../../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="../../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../course-info/presentation-slides.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentació del curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../course-info/contributions/contribute.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contribueix al curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Temari</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fitxa de la unitat</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/theory/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/activities/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activitats tèoriques · Unitat 1</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/pralab/01-aws-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Laboratori de preparació i comandes bàsiques d’administració</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-01-fonaments/pralab/02-aws-wordpress.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Desplegament d’una aplicació web amb AWS</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 2 · Arrancada</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/theory/01-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/theory/02-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/theory/03-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 3)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/activities/01-systemd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Serveis amb <code>systemd</code></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/01_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (I) · BIOS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (II) · UEFI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/03_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (III) · De GRUB a Linux</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/04_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (IV) · Migració a LUKS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-02-arrancada/pralabs/05_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (IV) · Migració a LUKS (Part 2)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 3 · Emmagatzematge</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../modules/unit-03-storage/theory/01-raids.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 3 · RAIDs</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Exàmens</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true">
+ <span class="menu-text">Competencials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../exams/practics/practic1/s1/enu.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examen simulacre: arrencada, initramfs i systemd</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../../exams/practics/practic1/s2/enu.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Simulacre 2: snapshots i restauració d’un servidor</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En aquesta pàgina</h2>
+   
+  <ul>
+  <li><a href="#què-construiràs" id="toc-què-construiràs" class="nav-link active" data-scroll-target="#què-construiràs">Què construiràs</a></li>
+  <li><a href="#descàrrega-i-arrencada" id="toc-descàrrega-i-arrencada" class="nav-link" data-scroll-target="#descàrrega-i-arrencada">Descàrrega i arrencada</a></li>
+  <li><a href="#pas-0.-arrencar-xarxa-i-eines" id="toc-pas-0.-arrencar-xarxa-i-eines" class="nav-link" data-scroll-target="#pas-0.-arrencar-xarxa-i-eines">Pas 0. Arrencar, xarxa i eines</a></li>
+  <li><a href="#pas-1.-un-disc-per-als-snapshots" id="toc-pas-1.-un-disc-per-als-snapshots" class="nav-link" data-scroll-target="#pas-1.-un-disc-per-als-snapshots">Pas 1. Un disc per als snapshots</a></li>
+  <li><a href="#pas-2.-el-snapshot-amb-rsync" id="toc-pas-2.-el-snapshot-amb-rsync" class="nav-link" data-scroll-target="#pas-2.-el-snapshot-amb-rsync">Pas 2. El snapshot amb <code>rsync</code></a></li>
+  <li><a href="#pas-3.-restaurar-en-viu" id="toc-pas-3.-restaurar-en-viu" class="nav-link" data-scroll-target="#pas-3.-restaurar-en-viu">Pas 3. Restaurar en viu</a></li>
+  <li><a href="#pas-4.-snapshot-automàtic-en-aturar-systemd" id="toc-pas-4.-snapshot-automàtic-en-aturar-systemd" class="nav-link" data-scroll-target="#pas-4.-snapshot-automàtic-en-aturar-systemd">Pas 4. Snapshot automàtic en aturar (systemd)</a></li>
+  <li><a href="#pas-5.-restaurar-abans-que-el-sistema-arrenqui-initramfs" id="toc-pas-5.-restaurar-abans-que-el-sistema-arrenqui-initramfs" class="nav-link" data-scroll-target="#pas-5.-restaurar-abans-que-el-sistema-arrenqui-initramfs">Pas 5. Restaurar abans que el sistema arrenqui (initramfs)</a>
+  <ul class="collapse">
+  <li><a href="#en-quina-etapa" id="toc-en-quina-etapa" class="nav-link" data-scroll-target="#en-quina-etapa">5.1. En quina etapa?</a></li>
+  <li><a href="#fer-visible-linitramfs" id="toc-fer-visible-linitramfs" class="nav-link" data-scroll-target="#fer-visible-linitramfs">5.2. Fer visible l’initramfs</a></li>
+  <li><a href="#lscript-i-el-hook" id="toc-lscript-i-el-hook" class="nav-link" data-scroll-target="#lscript-i-el-hook">5.3. L’script i el hook</a></li>
+  <li><a href="#provar-ho" id="toc-provar-ho" class="nav-link" data-scroll-target="#provar-ho">5.4. Provar-ho</a></li>
+  </ul></li>
+  <li><a href="#pas-6.-activar-ho-des-de-grub" id="toc-pas-6.-activar-ho-des-de-grub" class="nav-link" data-scroll-target="#pas-6.-activar-ho-des-de-grub">Pas 6. Activar-ho des de GRUB</a></li>
+  <li><a href="#pas-7.-prova-final-i-què-passa-si" id="toc-pas-7.-prova-final-i-què-passa-si" class="nav-link" data-scroll-target="#pas-7.-prova-final-i-què-passa-si">Pas 7. Prova final i què passa si…</a></li>
+  <li><a href="#preguntes-de-repàs" id="toc-preguntes-de-repàs" class="nav-link" data-scroll-target="#preguntes-de-repàs">Preguntes de repàs</a></li>
+  <li><a href="#resum-dordres" id="toc-resum-dordres" class="nav-link" data-scroll-target="#resum-dordres">Resum d’ordres</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Exàmens</li><li class="breadcrumb-item"><a href="../../../../exams/practics/practic1/s1/enu.html">Competencials</a></li><li class="breadcrumb-item"><a href="../../../../exams/practics/practic1/s2/enu.html">Simulacre 2: snapshots i restauració d’un servidor</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Simulacre 2: snapshots i restauració d’un servidor</h1>
+<p class="subtitle lead">Protegint i recuperant el servidor de la LAN party</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="què-construiràs" class="level2">
+<h2 class="anchored" data-anchor-id="què-construiràs">Què construiràs</h2>
+<p>Un servidor de jocs s’ha de poder <strong>protegir i recuperar</strong>: abans d’un canvi arriscat (o cada vegada que s’apaga) es fa una còpia de les dades i la configuració, i si alguna cosa es trenca, es restaura. Ho muntaràs en capes, cadascuna amb una eina diferent de les vistes al curs:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 30%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Pas</th>
+<th style="text-align: left;">Què fas</th>
+<th style="text-align: left;">Què repasses</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">Arrencar la màquina, xarxa i eines</td>
+<td style="text-align: left;">Discs, <code>lsblk</code>, <code>apt</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">Un disc dedicat als snapshots</td>
+<td style="text-align: left;"><code>fstab</code>, etiquetes, unitats <code>.mount</code>, <code>nofail</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">2</td>
+<td style="text-align: left;">Script de snapshot amb <code>rsync</code></td>
+<td style="text-align: left;">Còpies, retenció, permisos</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">Script de restauració en viu</td>
+<td style="text-align: left;">Per què no es pot restaurar tot en marxa</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">4</td>
+<td style="text-align: left;">Snapshot automàtic en aturar</td>
+<td style="text-align: left;"><strong>systemd</strong>: ordenació, <code>RequiresMountsFor=</code>, <code>ExecStop=</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">5</td>
+<td style="text-align: left;">Restauració abans que el sistema arrenqui</td>
+<td style="text-align: left;"><strong>initramfs</strong>: etapes, hooks, consola, depuració</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">6</td>
+<td style="text-align: left;">Activar-la des de GRUB</td>
+<td style="text-align: left;"><code>/etc/default/grub</code>, <code>40_custom</code>, <code>update-grub</code>, línia d’ordres</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">7</td>
+<td style="text-align: left;">Prova final i què passa si…</td>
+<td style="text-align: left;">Predicció i diagnòstic</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="descàrrega-i-arrencada" class="level2">
+<h2 class="anchored" data-anchor-id="descàrrega-i-arrencada">Descàrrega i arrencada</h2>
+<p>Descarrega els fitxers de la pràctica <a href="https://udlcat-my.sharepoint.com/:f:/g/personal/jordi_mateo_udl_cat/IgDcsSI4Yrj1RoBgt7Nbm_gnAaG0HiFC3alhQYBGgXdZGrA?e=t8owik">Simulacre 2</a> i descomprimeix-los en una carpeta. Hi ha d’haver <code>base.qcow2</code>, <code>firmware/</code>, <code>run.sh</code>. Necessites <a href="https://www.qemu.org/">QEMU</a> instal·lat.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./run.sh</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La màquina té <strong>dos discs</strong>: el del sistema (<code>practica.qcow2</code>, sobre <code>base.qcow2</code>) i un disc buit de 8 GB per als snapshots (<code>snap.qcow2</code>). Usuari <code>jordi</code> amb contrasenya <code>1234</code>. Aquest usuari té <code>sudo</code> i si voleu accedir com a root podeu fer <code>sudo su</code>. Aquesta vegada la màquina <strong>té xarxa</strong>. Si vols <strong>tornar a començar</strong>, tanca QEMU i esborra <code>practica.qcow2</code>, <code>snap.qcow2</code> i <code>vars_practica.fd</code>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Consell
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La màquina no té el servei ssh funcionant, si ho necessiteu podeu activar-lo amb <code>systemctl unmask ssh</code>, <code>systemctl enable ssh</code> i <code>systemctl start ssh</code>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Si la pantalla sembla congelada
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si la pantalla s’atura en un missatge del nucli, <strong>espera uns segons i mira la consola sèrie</strong> (<code>serial0</code>, al menú <em>View</em> de QEMU). Al pas 5 entendràs per què passa i ho arreglaràs.</p>
+</div>
+</div>
+</section>
+<section id="pas-0.-arrencar-xarxa-i-eines" class="level2">
+<h2 class="anchored" data-anchor-id="pas-0.-arrencar-xarxa-i-eines">Pas 0. Arrencar, xarxa i eines</h2>
+<p><strong>Objectiu.</strong> Tenir la màquina en marxa, amb xarxa i amb <code>rsync</code> instal·lat.</p>
+<p><strong>Què has de fer.</strong></p>
+<ol type="1">
+<li>Arrenca la màquina i entra com a <code>jordi</code>.</li>
+<li>Comprova que té adreça IP i que arriba a Internet.</li>
+<li>Instal·la <code>rsync</code>.</li>
+<li>Identifica els dos discs: quin és el del sistema i quin el dels snapshots, i com se’n diuen.</li>
+</ol>
+<p><strong>Comprova.</strong> <code>rsync --version</code> respon, i <code>lsblk</code> mostra un disc de 8 GB <strong>sense particions ni sistema d’arxius</strong>.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Pista
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>ip -br a</code> mostra les interfícies amb la seva adreça; <code>ping -c1</code> serveix per provar l’accés. Si no hi ha IP, mira quin servei de xarxa té el sistema abans d’inventar-te’n un.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> <span class="at">-br</span> a                       <span class="co"># interfícies i adreces</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ping</span> <span class="at">-c1</span> deb.debian.org        <span class="co"># accés i DNS</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> update</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> install <span class="at">-y</span> rsync</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rsync</span> <span class="at">--version</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-o</span> NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El disc del sistema és <code>vda</code> (virtio); el de snapshots és <code>sda</code> (SATA), sense <code>FSTYPE</code>.</p>
+</div>
+</div>
+</div>
+<p><strong>Per pensar.</strong> El disc del sistema és <code>vda</code> i el buit és <code>sda</code>; a l’examen, el del sistema era <code>sda</code>. Què implica això per a com identifiques un disc en un fitxer de configuració?</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Resposta
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Que el nom <code>/dev/sdX</code> o <code>/dev/vdX</code> <strong>depèn del bus i de l’ordre de descobriment</strong>: canvia segons com es connecta el disc. Per això s’identifica per <strong>UUID o etiqueta</strong>, com fa el <code>root=UUID=</code> de GRUB i l’<code>fstab</code>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="pas-1.-un-disc-per-als-snapshots" class="level2">
+<h2 class="anchored" data-anchor-id="pas-1.-un-disc-per-als-snapshots">Pas 1. Un disc per als snapshots</h2>
+<p><strong>Objectiu.</strong> Que el disc buit quedi formatat, muntat a <code>/mnt/snapshots</code> i es munti sol a cada arrencada.</p>
+<p><strong>Què has de fer.</strong></p>
+<ol type="1">
+<li>Crea un sistema d’arxius <code>ext4</code> al disc, amb l’etiqueta <code>snapshots</code>.</li>
+<li>Crea el punt de muntatge <code>/mnt/snapshots</code>.</li>
+<li>Fes-lo persistent a <code>/etc/fstab</code> <strong>sense dependre del nom del dispositiu</strong> i de manera que, si el disc falta, la màquina arrenqui igualment.</li>
+<li>Comprova-ho i reinicia.</li>
+</ol>
+<p><strong>Comprova.</strong> <code>findmnt /mnt/snapshots</code> mostra el disc muntat, <code>findmnt --verify</code> no es queixa i, després de reiniciar, continua muntat.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Pista
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>mkfs.ext4 -L etiqueta dispositiu</code>. A <code>fstab</code>, el primer camp pot ser <code>LABEL=...</code>. Mira a <code>man fstab</code> què fa l’opció <code>nofail</code>.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mkfs.ext4</span> <span class="at">-L</span> snapshots /dev/sda</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /mnt/snapshots</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">'LABEL=snapshots  /mnt/snapshots  ext4  defaults,nofail  0  2'</span> <span class="op">&gt;&gt;</span> /etc/fstab</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> daemon-reload</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> /mnt/snapshots</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> <span class="at">--verify</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> /mnt/snapshots</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> status mnt-snapshots.mount      <span class="co"># la unitat que systemd ha generat de l'fstab</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p><strong>Per pensar.</strong></p>
+<ol type="1">
+<li>Per què <code>LABEL=</code> (o <code>UUID=</code>) i no <code>/dev/sda</code>?</li>
+<li>Què passaria, sense <code>nofail</code>, si arrenques la màquina sense el segon disc?</li>
+<li>D’on surt la unitat <code>mnt-snapshots.mount</code> si tu no n’has escrit cap?</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Respostes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Perquè el nom canvia segons el bus i l’ordre (pas 0).</li>
+<li>L’arrencada esperaria el dispositiu i acabaria en mode d’<strong>emergència</strong> (<code>emergency.target</code>): un disc de còpies secundari no hauria de poder deixar el servidor sense arrencar.</li>
+<li>De <code>systemd-fstab-generator</code>, que converteix cada línia de <code>fstab</code> en una unitat <code>.mount</code> en arrencar.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="pas-2.-el-snapshot-amb-rsync" class="level2">
+<h2 class="anchored" data-anchor-id="pas-2.-el-snapshot-amb-rsync">Pas 2. El snapshot amb <code>rsync</code></h2>
+<p><strong>Objectiu.</strong> Un script <code>/usr/local/sbin/snapshot-create</code> que faci una còpia del servidor dins de <code>/mnt/snapshots</code>.</p>
+<p><strong>Dades de prova.</strong> Crea-les abans de començar, perquè hi hagi alguna cosa que protegir:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /opt/lan</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"món v1"</span> <span class="op">&gt;</span> /opt/lan/world.txt</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"max_jugadors=16"</span> <span class="op">&gt;</span> /etc/lan.conf</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"apunts v1"</span> <span class="op">&gt;</span> /home/jordi/notes.txt <span class="kw">&amp;&amp;</span> <span class="fu">chown</span> jordi:jordi /home/jordi/notes.txt</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Requisits de l’script.</strong></p>
+<ol type="1">
+<li>Copia <code>/etc</code>, <code>/home</code> i <code>/opt</code> a un directori nou dins de <code>/mnt/snapshots</code>, amb nom <code>snapshot_AAAAMMDD_HHMMSS</code>, <strong>o amb el nom que se li passi com a argument</strong> (per exemple <code>base</code>).</li>
+<li>Conserva permisos, propietaris, ACL i atributs ampliats, i que el propietari no depengui dels noms d’usuari.</li>
+<li>Es nega a treballar si <code>/mnt/snapshots</code> no és muntat, i no sobreescriu un snapshot existent.</li>
+<li>Anota cada snapshot a <code>/mnt/snapshots/snapshots.log</code>.</li>
+<li>Conserva només els <strong>3 últims</strong> automàtics; els que tenen nom propi (com <code>base</code>) <strong>no s’esborren mai</strong>.</li>
+</ol>
+<p><strong>Comprova.</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">snapshot-create</span> base</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> 1 2 3 4 5<span class="kw">;</span> <span class="cf">do</span> <span class="fu">sleep</span> 1<span class="kw">;</span> <span class="ex">snapshot-create</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> /mnt/snapshots                      <span class="co"># base + 3 automàtics + el log</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> <span class="at">-r</span> /opt /mnt/snapshots/base/opt <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">"iguals"</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Pista
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>rsync -aAX</code> conserva gairebé tot; afegeix <code>--numeric-ids</code>. Compte amb la barra final: <code>rsync /opt/ dest/opt/</code> copia el <em>contingut</em>. Per a la retenció, ordena els noms (el format de data ordena bé alfabèticament) i esborra tots menys els <code>KEEP</code> últims. <code>mountpoint -q</code> serveix per saber si un directori és un punt de muntatge.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Crea un snapshot (còpia) dels directoris de DIRS dins SNAPSHOT_DIR.</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   snapshot-create            -&gt; snapshot_AAAAMMDD_HHMMSS (automàtic; en conserva els KEEP últims)</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   snapshot-create base       -&gt; snapshot amb nom propi (mai s'esborra automaticament)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="va">SNAPSHOT_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">${SNAPSHOT_DIR</span><span class="op">:-</span>/mnt/snapshots<span class="va">}</span><span class="st">"</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="va">DIRS</span><span class="op">=</span><span class="st">"</span><span class="va">${DIRS</span><span class="op">:-</span>etc home opt<span class="va">}</span><span class="st">"</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="va">KEEP</span><span class="op">=</span><span class="st">"</span><span class="va">${KEEP</span><span class="op">:-</span>3<span class="va">}</span><span class="st">"</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="ex">mountpoint</span> <span class="at">-q</span> <span class="st">"</span><span class="va">$SNAPSHOT_DIR</span><span class="st">"</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"ERROR: </span><span class="va">$SNAPSHOT_DIR</span><span class="st"> no està muntat"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="va">NAME</span><span class="op">=</span><span class="st">"</span><span class="va">${1</span><span class="op">:-</span>snapshot_<span class="va">$(</span><span class="fu">date</span> +%Y%m%d_%H%M%S<span class="va">)}</span><span class="st">"</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="va">TARGET</span><span class="op">=</span><span class="st">"</span><span class="va">$SNAPSHOT_DIR</span><span class="st">/</span><span class="va">$NAME</span><span class="st">"</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="ot">!</span> <span class="ot">-e</span> <span class="st">"</span><span class="va">$TARGET</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"ERROR: </span><span class="va">$NAME</span><span class="st"> ja existeix"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$TARGET</span><span class="st">"</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> dir <span class="kw">in</span> <span class="va">$DIRS</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="bu">[</span> <span class="ot">-d</span> <span class="st">"/</span><span class="va">$dir</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="cf">continue</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"  - Copiant /</span><span class="va">$dir</span><span class="st">"</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rsync</span> <span class="at">-aAX</span> <span class="at">--numeric-ids</span> <span class="st">"/</span><span class="va">$dir</span><span class="st">/"</span> <span class="st">"</span><span class="va">$TARGET</span><span class="st">/</span><span class="va">$dir</span><span class="st">/"</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">$(</span><span class="fu">date</span> <span class="at">-Is</span><span class="va">)</span><span class="st"> </span><span class="va">$NAME</span><span class="st">"</span> <span class="op">&gt;&gt;</span> <span class="st">"</span><span class="va">$SNAPSHOT_DIR</span><span class="st">/snapshots.log"</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"[OK] Snapshot creat a: </span><span class="va">$TARGET</span><span class="st">"</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="ex">mapfile</span> <span class="at">-t</span> OLD <span class="op">&lt;</span> <span class="op">&lt;(</span><span class="fu">ls</span> <span class="at">-1d</span> <span class="st">"</span><span class="va">$SNAPSHOT_DIR</span><span class="st">"</span>/snapshot_<span class="pp">*</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> <span class="at">-</span><span class="st">"</span><span class="va">$KEEP</span><span class="st">"</span><span class="op">)</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">${</span><span class="op">#</span><span class="va">OLD</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span> <span class="ot">-gt</span> 0 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"[*] Eliminant snapshots antics: </span><span class="va">${OLD</span><span class="op">[*]##</span><span class="pp">*</span>/<span class="va">}</span><span class="st">"</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rm</span> <span class="at">-rf</span> <span class="at">--</span> <span class="st">"</span><span class="va">${OLD</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x /usr/local/sbin/snapshot-create</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">snapshot-create</span> base</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p><strong>Per pensar.</strong></p>
+<ol type="1">
+<li>Per què <code>--numeric-ids</code>?</li>
+<li>Per què no es copia <code>/usr</code>? Mira <code>ls -ld /bin</code> abans de respondre.</li>
+<li>Un snapshot fet amb el sistema en marxa, és consistent?</li>
+<li>Ampliació: fes que cada snapshot reutilitzi, amb enllaços durs, els fitxers que no han canviat. Quina opció de <code>rsync</code> ho fa, i com ho comprovaries amb <code>stat</code>?</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Respostes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Sense la opció, <code>rsync</code> tradueix propietaris per <strong>nom</strong>; en un entorn sense <code>/etc/passwd</code> (l’initramfs) no es podria fer i els propietaris es perdrien.</li>
+<li>A Debian 13 <code>/bin</code> és un enllaç a <code>/usr/bin</code>, així que copiar-lo duplicaria <code>/usr/bin</code>; i <code>/usr</code> és gran i és el que el sistema està usant (pas 3).</li>
+<li>No del tot: <code>rsync</code> copia fitxer a fitxer mentre altres processos poden escriure; no és una foto atòmica. Per a això hi ha mecanismes del sistema d’arxius o del volum (LVM, btrfs) o de la virtualització (<code>qemu-img snapshot</code>).</li>
+<li><code>--link-dest=&lt;snapshot anterior&gt;/&lt;directori&gt;</code>. Un fitxer sense canvis surt amb <strong>2 enllaços</strong> a <code>stat -c '%h %n' fitxer</code>, i el snapshot ocupa gairebé res.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="pas-3.-restaurar-en-viu" class="level2">
+<h2 class="anchored" data-anchor-id="pas-3.-restaurar-en-viu">Pas 3. Restaurar en viu</h2>
+<p><strong>Objectiu.</strong> Un script <code>/usr/local/sbin/snapshot-restore</code> que torni <code>/etc</code>, <code>/home</code> i <code>/opt</code> a l’estat d’un snapshot.</p>
+<p><strong>Requisits.</strong></p>
+<ol type="1">
+<li>Primer argument: nom del snapshot. Opcionalment, la llista de directoris a restaurar (per defecte, els tres).</li>
+<li>El destí ha de quedar <strong>exactament</strong> com el snapshot: els fitxers que no hi eren, s’esborren.</li>
+<li><strong>Es nega</strong> a restaurar <code>/usr</code>, <code>/bin</code>, <code>/sbin</code>, <code>/lib</code> i <code>/lib64</code> amb el sistema en marxa, amb un missatge que ho expliqui.</li>
+<li>Falla amb un missatge clar si el snapshot no existeix.</li>
+</ol>
+<p><strong>Comprova.</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> /opt/lan/<span class="pp">*</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> trencat <span class="op">&gt;</span> /etc/lan.conf</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">snapshot-restore</span> base</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /opt/lan/world.txt /etc/lan.conf           <span class="co"># món v1 / max_jugadors=16</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">snapshot-restore</span> base usr<span class="kw">;</span> <span class="bu">echo</span> <span class="va">$?</span>             <span class="co"># refusat, codi diferent de 0</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Pista
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>La mateixa eina que al pas 2, però amb la direcció invertida i <code>--delete</code>. Un <code>case</code> sobre el nom del directori és suficient per a la protecció.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Restaura un snapshot sobre el sistema EN MARXA (només per a directoris de dades i configuració).</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   snapshot-restore NOM [directori...]      (per defecte: etc home opt)</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="va">SNAPSHOT_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">${SNAPSHOT_DIR</span><span class="op">:-</span>/mnt/snapshots<span class="va">}</span><span class="st">"</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="va">$#</span> <span class="ot">-ge</span> 1 <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"Ús: </span><span class="va">$0</span><span class="st"> &lt;snapshot&gt; [directori...]"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="va">SNAP</span><span class="op">=</span><span class="st">"</span><span class="va">$SNAPSHOT_DIR</span><span class="st">/</span><span class="va">$1</span><span class="st">"</span><span class="kw">;</span> <span class="bu">shift</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="ot">-d</span> <span class="st">"</span><span class="va">$SNAP</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"Snapshot inexistent: </span><span class="va">$SNAP</span><span class="st">"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="va">DIRS</span><span class="op">=</span><span class="st">"</span><span class="va">${*</span><span class="op">:-</span>etc home opt<span class="va">}</span><span class="st">"</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> dir <span class="kw">in</span> <span class="va">$DIRS</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="st">"</span><span class="va">$dir</span><span class="st">"</span> <span class="kw">in</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="ss">usr</span><span class="kw">|</span><span class="ss">bin</span><span class="kw">|</span><span class="ss">sbin</span><span class="kw">|</span><span class="ss">lib</span><span class="kw">|</span><span class="ss">lib64</span><span class="kw">)</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>      <span class="bu">echo</span> <span class="st">"REFUSAT: /</span><span class="va">$dir</span><span class="st"> està en ús; es restaura des de l'initramfs"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1 <span class="cf">;;</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">esac</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="bu">[</span> <span class="ot">-d</span> <span class="st">"</span><span class="va">$SNAP</span><span class="st">/</span><span class="va">$dir</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"  - /</span><span class="va">$dir</span><span class="st"> no és al snapshot, el salto"</span><span class="kw">;</span> <span class="cf">continue</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"  - Restaurant /</span><span class="va">$dir</span><span class="st">"</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rsync</span> <span class="at">-aAX</span> <span class="at">--numeric-ids</span> <span class="at">--delete</span> <span class="st">"</span><span class="va">$SNAP</span><span class="st">/</span><span class="va">$dir</span><span class="st">/"</span> <span class="st">"/</span><span class="va">$dir</span><span class="st">/"</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"[OK] Snapshot restaurat."</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p><strong>Opcional.</strong> Escriu un menú interactiu (<code>snapshot-menu</code>) amb <code>select</code> que llisti els snapshots i cridi <code>snapshot-restore</code>. Compte: el disc ext4 té un directori <code>lost+found</code> que <strong>no</strong> és un snapshot.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució del menú
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Menú interactiu per triar un snapshot i restaurar-lo.</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="va">SNAPSHOT_DIR</span><span class="op">=</span><span class="st">"</span><span class="va">${SNAPSHOT_DIR</span><span class="op">:-</span>/mnt/snapshots<span class="va">}</span><span class="st">"</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">mapfile</span> <span class="at">-t</span> SNAPS <span class="op">&lt;</span> <span class="op">&lt;(</span><span class="fu">find</span> <span class="st">"</span><span class="va">$SNAPSHOT_DIR</span><span class="st">"</span> <span class="at">-mindepth</span> 1 <span class="at">-maxdepth</span> 1 <span class="at">-type</span> d ! <span class="at">-name</span> lost+found <span class="at">-printf</span> <span class="st">'%f\n'</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">sort</span><span class="op">)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="st">"</span><span class="va">${</span><span class="op">#</span><span class="va">SNAPS</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span> <span class="ot">-gt</span> 0 <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"No hi ha snapshots per restaurar."</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="va">PS3</span><span class="op">=</span><span class="st">"Snapshot a restaurar: "</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="cf">select</span> snap <span class="kw">in</span> <span class="st">"</span><span class="va">${SNAPS</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span> <span class="st">"Cancel·lar"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">case</span> <span class="st">"</span><span class="va">$snap</span><span class="st">"</span> <span class="kw">in</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Cancel·lar"</span><span class="kw">)</span> <span class="bu">echo</span> <span class="st">"Cancel·lat."</span><span class="kw">;</span> <span class="bu">exit</span> 0 <span class="cf">;;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span><span class="kw">)</span>           <span class="bu">echo</span> <span class="st">"Opció no vàlida."</span> <span class="cf">;;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="pp">*</span><span class="kw">)</span>            <span class="bu">exec</span> /usr/local/sbin/snapshot-restore <span class="st">"</span><span class="va">$snap</span><span class="st">"</span> <span class="cf">;;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">esac</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p><strong>Per pensar.</strong> Per què és perillós restaurar <code>/usr</code> amb el sistema en marxa? Quin altre fitxer hauria de coincidir amb <code>/usr</code> i no és al snapshot?</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Resposta
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Es sobreescriuen biblioteques i programes <strong>que s’estan usant</strong> (libc, bash, el mateix <code>rsync</code>), i <code>--delete</code> pot esborrar-ne que el sistema encara necessita. A més, la base de dades de <code>dpkg</code> (<code>/var/lib/dpkg</code>) no és al snapshot: diria que hi ha paquets instal·lats els fitxers dels quals ja no hi són. Per això la restauració total s’ha de fer <strong>abans que el sistema usi aquests fitxers</strong>: a l’initramfs (pas 5).</p>
+</div>
+</div>
+</div>
+</section>
+<section id="pas-4.-snapshot-automàtic-en-aturar-systemd" class="level2">
+<h2 class="anchored" data-anchor-id="pas-4.-snapshot-automàtic-en-aturar-systemd">Pas 4. Snapshot automàtic en aturar (systemd)</h2>
+<p><strong>Objectiu.</strong> Que cada vegada que la màquina s’atura o es reinicia, es faci un snapshot.</p>
+<p><strong>Requisits de la unitat <code>/etc/systemd/system/snapshot-shutdown.service</code>.</strong></p>
+<ol type="1">
+<li>S’executa <code>snapshot-create</code> <strong>en aturar-se el sistema</strong>, tant amb <code>poweroff</code> com amb <code>reboot</code>.</li>
+<li>Ha d’executar-se <strong>mentre <code>/mnt/snapshots</code> encara és muntat</strong> (systemd desmunta els discs en aturar).</li>
+<li>Una còpia pot trigar molt: no ha de morir pel temps d’espera per defecte.</li>
+<li>Ha de quedar habilitada i activa.</li>
+</ol>
+<p><strong>Comprova.</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> status snapshot-shutdown.service        <span class="co"># active (exited)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> show <span class="at">-p</span> After <span class="at">-p</span> Requires snapshot-shutdown.service <span class="kw">|</span> <span class="fu">grep</span> mnt-snapshots</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> reboot</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ... un cop reiniciat:</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 3 /mnt/snapshots/snapshots.log            <span class="co"># hi ha un snapshot nou fet en aturar</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Pista
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>systemd atura les unitats en <strong>l’ordre invers</strong> de com les ha arrencat (recorda la Part 3 de l’examen). Un servei que no fa res en arrencar però que fa la feina quan s’<strong>atura</strong> té <code>Type=oneshot</code>, <code>RemainAfterExit=yes</code> i la feina a <code>ExecStop=</code>. Per assegurar que el muntatge és viu, busca <code>RequiresMountsFor=</code>. El temps d’aturada per defecte és de 90 s.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-17-contents" aria-controls="callout-17" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-17" class="callout-17-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Snapshot en aturar el sistema</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">RequiresMountsFor</span><span class="ot">=</span><span class="st">/mnt/snapshots</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">oneshot</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="dt">RemainAfterExit</span><span class="ot">=</span><span class="kw">yes</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/bin/true</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStop</span><span class="ot">=</span><span class="st">/usr/local/sbin/snapshot-create</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="dt">TimeoutStopSec</span><span class="ot">=</span><span class="dv">900</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> daemon-reload</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> enable <span class="at">--now</span> snapshot-shutdown.service</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>ExecStart=/bin/true</code> + <code>RemainAfterExit=yes</code> deixa la unitat «activa» mentre el sistema funciona; en aturar-se, systemd l’<strong>atura</strong>, i en fer-ho executa <code>ExecStop=</code>. <code>RequiresMountsFor=</code> afegeix <code>Requires=</code> i <code>After=</code> sobre <code>mnt-snapshots.mount</code>: com que l’aturada és en ordre invers, la unitat s’atura <strong>abans</strong> de desmuntar el disc. <code>TimeoutStopSec</code> evita que systemd la mati als 90 s.</p>
+</div>
+</div>
+</div>
+<p><strong>Per pensar.</strong></p>
+<ol type="1">
+<li>Per què <code>WantedBy=poweroff.target</code> no és una bona manera de fer-ho?</li>
+<li>Per què la unitat «no fa res» en arrencar?</li>
+<li>Què veuries si afegissis <code>After=</code> sense <code>RequiresMountsFor=</code>?</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-18-contents" aria-controls="callout-18" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Respostes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-18" class="callout-18-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Només s’activaria amb <code>poweroff</code> (no amb <code>reboot</code>), i no hi ha garantia que s’executi <strong>abans</strong> de desmuntar <code>/mnt/snapshots</code>: no té cap relació d’ordre amb el muntatge. Aprofitar l’ordre invers de l’arrencada és fiable.</li>
+<li>Perquè la feina vol fer-se a l’<strong>aturada</strong>: la unitat només ha d’estar activa perquè systemd la tingui a la llista d’unitats a aturar.</li>
+<li><code>After=mnt-snapshots.mount</code> ordena, però no obliga que el muntatge existeixi (no és un requeriment): si el disc no és, la unitat s’executaria igualment i fallaria l’script. <code>RequiresMountsFor=</code> fa les dues coses (ordre i requeriment).</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="pas-5.-restaurar-abans-que-el-sistema-arrenqui-initramfs" class="level2">
+<h2 class="anchored" data-anchor-id="pas-5.-restaurar-abans-que-el-sistema-arrenqui-initramfs">Pas 5. Restaurar abans que el sistema arrenqui (initramfs)</h2>
+<p><strong>Objectiu.</strong> Poder restaurar un snapshot <strong>abans</strong> que el sistema usi els fitxers, activant-ho amb un paràmetre del nucli: <code>snapshot=NOM</code>.</p>
+<section id="en-quina-etapa" class="level3">
+<h3 class="anchored" data-anchor-id="en-quina-etapa">5.1. En quina etapa?</h3>
+<p>L’initramfs executa els seus scripts en etapes, en aquest ordre: <code>init-top</code> → <code>init-premount</code> → <code>local-top</code> → <code>local-block</code> → <code>local-premount</code> → <strong>(es munta l’arrel a <code>/root</code>)</strong> → <code>local-bottom</code> → <code>init-bottom</code>. Tria l’etapa on caldria restaurar i justifica-ho.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-19-contents" aria-controls="callout-19" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Resposta
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-19" class="callout-19-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>local-bottom</code>: l’arrel ja és muntada (a <code>/root</code>, la variable <code>rootmnt</code>) però el sistema encara <strong>no hi ha entrat</strong>, així que podem sobreescriure-la sense que res l’estigui usant. A <code>init-top</code> encara no s’han carregat els controladors del disc i l’arrel no és muntada. L’arrel arriba muntada en <strong>només lectura</strong> (paràmetre <code>ro</code>), per tant s’ha de remuntar en lectura i escriptura i tornar-la a deixar com estava.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="fer-visible-linitramfs" class="level3">
+<h3 class="anchored" data-anchor-id="fer-visible-linitramfs">5.2. Fer visible l’initramfs</h3>
+<p>L’initramfs s’executa en uns pocs segons i, després, l’arrencada continua i omple la pantalla: <strong>un missatge normal passa tan de pressa que no el veuràs</strong>. Per això aquest script de prova (provisional) fa dues coses: <strong>atura l’arrencada 15 segons</strong> i <strong>deixa una marca</strong> a <code>/run</code>, que sobreviu fins al sistema arrencat.</p>
+<p>Crea’l a <code>/etc/initramfs-tools/scripts/local-bottom/snapshot-restore</code> amb aquesta capçalera, que <strong>és obligatòria</strong> en qualsevol script d’<code>initramfs-tools</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="va">PREREQ</span><span class="op">=</span><span class="st">""</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">prereqs()</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"</span><span class="va">$PREREQ</span><span class="st">"</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="st">"</span><span class="va">$1</span><span class="st">"</span> <span class="kw">in</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="ss">prereqs</span><span class="kw">)</span> <span class="ex">prereqs</span><span class="kw">;</span> <span class="bu">exit</span> 0 <span class="cf">;;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="cf">esac</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="bu">.</span> /scripts/functions</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="ex">log_begin_msg</span> <span class="st">"snapshot-restore: hola des de l'initramfs (espero 15 s)"</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"executat a local-bottom"</span> <span class="op">&gt;</span> /run/hola-initramfs</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sleep</span> 15</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="ex">log_end_msg</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Fes-lo executable, regenera l’initramfs amb <code>update-initramfs -u</code> i reinicia. <strong>Mira la pantalla durant tota l’arrencada</strong> i respon:</p>
+<ol type="1">
+<li>Veus el missatge? Què fa l’arrencada durant aquests 15 segons?</li>
+<li>Un cop dins, <code>cat /run/hola-initramfs</code>: s’ha executat o no?</li>
+<li>Torna a reiniciar i, durant la pausa, mira la consola sèrie (<code>serial0</code>): què hi veus?</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-20-contents" aria-controls="callout-20" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Resposta
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-20" class="callout-20-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><strong>No</strong> veus el missatge: la pantalla s’atura 15 s en l’últim missatge del nucli (<code>bochs-drm</code>…) i després l’arrencada continua com si res.</li>
+<li><strong>Sí</strong>: el fitxer existeix. L’script s’ha executat, però el missatge no s’ha vist. <code>/run</code> es conserva en passar a l’arrel real.</li>
+<li>El missatge és a la consola <strong>sèrie</strong> (<code>serial0</code>). La línia d’ordres del nucli té <code>console=tty0 console=ttyS0,115200n8</code>, i <code>/dev/console</code> (el que usen els scripts de l’initramfs) és sempre l’<strong>última</strong> <code>console=</code>: <code>ttyS0</code>. Els missatges del <strong>nucli</strong> van a totes dues, per això la pantalla s’atura en un missatge del nucli.</li>
+</ol>
+</div>
+</div>
+</div>
+<p><strong>Arregla-ho</strong> perquè l’initramfs parli per la pantalla, sense treure la consola sèrie: canvia l’ordre de les consoles a <code>/etc/default/grub</code> (variable <code>GRUB_CMDLINE_LINUX</code>) i regenera la configuració de GRUB. Comprova-ho amb <code>cat /proc/cmdline</code> després de reiniciar i, sobretot, <strong>mirant la pantalla</strong>: ara el missatge i la pausa de 15 s s’han de veure sense canviar a la sèrie.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-21-contents" aria-controls="callout-21" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-21" class="callout-21-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>A <code>/etc/default/grub</code>:</p>
+<pre class="text"><code>GRUB_CMDLINE_LINUX="console=ttyS0,115200n8 console=tty0 rootdelay=5"</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">update-grub</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">reboot</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>No s’edita mai <code>/boot/grub/grub.cfg</code> a mà.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="lscript-i-el-hook" class="level3">
+<h3 class="anchored" data-anchor-id="lscript-i-el-hook">5.3. L’script i el hook</h3>
+<p><strong>Requisits.</strong></p>
+<ol type="1">
+<li>Només actua si la línia d’ordres del nucli porta <code>snapshot=NOM</code>; si no, no fa res.</li>
+<li>Troba el disc per <strong>etiqueta</strong> (<code>snapshots</code>) i el munta (en només lectura) en un directori temporal.</li>
+<li>Si el snapshot no existeix, o no troba el disc, ho diu i <strong>deixa continuar l’arrencada</strong> (mai ha de deixar la màquina penjada).</li>
+<li>Remunta l’arrel en lectura i escriptura, restaura <code>/etc</code>, <code>/home</code> i <code>/opt</code> amb <code>rsync --delete</code>, fa <code>sync</code>, torna l’arrel a només lectura i desmunta.</li>
+<li>Escriu tot el que fa a <code>/run/snapshot-restore.log</code> perquè es pugui llegir després d’arrencar.</li>
+<li>L’initramfs ha de <strong>portar <code>rsync</code></strong>: cal un <em>hook</em>.</li>
+</ol>
+<p><strong>Comprova.</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lsinitramfs</span> /boot/initrd.img-<span class="va">$(</span><span class="fu">uname</span> <span class="at">-r</span><span class="va">)</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'rsync|snapshot-restore'</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-22-contents" aria-controls="callout-22" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Pistes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-22" class="callout-22-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li>No hi ha <code>bash</code> a l’initramfs: <code>#!/bin/sh</code> (busybox) i només sintaxi POSIX.</li>
+<li>A <code>/scripts/functions</code> hi ha helpers: <code>log_begin_msg</code>, <code>wait_for_udev</code> i <code>resolve_device</code> (tradueix <code>LABEL=...</code> a un dispositiu).</li>
+<li>L’arrel es munta a <code>${rootmnt}</code>.</li>
+<li><code>/run</code> <strong>sobreviu</strong> al canvi a l’arrel real: un lloc bo per deixar un log.</li>
+<li>Per fer arribar un binari (i les seves llibreries) a l’initramfs, un <em>hook</em> a <code>/etc/initramfs-tools/hooks/</code> amb <code>copy_exec</code>, que copia el programa <strong>i les biblioteques dinàmiques</strong> que necessita.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-23-contents" aria-controls="callout-23" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució: el hook
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-23" class="callout-23-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/initramfs-tools/hooks/snapshot-restore</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="va">PREREQ</span><span class="op">=</span><span class="st">""</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">prereqs()</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"</span><span class="va">$PREREQ</span><span class="st">"</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="st">"</span><span class="va">$1</span><span class="st">"</span> <span class="kw">in</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="ss">prereqs</span><span class="kw">)</span> <span class="ex">prereqs</span><span class="kw">;</span> <span class="bu">exit</span> 0 <span class="cf">;;</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="cf">esac</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="bu">.</span> /usr/share/initramfs-tools/hook-functions</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co"># rsync dinàmic: copy_exec hi copia també les llibreries que necessita</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="ex">copy_exec</span> /usr/bin/rsync /usr/bin</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co"># el disc de snapshots és ext4</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="ex">manual_add_modules</span> ext4</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-24-contents" aria-controls="callout-24" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució: l’script
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-24" class="callout-24-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/initramfs-tools/scripts/local-bottom/snapshot-restore</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Restaura un snapshot si la línia d'ordres del nucli porta snapshot=NOM.</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="va">PREREQ</span><span class="op">=</span><span class="st">""</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">prereqs()</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"</span><span class="va">$PREREQ</span><span class="st">"</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="st">"</span><span class="va">$1</span><span class="st">"</span> <span class="kw">in</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="ss">prereqs</span><span class="kw">)</span> <span class="ex">prereqs</span><span class="kw">;</span> <span class="bu">exit</span> 0 <span class="cf">;;</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="cf">esac</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="bu">.</span> /scripts/functions</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="va">SNAP</span><span class="op">=</span><span class="st">""</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> <span class="va">$(</span><span class="fu">cat</span> /proc/cmdline<span class="va">)</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">"</span><span class="va">$x</span><span class="st">"</span> <span class="kw">in</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>        <span class="ss">snapshot=</span><span class="pp">*</span><span class="kw">)</span> <span class="va">SNAP</span><span class="op">=</span><span class="st">"</span><span class="va">${x</span><span class="op">#</span>snapshot=<span class="va">}</span><span class="st">"</span> <span class="cf">;;</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">esac</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="ot">-n</span> <span class="st">"</span><span class="va">$SNAP</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="bu">exit</span> 0</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="va">LOG</span><span class="op">=</span>/run/snapshot-restore.log</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="va">DIRS</span><span class="op">=</span><span class="st">"etc home opt"</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a><span class="fu">say()</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"snapshot-restore: </span><span class="va">$*</span><span class="st">"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">echo</span> <span class="st">"snapshot-restore: </span><span class="va">$*</span><span class="st">"</span> <span class="op">&gt;&gt;</span> <span class="st">"</span><span class="va">$LOG</span><span class="st">"</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="ex">say</span> <span class="st">"snapshot sol·licitat: </span><span class="va">$SNAP</span><span class="st">"</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a><span class="ex">wait_for_udev</span> 10</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="co"># resolve_device (de /scripts/functions) tradueix LABEL=... a /dev/... amb blkid</span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a><span class="va">DEV</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">resolve_device</span> LABEL=snapshots<span class="va">)</span><span class="st">"</span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-z</span> <span class="st">"</span><span class="va">$DEV</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-b</span> <span class="st">"</span><span class="va">$DEV</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>    <span class="ex">say</span> <span class="st">"ERROR: no trobo el disc amb etiqueta 'snapshots' (falta el controlador del disc a l'initramfs?)"</span></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 0</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /snap</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> <span class="at">-t</span> ext4 <span class="at">-o</span> ro <span class="st">"</span><span class="va">$DEV</span><span class="st">"</span> /snap <span class="kw">||</span> <span class="kw">{</span> <span class="ex">say</span> <span class="st">"ERROR: no puc muntar </span><span class="va">$DEV</span><span class="st">"</span><span class="kw">;</span> <span class="bu">exit</span> 0<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-d</span> <span class="st">"/snap/</span><span class="va">$SNAP</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>    <span class="ex">say</span> <span class="st">"ERROR: no existeix el snapshot </span><span class="va">$SNAP</span><span class="st">"</span></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">umount</span> /snap</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 0</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> <span class="at">-o</span> remount,rw <span class="st">"</span><span class="va">${rootmnt}</span><span class="st">"</span> <span class="kw">||</span> <span class="kw">{</span> <span class="ex">say</span> <span class="st">"ERROR: no puc remuntar l'arrel en rw"</span><span class="kw">;</span> <span class="fu">umount</span> /snap<span class="kw">;</span> <span class="bu">exit</span> 0<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> d <span class="kw">in</span> <span class="va">$DIRS</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>    <span class="bu">[</span> <span class="ot">-d</span> <span class="st">"/snap/</span><span class="va">$SNAP</span><span class="st">/</span><span class="va">$d</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="cf">continue</span></span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>    <span class="ex">say</span> <span class="st">"restaurant /</span><span class="va">$d</span><span class="st">"</span></span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rsync</span> <span class="at">-aAX</span> <span class="at">--numeric-ids</span> <span class="at">--delete</span> <span class="st">"/snap/</span><span class="va">$SNAP</span><span class="st">/</span><span class="va">$d</span><span class="st">/"</span> <span class="st">"</span><span class="va">${rootmnt}</span><span class="st">/</span><span class="va">$d</span><span class="st">/"</span> <span class="op">&gt;&gt;</span> <span class="st">"</span><span class="va">$LOG</span><span class="st">"</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="dt">\</span></span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>        <span class="kw">||</span> <span class="ex">say</span> <span class="st">"ATENCIÓ: error restaurant /</span><span class="va">$d</span><span class="st">"</span></span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a><span class="fu">sync</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a><span class="fu">mount</span> <span class="at">-o</span> remount,ro <span class="st">"</span><span class="va">${rootmnt}</span><span class="st">"</span></span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a><span class="fu">umount</span> /snap</span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a><span class="ex">say</span> <span class="st">"fet"</span></span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> 0</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x /etc/initramfs-tools/hooks/snapshot-restore <span class="dt">\</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>         /etc/initramfs-tools/scripts/local-bottom/snapshot-restore</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="ex">update-initramfs</span> <span class="at">-u</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="provar-ho" class="level3">
+<h3 class="anchored" data-anchor-id="provar-ho">5.4. Provar-ho</h3>
+<p><strong>Compte:</strong> si restaures un snapshot <strong>antic</strong> de <code>/etc</code>, també hi perdràs els fitxers que has creat després (aquest script, el hook, la unitat del pas 4…). Per això, abans de provar, fes un snapshot nou <strong>amb tot ja fet</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">snapshot-create</span> prova</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"trencat"</span> <span class="op">&gt;</span> /opt/lan/world.txt <span class="kw">;</span> <span class="fu">rm</span> <span class="at">-f</span> /home/jordi/notes.txt</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Reinicia i, al menú de GRUB, prem <code>e</code> sobre la primera entrada, afegeix <code>snapshot=prova</code> al final de la línia que comença per <code>linux</code> i arrenca amb <code>Ctrl+X</code> (o F10). Un cop dins:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /run/snapshot-restore.log</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /opt/lan/world.txt <span class="kw">;</span> <span class="fu">ls</span> /home/jordi</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Si no funciona:</strong></p>
+<ul>
+<li>Afegeix <code>break=bottom</code> a la línia d’ordres: l’arrencada s’atura en un shell de l’initramfs just <strong>després</strong> d’executar <code>local-bottom</code>. Allà pots mirar <code>cat /run/snapshot-restore.log</code>, <code>ls /dev/disk/by-label</code> i <code>mount</code>.</li>
+<li>Comprova que el <code>lsinitramfs</code> del pas 5.3 mostra <code>rsync</code> i l’script.</li>
+<li>Mira que el nom del snapshot és exacte (<code>ls /mnt/snapshots</code>).</li>
+</ul>
+<p><strong>Per pensar.</strong></p>
+<ol type="1">
+<li>Per què l’script acaba sempre amb <code>exit 0</code>, fins i tot en cas d’error?</li>
+<li>Per què <code>--numeric-ids</code> és aquí <strong>imprescindible</strong>?</li>
+<li>Per què l’arrel es remunta en <code>rw</code> només durant la còpia?</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-25-contents" aria-controls="callout-25" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Respostes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-25" class="callout-25-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Perquè si l’script falla, l’arrencada s’ha de poder continuar: una màquina que no arrenca per culpa de l’eina de recuperació és pitjor que no tenir-la.</li>
+<li>Perquè l’initramfs no té <code>/etc/passwd</code>: no hi ha noms d’usuari per traduir, i <code>rsync</code> no podria assignar els propietaris correctes.</li>
+<li>Per minimitzar el temps en què el sistema d’arxius està obert a escriptura i deixar-lo com el nucli l’ha arrencat (<code>ro</code>); systemd el remuntarà en <code>rw</code> quan toqui.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="pas-6.-activar-ho-des-de-grub" class="level2">
+<h2 class="anchored" data-anchor-id="pas-6.-activar-ho-des-de-grub">Pas 6. Activar-ho des de GRUB</h2>
+<p><strong>Objectiu.</strong> Una entrada del menú de GRUB que <strong>restauri <code>prova</code></strong> una sola vegada, sense haver d’editar la línia a mà.</p>
+<p><strong>Requisits.</strong></p>
+<ol type="1">
+<li>Una entrada addicional al menú, «Debian GNU/Linux (restaurar snapshot prova)», amb els mateixos paràmetres que l’entrada normal més <code>snapshot=prova</code>.</li>
+<li>Sense tocar <code>/boot/grub/grub.cfg</code> directament.</li>
+<li>Comprova que <strong>no</strong> has afegit <code>snapshot=</code> a <code>GRUB_CMDLINE_LINUX_DEFAULT</code>.</li>
+</ol>
+<p><strong>Comprova.</strong> <code>grep -n 'snapshot=' /boot/grub/grub.cfg</code> mostra l’entrada nova; en reiniciar i triar-la, es restaura; si tries l’entrada normal, no.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-26-contents" aria-controls="callout-26" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Alerta</span>Pista
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-26" class="callout-26-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Mira en un <code>less</code> o <code>grep</code> de <code>/boot/grub/grub.cfg</code> el bloc <code>menuentry</code> de l’entrada normal i <strong>copia’l</strong> a <code>/etc/grub.d/40_custom</code>, tot canviant el títol i afegint el paràmetre. El fitxer <code>40_custom</code> ja porta dues línies de capçalera que has de respectar. Necessites el UUID de l’arrel (<code>blkid</code>) i la versió del nucli (<code>uname -r</code>).</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-27-contents" aria-controls="callout-27" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-27" class="callout-27-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>A <code>/etc/grub.d/40_custom</code>, sota les dues línies que ja hi ha (substitueix <code>&lt;UUID&gt;</code> i <code>&lt;versió&gt;</code> pels teus valors):</p>
+<pre class="text"><code>menuentry "Debian GNU/Linux (restaurar snapshot prova)" {
+    search --no-floppy --fs-uuid --set=root &lt;UUID&gt;
+    linux  /boot/vmlinuz-&lt;versió&gt; root=UUID=&lt;UUID&gt; ro console=ttyS0,115200n8 console=tty0 rootdelay=5 snapshot=prova
+    initrd /boot/initrd.img-&lt;versió&gt;
+}</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">update-grub</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-n</span> <span class="st">'snapshot='</span> /boot/grub/grub.cfg</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p><strong>Per pensar.</strong></p>
+<ol type="1">
+<li>Per què seria un error posar <code>snapshot=prova</code> a <code>GRUB_CMDLINE_LINUX_DEFAULT</code>?</li>
+<li>Què passa amb aquesta entrada quan s’actualitza el nucli?</li>
+<li>Quina diferència hi ha entre editar amb <code>e</code> i l’entrada de <code>40_custom</code>?</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-28-contents" aria-controls="callout-28" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Respostes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-28" class="callout-28-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>S’aplicaria a <strong>cada</strong> arrencada: cada reinici esborraria el treball fet des del snapshot. La restauració ha de ser puntual.</li>
+<li>Apunta a una versió <strong>concreta</strong> del nucli i del seu initramfs; si s’esborren en actualitzar, l’entrada deixa de funcionar. És una entrada de rescat, no una configuració permanent.</li>
+<li><code>e</code> és temporal (només aquesta arrencada); <code>40_custom</code> és persistent i queda al menú. El que <strong>no</strong> és persistent és <code>snapshot=</code> mateix: només s’aplica quan tries l’entrada.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="pas-7.-prova-final-i-què-passa-si" class="level2">
+<h2 class="anchored" data-anchor-id="pas-7.-prova-final-i-què-passa-si">Pas 7. Prova final i què passa si…</h2>
+<p><strong>Escenari.</strong> Un company ha fet una bogeria: ha canviat <code>/etc/lan.conf</code>, ha esborrat les dades de <code>/opt/lan</code> i ha trencat els apunts. Recupera’l tot amb l’entrada de GRUB i demostra-ho amb ordres.</p>
+<p>Un cop ho tens, <strong>respon abans de provar-ho</strong>:</p>
+<ol type="1">
+<li><strong><code>MODULES=dep</code> i el disc de snapshots.</strong> Imagina que canvies <code>MODULES=most</code> per <code>MODULES=dep</code> a <code>/etc/initramfs-tools/initramfs.conf</code> i regeneres l’initramfs. El disc del sistema és virtio i el de snapshots és SATA. Què passarà en restaurar? Quin missatge veuràs? Com ho comprovaries amb <code>lsinitramfs</code>? Com ho arregles?</li>
+<li><strong>Reboot contra poweroff.</strong> El snapshot del pas 4 es fa en tots dos casos? Com ho demostres?</li>
+<li><strong>El snapshot <code>base</code> del pas 2.</strong> Què passa si restaures <code>base</code>, que és anterior a la unitat i a l’script?</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-29-contents" aria-controls="callout-29" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Respostes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-29" class="callout-29-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>Amb <code>dep</code>, l’initramfs només porta els controladors <strong>del disc de l’arrel</strong> (virtio), no els del disc SATA de snapshots. L’script no trobarà el disc, escriurà «no trobo el disc amb etiqueta ‘snapshots’» al log i l’arrencada continuarà <strong>sense restaurar res</strong>. Ho comproves amb <code>lsinitramfs /boot/initrd.img-$(uname -r) | grep -E 'ahci|virtio_blk'</code>: només hauria de sortir <code>virtio_blk</code>. Es resol amb <code>MODULES=most</code> o afegint <code>ahci</code> a <code>/etc/initramfs-tools/modules</code>, i regenerant. És el mateix mecanisme que la Part 2 de l’examen, a l’inrevés.</li>
+<li>Sí: la unitat s’atura en tots dos casos. Ho demostres amb una línia nova a <code>snapshots.log</code> després de cada un.</li>
+<li>Restaurar <code>/etc</code> des de <code>base</code> esborra la unitat <code>snapshot-shutdown.service</code>, el hook i l’script (no existien quan es va fer <code>base</code>) i la configuració de GRUB; tens el sistema tornat a un estat anterior a la teva feina. Per això es fa el snapshot <strong>amb tot fet</strong> abans de provar.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="preguntes-de-repàs" class="level2">
+<h2 class="anchored" data-anchor-id="preguntes-de-repàs">Preguntes de repàs</h2>
+<ol type="1">
+<li>Quin fitxer de <code>fstab</code> o quina unitat fa que <code>/mnt/snapshots</code> es munti en arrencar? Per què <code>nofail</code>?</li>
+<li>Explica pas a pas què passa, des de GRUB fins al shell, quan s’arrenca amb <code>snapshot=prova</code>.</li>
+<li>El missatge de l’initramfs no surt per la pantalla. Explica per què i com ho arreglaries sense perdre la consola sèrie.</li>
+<li>Per què <code>snapshot-restore</code> es nega a restaurar <code>/usr</code> en viu, i què fa que l’initramfs sí que ho pugui fer?</li>
+<li>Escriu les línies d’una unitat que fa una acció en aturar-se el sistema, i explica per què no és <code>WantedBy=poweroff.target</code>.</li>
+<li>Quina és la diferència entre <code>MODULES=dep</code> i <code>MODULES=most</code> i com afecta aquesta pràctica?</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-30-contents" aria-controls="callout-30" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Respostes breus
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-30" class="callout-30-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>La línia <code>LABEL=snapshots /mnt/snapshots ext4 defaults,nofail 0 2</code> de <code>/etc/fstab</code>, que <code>systemd-fstab-generator</code> converteix en <code>mnt-snapshots.mount</code>. <code>nofail</code>: si el disc falta, l’arrencada no acaba en emergència.</li>
+<li>GRUB carrega el nucli i l’initramfs amb la línia d’ordres (amb <code>snapshot=prova</code>); l’initramfs carrega els controladors, munta l’arrel a <code>/root</code> en <code>ro</code>, executa <code>local-bottom</code>; l’script llegeix <code>/proc/cmdline</code>, munta el disc per etiqueta, remunta l’arrel en <code>rw</code>, restaura amb <code>rsync --delete</code>, deixa l’arrel en <code>ro</code>; després l’initramfs fa <code>run-init</code> cap a <code>/sbin/init</code> (systemd) i el sistema arrenca ja restaurat.</li>
+<li><code>/dev/console</code> és l’última <code>console=</code>; si és <code>ttyS0</code>, l’initramfs parla per la sèrie. S’arregla canviant l’ordre a <code>console=ttyS0,115200n8 console=tty0</code> a <code>GRUB_CMDLINE_LINUX</code> i fent <code>update-grub</code>.</li>
+<li><code>/usr</code> és en ús (libc, bash, rsync) i el <code>dpkg</code> no és al snapshot. A l’initramfs el sistema real encara no ha arrencat: res no usa els fitxers de l’arrel.</li>
+<li><code>[Service] Type=oneshot</code>, <code>RemainAfterExit=yes</code>, <code>ExecStart=/bin/true</code>, <code>ExecStop=&lt;acció&gt;</code>, <code>[Install] WantedBy=multi-user.target</code>, i <code>RequiresMountsFor=</code> si cal un muntatge. <code>poweroff.target</code> només s’activa en <code>poweroff</code>, no en <code>reboot</code>, i no té relació d’ordre amb els desmuntatges.</li>
+<li><code>dep</code> només porta els controladors del maquinari de la màquina on es genera; <code>most</code> en porta gairebé tots. Aquí, amb <code>dep</code> l’initramfs no portaria el controlador del disc de snapshots.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="resum-dordres" class="level2">
+<h2 class="anchored" data-anchor-id="resum-dordres">Resum d’ordres</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Tema</th>
+<th style="text-align: left;">Ordres</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Discs</td>
+<td style="text-align: left;"><code>lsblk</code>, <code>blkid</code>, <code>mkfs.ext4 -L</code>, <code>findmnt</code>, <code>findmnt --verify</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Còpies</td>
+<td style="text-align: left;"><code>rsync -aAX --numeric-ids [--delete] [--link-dest]</code>, <code>diff -r</code>, <code>du -sh</code>, <code>stat -c '%h %n'</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">systemd</td>
+<td style="text-align: left;"><code>systemctl enable --now</code>, <code>systemctl show -p After</code>, <code>systemctl status</code>, <code>journalctl -b -1 -u</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">initramfs</td>
+<td style="text-align: left;"><code>update-initramfs -u</code>, <code>lsinitramfs</code>, <code>break=bottom</code>, <code>/run/snapshot-restore.log</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GRUB</td>
+<td style="text-align: left;"><code>/etc/default/grub</code>, <code>/etc/grub.d/40_custom</code>, <code>update-grub</code>, <code>cat /proc/cmdline</code>, <code>e</code> al menú</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiat!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiat!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/igualada\.amsa\.udl\.cat");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../../exams/practics/practic1/s1/enu.html" class="pagination-link" aria-label="Examen simulacre: arrencada, initramfs i systemd">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Examen simulacre: arrencada, initramfs i systemd</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
