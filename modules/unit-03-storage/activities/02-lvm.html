@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ca" xml:lang="ca"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.20">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Gestió de volums lògics (LVM) – Administració i Manteniment de Sistemes i Aplicacions</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../modules/unit-03-storage/pralabs/02-lvm.html" rel="next">
+<link href="../../../modules/unit-03-storage/theory/02-lvm.html" rel="prev">
+<link href="../../../assets/logo.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-17888a1159294d3eb470f19f6f52f5a5.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0ae969d3293726db143f6e9eb89af930.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-17888a1159294d3eb470f19f6f52f5a5.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-815e7f6c83dcdc718467f355b707c941.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-c27b2b010f924af7bd3ec1794222b16d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-815e7f6c83dcdc718467f355b707c941.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Cap resultat",
+    "search-matching-documents-text": "documents que coincideixen",
+    "search-copy-link-title": "Copia l'enllaç a la cerca",
+    "search-hide-matches-text": "Amaga les coincidències addicionals",
+    "search-more-match-text": "altra coincidència en aquest document",
+    "search-more-matches-text": "altres coincidències en aquest document",
+    "search-clear-button-title": "Neteja",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel·la",
+    "search-submit-button-title": "Envia",
+    "search-label": "Cerca"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">AMSA</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Cerca"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Commuta la navegació" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../index.html"> 
+<span class="menu-text">Inici</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://guiadocent.udl.cat/html/2026-27_105013"> 
+<span class="menu-text">Guia docent</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/AMSA-UdL-EpS/course-site-igualada"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Commuta el mode fosc"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Commuta la navegació de la barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 3 · Emmagatzematge</li><li class="breadcrumb-item"><a href="../../../modules/unit-03-storage/activities/02-lvm.html">Activitats</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-03-storage/activities/02-lvm.html">Gestió de volums lògics (LVM)</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Commuta la navegació de la barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+      <a href="../../../index.html" class="sidebar-logo-link">
+      <img src="../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo light-content py-0 d-lg-inline d-none">
+      <img src="../../../assets/logo.png" alt="AMSA Logo" class="sidebar-logo dark-content py-0 d-lg-inline d-none">
+      </a>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../course-info/presentation-slides.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Presentació del curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../course-info/contributions/contribute.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contribueix al curs</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Temari</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Fitxa de la unitat</span></a>
+  </div>
+</li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/theory/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Fonaments de l’Administració de Sistemes</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/activities/01-fonaments.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Activitats tèoriques · Unitat 1</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/pralab/01-aws-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Laboratori de preparació i comandes bàsiques d’administració</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-01-fonaments/pralab/02-aws-wordpress.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 1 · Desplegament d’una aplicació web amb AWS</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 2 · Arrancada</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/theory/01-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 1)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/theory/02-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 2)</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/theory/03-arrancada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 2 · Arrencada (Part 3)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/activities/01-systemd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Serveis amb <code>systemd</code></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/01_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (I) · BIOS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/02_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (II) · UEFI</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/03_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (III) · De GRUB a Linux</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/04_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (IV) · Migració a LUKS</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-02-arrancada/pralabs/05_arrencada.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Arrencada (IV) · Migració a LUKS (Part 2)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Unitat 3 · Emmagatzematge</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false">
+ <span class="menu-text">Teoria</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-03-storage/theory/01-raids.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 3 · RAIDs</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-03-storage/theory/02-lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Unitat 3 · Logical Volume Manager (LVM)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Activitats</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth3 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-03-storage/activities/02-lvm.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Gestió de volums lògics (LVM)</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false">
+ <span class="menu-text">Pralabs</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="false" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth3 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../modules/unit-03-storage/pralabs/02-lvm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Emmagatzematge (II): LVM</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true">
+ <span class="menu-text">Exàmens</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="true">
+ <span class="menu-text">Competencials</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="true" aria-label="Commuta la secció">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-15" class="collapse list-unstyled sidebar-section depth2 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../exams/practics/practic1/s1/enu.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Examen simulacre: arrencada, initramfs i systemd</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../../exams/practics/practic1/s2/enu.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Simulacre 2: snapshots i restauració d’un servidor</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">En aquesta pàgina</h2>
+   
+  <ul>
+  <li><a href="#abans-de-començar" id="toc-abans-de-començar" class="nav-link active" data-scroll-target="#abans-de-començar">Abans de començar</a></li>
+  <li><a href="#exercici-1-comptar-extents" id="toc-exercici-1-comptar-extents" class="nav-link" data-scroll-target="#exercici-1-comptar-extents">Exercici 1 · Comptar extents</a></li>
+  <li><a href="#exercici-2-llegir-una-taula-de-device-mapper" id="toc-exercici-2-llegir-una-taula-de-device-mapper" class="nav-link" data-scroll-target="#exercici-2-llegir-una-taula-de-device-mapper">Exercici 2 · Llegir una taula de device-mapper</a></li>
+  <li><a href="#exercici-3-lordre-de-les-operacions" id="toc-exercici-3-lordre-de-les-operacions" class="nav-link" data-scroll-target="#exercici-3-lordre-de-les-operacions">Exercici 3 · L’ordre de les operacions</a></li>
+  <li><a href="#exercici-4-migrar-home-a-lvm" id="toc-exercici-4-migrar-home-a-lvm" class="nav-link" data-scroll-target="#exercici-4-migrar-home-a-lvm">Exercici 4 · Migrar <code>/home</code> a LVM</a></li>
+  <li><a href="#exercici-5-substituir-un-disc-sense-aturar-el-servei" id="toc-exercici-5-substituir-un-disc-sense-aturar-el-servei" class="nav-link" data-scroll-target="#exercici-5-substituir-un-disc-sense-aturar-el-servei">Exercici 5 · Substituir un disc sense aturar el servei</a></li>
+  <li><a href="#exercici-6-dimensionar-un-snapshot" id="toc-exercici-6-dimensionar-un-snapshot" class="nav-link" data-scroll-target="#exercici-6-dimensionar-un-snapshot">Exercici 6 · Dimensionar un snapshot</a></li>
+  <li><a href="#exercici-7-revisar-el-disseny-dun-company" id="toc-exercici-7-revisar-el-disseny-dun-company" class="nav-link" data-scroll-target="#exercici-7-revisar-el-disseny-dun-company">Exercici 7 · Revisar el disseny d’un company</a></li>
+  <li><a href="#exercici-8-planificar-la-capacitat-dun-thin-pool" id="toc-exercici-8-planificar-la-capacitat-dun-thin-pool" class="nav-link" data-scroll-target="#exercici-8-planificar-la-capacitat-dun-thin-pool">Exercici 8 · Planificar la capacitat d’un thin pool</a></li>
+  <li><a href="#exercici-9-on-satura-larrencada" id="toc-exercici-9-on-satura-larrencada" class="nav-link" data-scroll-target="#exercici-9-on-satura-larrencada">Exercici 9 · On s’atura l’arrencada?</a></li>
+  <li><a href="#exercici-10-fallada-dun-disc" id="toc-exercici-10-fallada-dun-disc" class="nav-link" data-scroll-target="#exercici-10-fallada-dun-disc">Exercici 10 · Fallada d’un disc</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Temari</li><li class="breadcrumb-item">Unitat 3 · Emmagatzematge</li><li class="breadcrumb-item"><a href="../../../modules/unit-03-storage/activities/02-lvm.html">Activitats</a></li><li class="breadcrumb-item"><a href="../../../modules/unit-03-storage/activities/02-lvm.html">Gestió de volums lògics (LVM)</a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Gestió de volums lògics (LVM)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="abans-de-començar" class="level2">
+<h2 class="anchored" data-anchor-id="abans-de-començar">Abans de començar</h2>
+<p>Sempre que no es digui el contrari, suposem:</p>
+<ul>
+<li>un sistema <strong>Debian bookworm</strong> (lvm2 2.03.16);</li>
+<li>discos virtio: <code>/dev/vda</code> per al sistema, i <code>/dev/vdb</code>, <code>/dev/vdc</code>… com a discos addicionals;</li>
+<li>que totes les ordres de LVM, <code>mount</code>, <code>mkfs</code> i similars s’executen amb privilegis de <code>root</code> (<code>sudo</code>).</li>
+</ul>
+<p>Intenteu resoldre cada exercici <strong>abans</strong> d’obrir la solució.</p>
+<hr>
+</section>
+<section id="exercici-1-comptar-extents" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-1-comptar-extents">Exercici 1 · Comptar extents</h2>
+<p>Teniu dos discos, <code>/dev/vdb</code> de <strong>10 GiB</strong> i <code>/dev/vdc</code> de <strong>20 GiB</strong>, i executeu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pvcreate /dev/vdb /dev/vdc</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgcreate datavg /dev/vdb /dev/vdc</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Recordeu que LVM reserva l’inici de cada PV per a l’etiqueta i les metadades. Amb la configuració per defecte, la zona de dades comença a <strong>1 MiB</strong> de l’inici del dispositiu. Tots els càlculs d’aquest exercici suposen aquesta configuració convencional (zona de dades a 1 MiB i, si no es diu el contrari, PE de 4 MiB). Amb una altra configuració de metadades o d’alineament, les xifres serien diferents.</p>
+<ol type="a">
+<li>Quants PE té cada PV? I el VG en total?</li>
+<li>Quants LE té un LV creat amb <code>lvcreate -n web -L 7G datavg</code>?</li>
+<li>Repetiu l’apartat a) suposant que el VG s’ha creat amb <code>vgcreate -s 32M datavg /dev/vdb /dev/vdc</code>.</li>
+<li>Amb PE de 32 MiB, què passa si executeu <code>lvcreate -n web -L 7000M datavg</code>?</li>
+<li>Un company diu: Si poso PE de 32 MiB, el disc anirà més ràpid perquè LVM llegirà blocs més grans. Té raó?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>a)</strong> L’espai útil de cada PV és la mida total menys 1 MiB, dividida per la mida del PE (4 MiB per defecte), arrodonint cap avall perquè un PE no pot quedar a mitges:</p>
+<ul>
+<li><code>vdb</code>: (10240 − 1) / 4 = 2559,75 → <strong>2559 PE</strong>.</li>
+<li><code>vdc</code>: (20480 − 1) / 4 = 5119,75 → <strong>5119 PE</strong>.</li>
+<li>VG: <strong>7678 PE</strong>, és a dir 30712 MiB ≈ 29,99 GiB. Per això <code>vgs</code> mostra <code>&lt;30.00g</code>, amb el símbol <code>&lt;</code>.</li>
+</ul>
+<p>Recordeu que aquestes xifres depenen de la hipòtesi de l’enunciat. El que és general és el mètode: espai útil del PV dividit per la mida del PE, arrodonint cap avall.</p>
+<p><strong>b)</strong> 7 GiB = 7168 MiB, i 7168 / 4 = <strong>1792 LE</strong>. La mida d’un LE és sempre igual a la d’un PE del seu VG.</p>
+<p><strong>c)</strong> Ara cada PE fa 32 MiB:</p>
+<ul>
+<li><code>vdb</code>: 10239 / 32 = 319,97 → <strong>319 PE</strong>.</li>
+<li><code>vdc</code>: 20479 / 32 = 639,97 → <strong>639 PE</strong>.</li>
+<li>VG: <strong>958 PE</strong> = 30656 MiB. Es perden 56 MiB respecte del cas anterior, perquè el residu de cada PV que no arriba a un PE sencer és més gran.</li>
+</ul>
+<p><strong>d)</strong> 7000 / 32 = 218,75. Un LV ha de tenir un nombre enter de LE, de manera que LVM <strong>arrodoneix cap amunt</strong> fins a 219 LE (7008 MiB) i ho avisa amb un missatge del tipus <em>Rounding up size to full physical extent</em>.</p>
+<p><strong>e)</strong> <strong>No.</strong> La mida del PE només determina la <strong>granularitat del mapatge</strong>: amb quina precisió es pot assignar l’espai i quantes entrades té la taula LE→PE. No canvia la mida de les operacions d’E/S. Un <code>read()</code> de 4 KiB continua sent una lectura de 4 KiB al disc, sigui quina sigui la mida del PE. El preu d’uns PE grans és perdre flexibilitat (els LV creixen de 32 MiB en 32 MiB) i desaprofitar més espai als extrems dels PV.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-2-llegir-una-taula-de-device-mapper" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-2-llegir-una-taula-de-device-mapper">Exercici 2 · Llegir una taula de device-mapper</h2>
+<p>Un servidor té un LV <code>datavg/web</code>. Obteniu aquesta informació:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dmsetup table datavg-web</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>0 4194304 linear 254:16 2048
+4194304 2097152 linear 254:32 2048</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> /dev/vdb /dev/vdc</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>brw-rw---- 1 root disk 254, 16 ... /dev/vdb
+brw-rw---- 1 root disk 254, 32 ... /dev/vdc</code></pre>
+<ol type="a">
+<li>Quina mida té el LV? Expresseu-la en GiB. (Els sectors són de 512 bytes.)</li>
+<li>On són físicament les dades del LV? Indiqueu-ho tram a tram.</li>
+<li>Per què tots dos trams comencen al sector 2048 del seu disc?</li>
+<li>Proposeu una explicació plausible de per què el LV té dos trams.</li>
+<li>Si falla <code>/dev/vdc</code>, què es perd? I si falla <code>/dev/vdb</code>?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Cada línia de la taula té el format <code>inici longitud tipus dispositiu offset</code>, amb totes les mides expressades en sectors.</p>
+<p><strong>a)</strong> 4194304 + 2097152 = 6291456 sectors × 512 B = 3 221 225 472 B = <strong>3 GiB</strong>.</p>
+<p><strong>b)</strong></p>
+<ul>
+<li>Sectors 0 a 4194303 del LV (els primers <strong>2 GiB</strong>) → <code>vdb</code> (254:16), a partir del seu sector 2048.</li>
+<li>Sectors 4194304 a 6291455 del LV (l’últim <strong>1 GiB</strong>) → <code>vdc</code> (254:32), a partir del seu sector 2048.</li>
+</ul>
+<p>El mapatge és <strong>lineal</strong>, sense <em>striping</em>.</p>
+<p><strong>c)</strong> El sector 2048 correspon a <strong>1 MiB</strong> (2048 × 512 B). És on comença la zona de dades de cada PV, just després de l’etiqueta i les metadades. Tots dos trams comencen al <strong>primer PE</strong> del seu disc.</p>
+<p><strong>d)</strong> El més probable és que el LV es creés amb 2 GiB a <code>vdb</code> i que més endavant s’ampliés amb <code>lvextend</code>. L’ampliació va anar a <code>vdc</code>, per exemple perquè <code>vdb</code> ja no tenia extents lliures, o perquè l’administrador va indicar el PV explícitament (<code>lvextend -L +1G datavg/web /dev/vdc</code>). Pel sistema de fitxers no hi ha cap diferència: veu un únic dispositiu (<code>dm-N</code>) de 3 GiB.</p>
+<p><strong>e)</strong> Si falla <code>vdc</code> es perd <strong>l’últim GiB</strong> del LV. Si falla <code>vdb</code> se’n perden <strong>els dos primers</strong>. En tots dos casos el que es perd és un tram del dispositiu, i el FS que hi ha a sobre queda malmès. Sense un LV redundant (<code>raid1</code>) i sense còpies de seguretat, els fitxers que hi havia en aquell tram no es poden recuperar. Repartir un LV lineal entre dos discos <strong>augmenta</strong> el risc: n’hi ha prou que falli qualsevol dels dos.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-3-lordre-de-les-operacions" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-3-lordre-de-les-operacions">Exercici 3 · L’ordre de les operacions</h2>
+<p><strong>a)</strong> Teniu <code>/srv/web</code> (ext4) sobre <code>datavg/web</code> i voleu afegir-hi 5 GiB fent servir un disc nou, <code>/dev/vdc</code>. Ordeneu aquests passos i indiqueu quins es poden fer amb el FS muntat:</p>
+<pre><code>(A) resize2fs /dev/datavg/web
+(B) vgextend datavg /dev/vdc
+(C) lvextend -L +5G datavg/web
+(D) pvcreate /dev/vdc</code></pre>
+<p><strong>b)</strong> Un company ha reduït <code>/home</code> (ext4, 20 GiB, amb 6 GiB ocupats) a 10 GiB amb aquesta seqüència. Després el sistema no ha pogut muntar <code>/home</code>. Expliqueu exactament què ha passat i escriviu la seqüència correcta.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /home</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvreduce <span class="at">-L</span> 10G datavg/home</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> resize2fs /dev/datavg/home 10G</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount /home</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>c)</strong> I si <code>/home</code> fos <strong>XFS</strong>?</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>a)</strong> L’ordre correcte és <strong>D → B → C → A</strong>: preparar el PV, afegir-lo al pool, fer créixer el contenidor (el LV) i, finalment, el contingut (el FS). Els quatre passos es poden fer <strong>amb el FS muntat</strong>, perquè ext4 pot créixer en calent. El pas D és opcional, perquè <code>vgextend</code> inicialitza el PV si cal. Els passos C i A es poden fer en una sola ordre:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvextend <span class="at">-r</span> <span class="at">-L</span> +5G datavg/web</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>b)</strong> S’ha seguit l’ordre de créixer quan calia l’invers. <code>lvreduce</code> ha retallat el LV a 10 GiB <strong>mentre el FS encara en feia 20</strong>. Tots els blocs del FS més enllà dels 10 GiB han deixat d’existir: hi poden haver hagut dades de fitxers, metadades, part del journal o còpies del superbloc. Que només hi hagués 6 GiB ocupats no protegeix de res, perquè ext4 reparteix les dades i les metadades per tot el volum, no les col·loca al principi. Quan després s’executa <code>resize2fs</code>, el FS ja és inconsistent.</p>
+<p>La seqüència correcta és, primer el contingut i després el contenidor:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /home</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> e2fsck <span class="at">-f</span> /dev/datavg/home</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> resize2fs /dev/datavg/home 10G</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvreduce <span class="at">-L</span> 10G datavg/home</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount /home</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>O bé, de manera equivalent i més segura, deixant que LVM coordini els passos amb <code>fsadm</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /home</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvreduce <span class="at">-r</span> <span class="at">-L</span> 10G datavg/home</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount /home</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>c)</strong> <strong>XFS no es pot reduir.</strong> L’única via és fer una còpia de les dades (<code>xfsdump</code> o <code>rsync</code>), destruir el FS, reduir el LV, crear un FS nou i restaurar les dades. Per això, quan es tria XFS per a un volum, cal dimensionar-lo pensant que <strong>només podrà créixer</strong>.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-4-migrar-home-a-lvm" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-4-migrar-home-a-lvm">Exercici 4 · Migrar <code>/home</code> a LVM</h2>
+<p>Un servidor té <code>/home</code> com a simple directori del sistema de fitxers arrel (<code>/dev/vda1</code>), que s’està omplint. Heu afegit un disc nou, <code>/dev/vdb</code> (50 GiB), i voleu que <code>/home</code> passi a ser un LV <code>datavg/home</code> de 20 GiB amb ext4, que es munti automàticament en cada arrencada.</p>
+<ol type="a">
+<li>Escriviu la seqüència completa d’ordres i expliqueu per a què serveix cadascuna.</li>
+<li>Per què és un error crear el LV i muntar-lo directament a <code>/home</code> sense haver-hi copiat res abans?</li>
+<li>A <code>rsync</code>, quina diferència hi ha entre <code>/home/</code> i <code>/home</code> com a origen? Per què calen les opcions <code>-aHAX</code>?</li>
+<li>A <code>/etc/fstab</code>, per què <strong>no</strong> s’ha de fer servir <code>/dev/vdb</code>? Quines alternatives són correctes?</li>
+<li>El servidor és en producció i <code>/home</code> no pot quedar inaccessible més de 5 minuts, però copiar-lo sencer en triga 40. Com faríeu la còpia perquè sigui <strong>consistent</strong>?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>a)</strong> Una seqüència possible, amb les escriptures a <code>/home</code> aturades durant la còpia (per exemple, des de <code>rescue.target</code> o en una finestra de manteniment). L’apartat e) explica per què és necessari i com reduir-ne la durada:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pvcreate /dev/vdb                       <span class="co"># inicialitza el disc com a PV</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgcreate datavg /dev/vdb                <span class="co"># crea el pool</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvcreate <span class="at">-n</span> home <span class="at">-L</span> 20G datavg          <span class="co"># crea el LV (deixem 30 GiB lliures per al futur)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkfs.ext4 /dev/datavg/home              <span class="co"># crea el FS sobre el LV</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount /dev/datavg/home /mnt             <span class="co"># el munta en un lloc temporal</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rsync <span class="at">-aHAX</span> /home/ /mnt/                <span class="co"># copia el contingut conservant-ne les propietats</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /mnt</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mv /home /home.old                      <span class="co"># aparta l'original sense esborrar-lo</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir /home</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> blkid /dev/datavg/home                  <span class="co"># obté l'UUID del FS</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Afegiu a <code>/etc/fstab</code> una línia com aquesta, amb l’UUID real:</p>
+<pre><code>UUID=&lt;uuid-del-fs&gt;  /home  ext4  defaults  0  2</code></pre>
+<p>Finalment, comproveu la configuració i munteu-la:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> findmnt <span class="at">--verify</span>        <span class="co"># detecta errors a /etc/fstab abans de reiniciar</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload <span class="co"># systemd regenera les unitats .mount a partir de fstab</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount /home</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Quan hàgiu comprovat que tot funciona (inclòs un reinici), podeu esborrar <code>/home.old</code>.</p>
+<p>Deixar espai lliure al VG és una decisió deliberada: serà el que permetrà fer créixer <code>/home</code>, o crear altres LVs, sense haver d’afegir discos.</p>
+<p><strong>b)</strong> Muntar un FS sobre un directori <strong>amaga</strong> el que hi havia a dins, però no ho esborra. Els usuaris veurien un <code>/home</code> buit, les dades originals continuarien ocupant espai a <code>/</code> (que era precisament el problema) i quedarien invisibles fins que es desmuntés el LV. Per això cal copiar abans les dades i apartar el directori original.</p>
+<p><strong>c)</strong> Amb la barra final, <code>rsync</code> copia el <strong>contingut</strong> de <code>/home</code> dins de <code>/mnt</code>. Sense la barra, copia el <strong>directori</strong> i el resultat seria <code>/mnt/home/...</code>. Pel que fa a les opcions:</p>
+<ul>
+<li><code>-a</code> conserva permisos, propietaris, dates i enllaços simbòlics;</li>
+<li><code>-H</code> conserva els enllaços durs;</li>
+<li><code>-A</code> conserva les ACL;</li>
+<li><code>-X</code> conserva els atributs estesos (per exemple, les etiquetes SELinux o les <em>capabilities</em>).</li>
+</ul>
+<p>Sense aquestes opcions, la còpia pot semblar correcta però tenir permisos o propietaris diferents.</p>
+<p><strong>d)</strong> Els noms <code>/dev/vdX</code> depenen de l’<strong>ordre en què el kernel detecta els discos</strong> i poden canviar si s’afegeix o es treu un disc. A més, <code>/dev/vdb</code> és el PV, no el FS. Hi ha dues alternatives correctes: l’<strong>UUID del FS</strong> (<code>UUID=...</code>) o el camí del LV (<code>/dev/datavg/home</code> o <code>/dev/mapper/datavg-home</code>), que és estable perquè el nom del VG i del LV no depèn de l’ordre dels discos.</p>
+<p><strong>e)</strong> Cal distingir entre una còpia <strong>correcta</strong> i una còpia <strong>consistent</strong>. Si <code>rsync</code> copia mentre els usuaris o els serveis continuen escrivint, cada fitxer es pot copiar bé, però no tots corresponen al mateix instant: un fitxer modificat després que <code>rsync</code> hi hagi passat queda desactualitzat, i un fitxer creat durant la còpia pot no ser-hi. Per a una base de dades o un conjunt de fitxers relacionats, el resultat pot ser inservible.</p>
+<p>La solució habitual és fer-ho en <strong>dues passades</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rsync <span class="at">-aHAX</span> /home/ /mnt/            <span class="co"># 1a passada, EN CALENT: copia el gruix (40 min)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ... finestra de manteniment: aturar els serveis i impedir les sessions d'usuari ...</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rsync <span class="at">-aHAX</span> <span class="at">--delete</span> /home/ /mnt/   <span class="co"># 2a passada, AMB LES ESCRIPTURES ATURADES</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La primera passada, feta en calent, no garanteix que els fitxers copiats siguin consistents entre ells, però això no és cap problema: la segona passada corregeix tot el que hagi canviat. El que sí és imprescindible és que durant la segona passada <strong>ningú no escrigui a <code>/home</code></strong>: ni les sessions d’usuari, ni cap <strong>servei</strong> que hi tingui dades (un servidor de correu, un servei web amb directoris d’usuari, tasques programades…).</p>
+<p>La segona passada només transfereix les diferències respecte de la primera, i per això és ràpida: és el que fa que la finestra de manteniment pugui ser de minuts i no d’hores. L’opció <code>--delete</code> és imprescindible en aquesta passada, perquè elimina de la còpia els fitxers que s’han esborrat a l’origen entre les dues passades. Sense aquesta opció, la còpia tindria fitxers que l’original ja no té.</p>
+<p>Les escriptures han de continuar aturades fins que s’hagi completat la segona passada, s’hagi apartat el directori original i s’hagi muntat el nou LV a <code>/home</code>. Només aleshores es poden reprendre les sessions i els serveis.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-5-substituir-un-disc-sense-aturar-el-servei" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-5-substituir-un-disc-sense-aturar-el-servei">Exercici 5 · Substituir un disc sense aturar el servei</h2>
+<p>El VG <code>datavg</code> té un sol PV, <code>/dev/vdb</code> (500 GiB), amb diversos LVs muntats i en ús. El disc comença a donar errors (SMART) i heu instal·lat un disc nou, <code>/dev/vdc</code>. Heu de retirar <code>vdb</code> <strong>sense aturar els serveis</strong>.</p>
+<ol type="a">
+<li>Escriviu la seqüència d’ordres i justifiqueu l’ordre.</li>
+<li>Què passaria si executéssiu <code>vgreduce datavg /dev/vdb</code> com a primer pas?</li>
+<li><code>vdc</code> fa 400 GiB, menys que <code>vdb</code>. Es pot fer igualment? Com ho comprovaríeu abans de començar?</li>
+<li>A mitja migració hi ha un tall de corrent. Què cal fer en tornar a arrencar?</li>
+<li>Quina limitació té aquest procediment si <code>vdb</code> ja té sectors il·legibles?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-5-contents" aria-controls="callout-5" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-5" class="callout-5-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>a)</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgextend datavg /dev/vdc    <span class="co"># 1. el VG guanya PE lliures a vdc</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pvmove /dev/vdb /dev/vdc     <span class="co"># 2. mou TOTS els PE ocupats de vdb a vdc</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgreduce datavg /dev/vdb    <span class="co"># 3. treu vdb del VG (ja no té cap PE assignat)</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pvremove /dev/vdb           <span class="co"># 4. esborra l'etiqueta LVM de vdb</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>L’ordre és obligat. <code>pvmove</code> necessita un lloc de destinació dins el mateix VG, i per tant <code>vdc</code> hi ha de ser abans. <code>vgreduce</code> només accepta treure un PV que no tingui cap PE assignat. Durant el pas 2 els LVs continuen actius: <code>pvmove</code> crea un mirall temporal, i quan cada tram ja està copiat, en canvia el mapatge. Els FS no se n’adonen perquè el seu dispositiu (<code>dm-N</code>) no canvia.</p>
+<p><strong>b)</strong> <code>vgreduce</code> refusaria l’operació perquè el PV encara té extents assignats a LVs. No es perdria res, però tampoc no s’hauria fet res.</p>
+<p><strong>c)</strong> Sí, sempre que els PE <strong>ocupats</strong> de <code>vdb</code> hi càpiguen. Abans de començar, cal comparar l’espai usat de <code>vdb</code> amb l’espai lliure que tindrà el VG fora de <code>vdb</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pvs <span class="at">-o</span> pv_name,pv_size,pv_used,pv_free</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Si <code>vdb</code> té 350 GiB ocupats i <code>vdc</code> en té 400 lliures (gairebé tots, un cop restades les metadades), la migració és possible. Si no hi caben, <code>pvmove</code> fallarà per manca d’espai.</p>
+<p><strong>d)</strong> <code>pvmove</code> deixa constància a les metadades de l’operació en curs. En tornar a arrencar, abans de fer res, cal comprovar l’estat del VG i dels LVs amb <code>sudo lvs -a -o +devices</code>: si hi apareix el LV temporal <code>pvmove0</code>, hi ha una migració pendent. Aleshores s’executa <code>pvmove</code> <strong>sense arguments</strong>, que reprèn les migracions inacabades. No s’ha de començar cap migració nova fins que l’anterior estigui resolta. Després es comprova amb <code>lvs -a -o +devices</code> que ja no queda res a <code>vdb</code> i es continua amb els passos 3 i 4.</p>
+<p><strong>e)</strong> <code>pvmove</code> necessita <strong>llegir</strong> les dades d’origen. Si un sector de <code>vdb</code> és il·legible, la còpia d’aquell tram fallarà, i aquell fragment de dades es perdrà. Un LVM lineal no té cap còpia de la qual recuperar-lo. Si el LV hagués estat <code>raid1</code>, la solució seria una altra (<code>lvconvert --repair</code>). Si no ho és, cal recórrer a les <strong>còpies de seguretat</strong>. Per això els avisos SMART s’han d’atendre <strong>abans</strong> que el disc falli.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-6-dimensionar-un-snapshot" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-6-dimensionar-un-snapshot">Exercici 6 · Dimensionar un snapshot</h2>
+<p>Per fer la còpia de seguretat nocturna d’un LV de 100 GiB, l’administrador crea un snapshot clàssic, en copia el contingut i després l’elimina. La còpia dura <strong>3 hores</strong>. Durant aquestes hores, l’aplicació escriu a l’origen a un ritme de <strong>4 GiB/h</strong>. Amb les dades de monitoratge sabeu que el <strong>80 %</strong> d’aquestes escriptures reescriuen repetidament els mateixos <strong>2 GiB</strong> de blocs (logs rotatius i taules molt actualitzades), i que el 20 % restant va a blocs que no s’havien modificat abans durant la còpia, sense que cap d’aquests blocs s’escrigui dues vegades.</p>
+<ol type="a">
+<li>Quantes dades s’escriuen a l’origen durant la còpia? Quant espai COW es consumeix, aproximadament? Justifiqueu la diferència entre els dos valors.</li>
+<li>Quina mida mínima donaríeu al snapshot? Amb quin marge?</li>
+<li>Què passa si el snapshot és de 4 GiB?</li>
+<li>Un company proposa estalviar espai fent que l’aplicació, durant la còpia, només creï fitxers <strong>nous</strong> en lloc de modificar els existents. Hi guanya alguna cosa?</li>
+<li>Quina opció de <code>lvm.conf</code> reduiria el risc de l’apartat c)?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>a)</strong> S’escriuen 4 GiB/h × 3 h = <strong>12 GiB</strong> a l’origen. El COW, però, només copia un <em>chunk</em> la <strong>primera vegada</strong> que es modifica després de crear el snapshot:</p>
+<ul>
+<li>Els 2 GiB calents es copien <strong>una sola vegada</strong>: 2 GiB de COW, tot i que s’hi escriuen 9,6 GiB.</li>
+<li>El 20 % restant (2,4 GiB) va a blocs diferents: 2,4 GiB més de COW.</li>
+<li>Total: <strong>≈ 4,4 GiB</strong> de COW, més una petita part per a la taula d’excepcions.</li>
+</ul>
+<p>La diferència entre 12 GiB escrits i 4,4 GiB consumits és el punt clau del COW: el que compta són els <strong>blocs diferents</strong> que es modifiquen, no el volum total d’escriptures.</p>
+<p><strong>b)</strong> Com a mínim uns 5 GiB, però el raonable és <strong>un marge ampli</strong> (per exemple, 8–10 GiB), perquè les estimacions de ritme fallen just les nits que hi ha més activitat, i quedar-se curt és catastròfic (vegeu c). Durant la còpia, l’ocupació es pot vigilar amb <code>lvs -o lv_name,data_percent</code>.</p>
+<p><strong>c)</strong> Quan l’àrea COW s’omple, el snapshot queda <strong>invàlid</strong>: no es pot llegir i s’ha d’eliminar. La còpia de seguretat, que estava llegint del snapshot, falla a mitja execució o queda incompleta. L’origen no es veu afectat i l’aplicació continua funcionant, de manera que el problema pot passar desapercebut si ningú no revisa els registres de la còpia.</p>
+<p><strong>d)</strong> <strong>No hi guanya res.</strong> El snapshot treballa a nivell de <strong>blocs</strong>, no de fitxers. Un fitxer nou ocupa blocs de l’origen que abans eren lliures per al FS, però que també formen part de l’origen: la primera escriptura en cadascun en copia el contingut antic (encara que sigui brossa) a l’àrea COW. Fins i tot pot ser pitjor, perquè els fitxers nous es reparteixen per blocs nous, mentre que les reescriptures tornen als mateixos blocs.</p>
+<p><strong>e)</strong> <code>snapshot_autoextend_threshold</code> i <code>snapshot_autoextend_percent</code>, a la secció <code>activation</code> de <code>/etc/lvm/lvm.conf</code>. Quan el snapshot arriba al llindar, <code>dmeventd</code> l’amplia automàticament un percentatge, <strong>si el VG té espai lliure</strong>. Per defecte el llindar és 100, és a dir, l’autoextensió està desactivada.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-7-revisar-el-disseny-dun-company" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-7-revisar-el-disseny-dun-company">Exercici 7 · Revisar el disseny d’un company</h2>
+<p>Un company us presenta aquest disseny per al servidor de bases de dades d’una empresa, amb quatre discos de 1 TB:</p>
+<blockquote class="blockquote">
+<p>Creo el VG <code>vg1</code> amb els quatre discos i un LV <em>striped</em> de 4 TB per a la base de dades, que és el que dona més rendiment. Per protegir les dades, afegeixo un cinquè disc en un VG separat, <code>vg2</code>, i cada nit hi creo un snapshot del LV de la base de dades. Així, si falla un disc de <code>vg1</code>, restauro la base de dades des del snapshot de <code>vg2</code>.</p>
+</blockquote>
+<ol type="a">
+<li>Identifiqueu tots els errors conceptuals del disseny i justifiqueu per què ho són.</li>
+<li>Proposeu una alternativa amb els mateixos quatre discos (més el cinquè si el voleu fer servir) i justifiqueu-ne els compromisos.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>a)</strong> El disseny té tres errors greus:</p>
+<ol type="1">
+<li><strong>Un LV <em>striped</em> sense redundància en 4 discos multiplica el risc.</strong> Les dades de cada LE estan repartides en stripes per tots quatre discos. Si en falla <strong>qualsevol</strong>, es perd tota la base de dades. Amb una probabilitat de fallada anual <em>p</em> per disc, i <strong>suposant que les fallades dels discos són independents</strong>, la probabilitat de perdre-la és 1 − (1 − <em>p</em>)⁴ ≈ 4<em>p</em> (per a <em>p</em> petita): aproximadament el quàdruple que amb un sol disc. A la pràctica, aquesta hipòtesi és optimista: els discos del mateix lot i de la mateixa edat tendeixen a fallar en períodes propers, de manera que el risc real pot ser encara més alt.</li>
+<li><strong>Un snapshot no pot estar en un altre VG.</strong> L’àrea COW d’un snapshot clàssic ha de ser al <strong>mateix VG</strong> que el seu origen. El que proposa no es pot fer amb LVM.</li>
+<li><strong>Encara que es pogués, un snapshot no és una còpia de seguretat.</strong> Un snapshot només conté els <em>chunks</em> que han canviat des que es va crear; tota la resta es llegeix de l’<strong>origen</strong>. Si es perd l’origen, el snapshot és inútil. Exactament en el cas en què el company el vol fer servir (la fallada d’un disc de <code>vg1</code>), no serveix de res.</li>
+</ol>
+<p><strong>b)</strong> Una alternativa raonable és un LV <strong><code>raid10</code></strong> amb els quatre discos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvcreate <span class="at">--type</span> raid10 <span class="at">-m</span> 1 <span class="at">-i</span> 2 <span class="at">-L</span> 1.8T <span class="at">-n</span> db vg1</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compte amb les unitats. Els discos es venen en <strong>TB decimals</strong>: 1 TB = 10¹² bytes. LVM, en canvi, interpreta <code>T</code> com a <strong>TiB</strong>: 1 TiB = 2⁴⁰ bytes ≈ 1,0995 × 10¹² bytes. Quatre discos de 1 TB en RAID 10 donen 2 × 10¹² bytes útils, que són <strong>≈ 1,82 TiB</strong>. Una ordre amb <code>-L 1.9T</code> fallaria per manca d’espai. Amb <code>-L 1.8T</code> queden uns 19 GiB de marge per a les metadades del RAID. És el mateix raonament de l’exercici 1: abans de dimensionar un volum, cal calcular l’espai realment disponible.</p>
+<p>Els compromisos són aquests:</p>
+<ul>
+<li><strong>Capacitat:</strong> uns 2 TB útils (≈ 1,82 TiB), la meitat de l’espai brut.</li>
+<li><strong>Rendiment:</strong> conserva gran part del rendiment del <em>striping</em> (lectures i escriptures en paral·lel entre parelles).</li>
+<li><strong>Tolerància a fallades:</strong> suporta la fallada de <strong>qualsevol disc</strong>, i també la de dos discos si no són de la mateixa parella de mirall.</li>
+</ul>
+<p>Una alternativa amb més capacitat és <code>raid5</code>: uns 3 TB útils (≈ 2,73 TiB) i tolerància a un disc, però amb una penalització a les escriptures petites (cal recalcular la paritat) que en una base de dades sol ser important.</p>
+<p>El cinquè disc no ha de contenir snapshots. Ha d’allotjar <strong>còpies de seguretat reals</strong>: per exemple, un FS on es desa cada nit un volcat de la base de dades. El snapshot hi pot participar, però en un altre paper: es crea al mateix VG un moment abans de la còpia, perquè el volcat llegeixi una imatge estable, i s’elimina en acabar. Millor encara si aquest volcat surt també del servidor, perquè un incendi o un ransomware afecten tots els discos alhora.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-8-planificar-la-capacitat-dun-thin-pool" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-8-planificar-la-capacitat-dun-thin-pool">Exercici 8 · Planificar la capacitat d’un thin pool</h2>
+<p>Un servidor allotja cinc aplicacions. Cadascuna té un thin LV de <strong>500 GiB</strong> virtuals en un thin pool de <strong>1 TiB</strong> reals. Avui el pool està ocupat al <strong>70 %</strong>, i l’ús creix a un ritme de <strong>20 GiB/dia</strong>.</p>
+<ol type="a">
+<li>Quina és la ràtio de sobreprovisionament? Què significa a la pràctica?</li>
+<li>Quants dies queden fins que el pool arribi al 80 %? I fins que s’ompli?</li>
+<li>Escriviu la configuració de <code>lvm.conf</code> perquè el pool s’ampliï un 20 % quan arribi al 80 %. Quina condició s’ha de complir perquè l’autoextensió funcioni? Quant espai lliure ha de tenir el VG per a la primera ampliació?</li>
+<li>Setmanes després, l’aplicació d’<code>app3</code> es queixa que no pot escriure. <code>df -h</code> mostra que el FS d’<code>app3</code> només ocupa 320 dels seus 500 GiB, però <code>lvs</code> indica que el <code>Data%</code> del pool és del 99 %. Un company executa <code>lvextend -L +200G datavg/app3</code>. Resol el problema? Justifiqueu-ho.</li>
+<li>Quina ordre fareu servir per vigilar el pool? Quins dos percentatges cal mirar, i per què tots dos?</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>a)</strong> S’han promès 5 × 500 GiB = 2500 GiB sobre 1024 GiB reals: una ràtio de <strong>≈ 2,44</strong>. A la pràctica, el sistema només funciona si les aplicacions <strong>no</strong> fan servir alhora tot l’espai que se’ls ha promès. Si totes intentessin omplir el seu volum, el pool s’esgotaria molt abans.</p>
+<p><strong>b)</strong> Un 70 % de 1024 GiB són 716,8 GiB ocupats.</p>
+<ul>
+<li>Fins al 80 % (819,2 GiB) falten 102,4 GiB → 102,4 / 20 ≈ <strong>5 dies</strong>.</li>
+<li>Fins al 100 % falten 307,2 GiB → 307,2 / 20 ≈ <strong>15 dies</strong>.</li>
+</ul>
+<p><strong>c)</strong> A <code>/etc/lvm/lvm.conf</code>, secció <code>activation</code>:</p>
+<pre><code>thin_pool_autoextend_threshold = 80
+thin_pool_autoextend_percent = 20</code></pre>
+<p>L’autoextensió només funciona si el pool està <strong>monitorat</strong> per <code>dmeventd</code> (servei <code>lvm2-monitor.service</code>, actiu per defecte a Debian) i si el <strong>VG té espai lliure</strong>. Totes dues condicions es poden comprovar, i la configuració de <code>lvm.conf</code> no serveix de res si en falla qualsevol:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvs <span class="at">-o</span> lv_name,seg_monitor,data_percent,metadata_percent datavg   <span class="co"># el pool ha de dir monitored</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgs <span class="at">-o</span> vg_name,vg_free datavg</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La primera ampliació és del 20 % de 1 TiB, és a dir <strong>≈ 205 GiB</strong>. Si el VG no té aquest espai lliure, l’autoextensió fallarà i el pool continuarà omplint-se.</p>
+<p><strong>d)</strong> <strong>No.</strong> El FS d’<code>app3</code> encara té 180 GiB lliures, de manera que el problema no és la mida <strong>virtual</strong> del thin LV. El que s’ha esgotat és l’espai <strong>físic</strong> del pool (99 %). Ampliar el thin LV només augmenta la promesa: la ràtio de sobreprovisionament puja i el pool continua ple. El que cal ampliar és el pool, després d’afegir un disc al VG si no hi ha espai lliure:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvextend <span class="at">-L</span> +200G datavg/pool</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El cas contrari també existeix. Si <code>df -h</code> mostrés el FS d’<code>app3</code> al 100 % i el pool tingués espai, el que s’hauria esgotat seria la capacitat virtual del thin LV, i aleshores <code>sudo lvextend -r -L +200G datavg/app3</code> (que amplia el LV i el FS) sí que resoldria el problema. Conclusió: amb thin provisioning, l’espai es mira a <strong>dos nivells</strong>: dins del thin LV (<code>df</code>) i al pool (<code>Data%</code>).</p>
+<p><strong>e)</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvs <span class="at">-o</span> lv_name,lv_size,data_percent,metadata_percent datavg</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cal vigilar el percentatge de <strong>dades</strong> i el de <strong>metadades</strong> del pool. Les metadades són una àrea separada i més petita, i es poden esgotar abans que les dades, sobretot si hi ha molts snapshots o el pool està molt fragmentat. Si s’esgoten, és una situació encara més greu. Es poden ampliar amb <code>lvextend --poolmetadatasize +1G datavg/pool</code>.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-9-on-satura-larrencada" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-9-on-satura-larrencada">Exercici 9 · On s’atura l’arrencada?</h2>
+<p>Totes aquestes màquines arrenquen en mode UEFI des d’un disc GPT. Per a cadascuna, digueu si arrenca. Si no ho fa, indiqueu <strong>en quina etapa</strong> s’atura (firmware, GRUB, initramfs o systemd) i <strong>per què</strong>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Màquina</th>
+<th style="text-align: left;">ESP</th>
+<th style="text-align: left;"><code>/boot</code></th>
+<th style="text-align: left;"><code>/</code></th>
+<th style="text-align: left;">Altres</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">A</td>
+<td style="text-align: left;">partició FAT32</td>
+<td style="text-align: left;">partició ext4</td>
+<td style="text-align: left;">LV lineal <code>sysvg/root</code></td>
+<td style="text-align: left;">initramfs amb <code>lvm2</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B</td>
+<td style="text-align: left;"><strong>LV</strong> FAT32</td>
+<td style="text-align: left;">partició ext4</td>
+<td style="text-align: left;">LV lineal</td>
+<td style="text-align: left;">—</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">C</td>
+<td style="text-align: left;">partició FAT32</td>
+<td style="text-align: left;"><strong>LV lineal</strong> ext4</td>
+<td style="text-align: left;">LV lineal</td>
+<td style="text-align: left;"><code>grub-install</code> executat normalment</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">D</td>
+<td style="text-align: left;">partició FAT32</td>
+<td style="text-align: left;">partició ext4</td>
+<td style="text-align: left;">LV lineal</td>
+<td style="text-align: left;">initramfs regenerat <strong>sense</strong> les eines de <code>lvm2</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">E</td>
+<td style="text-align: left;">partició FAT32</td>
+<td style="text-align: left;"><strong>thin LV</strong> ext4</td>
+<td style="text-align: left;">LV lineal</td>
+<td style="text-align: left;">—</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>A: arrenca.</strong> És la configuració habitual. El firmware llegeix l’ESP, GRUB llegeix <code>/boot</code> d’una partició normal, i l’initramfs activa el VG abans de muntar l’arrel.</li>
+<li><strong>B: s’atura al firmware.</strong> El firmware UEFI cerca l’ESP com una <strong>partició</strong> GPT amb sistema de fitxers FAT, i no sap res de LVM. No troba l’executable de GRUB, i la màquina no té cap entrada d’arrencada utilitzable (<em>No bootable device</em> o el menú del firmware).</li>
+<li><strong>C: arrenca.</strong> En una instal·lació de GRUB 2 amb el mòdul <code>lvm</code> incorporat a la imatge EFI, GRUB pot llegir un LV lineal. En una instal·lació Debian amb GRUB 2 correctament configurat, i amb el mòdul lvm disponible a la imatge EFI, GRUB pot llegir un LV lineal. Cal comprovar que la imatge instal·lada inclou aquest suport. Cal distingir la capacitat de GRUB de la configuració concreta de la màquina: una imatge de GRUB sense el mòdul <code>lvm</code> no arrencaria. És una configuració vàlida, encara que per convenció i robustesa se sol deixar <code>/boot</code> en una partició.</li>
+<li><strong>D: s’atura a l’initramfs.</strong> El kernel arrenca, però sense les eines de LVM ningú no activa el VG, i el dispositiu indicat a <code>root=</code> no apareix mai. Amb <code>initramfs-tools</code> (Debian), després d’esperar acaba mostrant un missatge com <em>ALERT! /dev/mapper/sysvg-root does not exist</em> i obre una consola de rescat. Es pot solucionar des d’aquesta consola (si té <code>lvm</code>) o des d’un sistema <em>live</em>, reinstal·lant <code>lvm2</code> i regenerant l’initramfs amb <code>update-initramfs -u</code> dins d’un <code>chroot</code>.</li>
+<li><strong>E: s’atura a GRUB.</strong> El mòdul <code>lvm</code> de GRUB <strong>no suporta thin LVs</strong>. GRUB no pot llegir <code>/boot</code>, i per tant no troba ni <code>grub.cfg</code> ni el kernel. Acabarà a la consola <code>grub rescue&gt;</code> o amb un error de dispositiu no trobat.</li>
+</ul>
+<p>La idea general: <strong>cada etapa ha de saber llegir el format on hi ha el que ha de carregar</strong>. El firmware llegeix FAT, GRUB llegeix el que permeten els seus mòduls, i l’initramfs llegeix el que hi hàgiu inclòs.</p>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="exercici-10-fallada-dun-disc" class="level2">
+<h2 class="anchored" data-anchor-id="exercici-10-fallada-dun-disc">Exercici 10 · Fallada d’un disc</h2>
+<p>El VG <code>datavg</code> té dos PVs, <code>/dev/vdb</code> i <code>/dev/vdc</code>, tots dos amb la configuració de metadades per defecte de LVM (una àrea de metadades per PV). Conté aquests LVs:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 34%">
+<col style="width: 49%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">LV</th>
+<th style="text-align: left;">Tipus</th>
+<th style="text-align: left;">On són els seus extents</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>web</code></td>
+<td style="text-align: left;">lineal, 8 GiB</td>
+<td style="text-align: left;">tots a <code>vdb</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>logs</code></td>
+<td style="text-align: left;">lineal, 12 GiB</td>
+<td style="text-align: left;">4 GiB a <code>vdb</code> i 8 GiB a <code>vdc</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>db</code></td>
+<td style="text-align: left;"><code>raid1</code>, 4 GiB</td>
+<td style="text-align: left;">una còpia a <code>vdb</code> i l’altra a <code>vdc</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>web-snap</code></td>
+<td style="text-align: left;">snapshot de <code>web</code>, 2 GiB</td>
+<td style="text-align: left;">àrea COW a <code>vdc</code></td>
+</tr>
+</tbody>
+</table>
+<p>Un matí, <code>vdc</code> ha mort completament. En arrencar, LVM avisa que no troba un dispositiu amb un UUID determinat i que el VG té un PV que falta.</p>
+<ol type="a">
+<li>Predigueu l’estat de cadascun dels quatre LVs: funciona amb normalitat, funciona degradat o s’ha perdut? Justifiqueu-ho.</li>
+<li>Les metadades del VG s’han perdut? Com ho sabeu?</li>
+<li>Heu instal·lat un disc nou, <code>/dev/vdd</code>. Escriviu la seqüència de recuperació i indiqueu què recupera cada pas i què <strong>no es pot</strong> recuperar.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solució">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Consell</span>Solució
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>a)</strong></p>
+<ul>
+<li><strong><code>web</code>: funciona amb normalitat.</strong> Tots els seus extents són a <code>vdb</code>, que està sa.</li>
+<li><strong><code>logs</code>: s’ha perdut, a la pràctica.</strong> Ha perdut 8 dels seus 12 GiB. Es pot forçar a activar-lo en mode parcial (<code>--activationmode partial</code>), però els trams que faltaven retornaran errors d’E/S i el FS estarà greument malmès. Com a molt, es poden intentar rescatar alguns fitxers que fossin sencers a la part de <code>vdb</code>.</li>
+<li><strong><code>db</code>: funciona degradat.</strong> La còpia de <code>vdb</code> és completa. Per defecte, LVM activa els LVs RAID en mode degradat (<code>activation_mode = "degraded"</code> a <code>lvm.conf</code>). Funciona, però ja <strong>no té redundància</strong>: una segona fallada seria definitiva.</li>
+<li><strong><code>web-snap</code>: s’ha perdut.</strong> La seva àrea COW era a <code>vdc</code>. L’origen <code>web</code> no es veu afectat, perquè un snapshot depèn del seu origen però no a l’inrevés.</li>
+</ul>
+<p><strong>b)</strong> <strong>No.</strong> Amb la configuració per defecte que indica l’enunciat, cada PV del VG guarda una còpia completa de les metadades, i la de <code>vdb</code> està intacta. Per això LVM pot dir exactament quin PV falta i quins LVs l’utilitzaven. A més, a <code>/etc/lvm/backup/datavg</code> hi ha la darrera còpia de les metadades, i a <code>/etc/lvm/archive/</code> les versions anteriors.</p>
+<p><strong>c)</strong> Una seqüència raonable:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgchange <span class="at">-ay</span> <span class="at">--activationmode</span> degraded datavg   <span class="co"># 0. activa els LVs complets i els RAID degradats</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgextend datavg /dev/vdd            <span class="co"># 1. el VG té espai on reconstruir</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvconvert <span class="at">--repair</span> datavg/db        <span class="co"># 2. reconstrueix la còpia de db a vdd</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvs <span class="at">-a</span> <span class="at">-o</span> lv_name,sync_percent,devices datavg   <span class="co"># 3. espereu que la sincronització arribi al 100 %</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Executar <code>lvconvert --repair</code> no vol dir que la reconstrucció hagi acabat. Abans de considerar recuperada la redundància, comproveu a la sortida del pas 3 dues coses: que la nova rèplica de <code>db</code> s’ha assignat a <code>/dev/vdd</code>, i que la sincronització ha arribat al <strong>100 %</strong>.</p>
+<p>El pas 0 pot semblar redundant, perquè <code>degraded</code> és el mode d’activació per defecte a <code>lvm.conf</code>. Però amb un PV absent, el VG pot no haver-se activat automàticament en arrencar, i escriure el mode explícitament fa que la recuperació no depengui de la configuració concreta del sistema. Aquest mode activa els LVs complets i <code>db</code> (degradat), però no <code>logs</code>, perquè li falten trams: per a això caldria <code>--activationmode partial</code>.</p>
+<p>Després, si cal, intenteu rescatar el que es pugui de <code>logs</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvchange <span class="at">-ay</span> <span class="at">--activationmode</span> partial datavg/logs</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /mnt/rescat</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount <span class="at">-o</span> ro,noload /dev/datavg/logs /mnt/rescat</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ... copieu a un altre lloc els fitxers que es puguin llegir ...</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /mnt/rescat</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> lvchange <span class="at">-an</span> datavg/logs</span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>És un <strong>intent</strong> de rescat, no una recuperació garantida. Els trams que eren a <code>vdc</code> retornen errors de lectura, i qualsevol fitxer, directori o metadada del FS que hi passés pot ser il·legible. Tres precaucions:</p>
+<ul>
+<li><code>ro</code> sol <strong>no basta</strong>: amb ext4, si el <em>journal</em> té transaccions pendents, el kernel les reprodueix (i escriu al dispositiu) encara que es munti només de lectura. L’opció <code>noload</code> evita que es carregui el <em>journal</em>.</li>
+<li>No executeu cap reparació automàtica (<code>fsck</code>) sobre l’original abans d’haver valorat les opcions de recuperació: una reparació pot descartar justament el que es volia salvar.</li>
+<li>Si les dades són prou valuoses, el més segur és fer abans una imatge del LV (per exemple, amb <code>ddrescue</code>) i treballar sobre la imatge.</li>
+</ul>
+<p>A continuació:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgreduce <span class="at">--removemissing</span> <span class="at">--force</span> <span class="at">--test</span> datavg   <span class="co"># 4. què faria? (no escriu res)</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> vgreduce <span class="at">--removemissing</span> <span class="at">--force</span> datavg          <span class="co"># 5. treu vdc de les metadades</span></span></code></pre></div><button title="Copia al porta-retalls" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Amb <code>--test</code>, LVM mostra què faria sense modificar les metadades: és la manera de comprovar, abans de fer-ho, quins LVs eliminarà. Amb <code>--force</code>, l’últim pas <strong>elimina</strong> els LVs que encara depenien de <code>vdc</code>, és a dir <code>logs</code> i <code>web-snap</code>, sencers. Per això cal haver rescatat abans el que es pugui.</p>
+<p>Finalment, recreeu <code>logs</code> (i el snapshot, si cal) i <strong>restaureu-ne les dades des de la còpia de seguretat</strong>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Recuperat</th>
+<th style="text-align: left;">No recuperable des de LVM</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>web</code>, sense necessitat de fer res</td>
+<td style="text-align: left;">les dades de <code>logs</code> que eren a <code>vdc</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>db</code>, amb la redundància restablerta a <code>vdd</code></td>
+<td style="text-align: left;"><code>web-snap</code> (cal tornar-lo a crear)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">la coherència de les metadades del VG</td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<p>Conclusió: <strong>LVM aporta flexibilitat, no redundància</strong>. Només el LV que s’havia creat explícitament com a <code>raid1</code> ha sobreviscut sense perdre dades. Per a la resta, l’única protecció real són les còpies de seguretat fora del VG.</p>
+</div>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiat!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiat!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/igualada\.amsa\.udl\.cat");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../../../modules/unit-03-storage/theory/02-lvm.html" class="pagination-link" aria-label="Unitat 3 · Logical Volume Manager (LVM)">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Unitat 3 · Logical Volume Manager (LVM)</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../../../modules/unit-03-storage/pralabs/02-lvm.html" class="pagination-link" aria-label="Emmagatzematge (II): LVM">
+        <span class="nav-page-text">Emmagatzematge (II): LVM</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
