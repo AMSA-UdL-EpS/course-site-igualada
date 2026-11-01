@@ -68,6 +68,7 @@ website:
             - section: Teoria
               contents:
                 - modules/unit-03-storage/theory/01-raids.qmd
+                - modules/unit-03-storage/theory/02-lvm.qmd
     - section: "Exàmens"
       contents:
         - section: "Competencials"
