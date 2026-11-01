@@ -69,6 +69,12 @@ website:
               contents:
                 - modules/unit-03-storage/theory/01-raids.qmd
                 - modules/unit-03-storage/theory/02-lvm.qmd
+            - section: "Activitats"
+              contents:
+                - modules/unit-03-storage/activities/02-lvm.qmd
+            - section: Pralabs
+              contents:
+                - modules/unit-03-storage/pralabs/02-lvm.qmd
     - section: "Exàmens"
       contents:
         - section: "Competencials"

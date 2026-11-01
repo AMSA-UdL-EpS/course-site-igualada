@@ -1,0 +1,496 @@
+---
+title: Gestió de volums lògics (LVM)
+lang: ca
+---
+
+## Abans de començar
+
+Sempre que no es digui el contrari, suposem:
+
+-   un sistema **Debian bookworm** (lvm2 2.03.16);
+-   discos virtio: `/dev/vda` per al sistema, i `/dev/vdb`, `/dev/vdc`... com a discos addicionals;
+-   que totes les ordres de LVM, `mount`, `mkfs` i similars s'executen amb privilegis de `root` (`sudo`).
+
+Intenteu resoldre cada exercici **abans** d'obrir la solució. 
+
+------------------------------------------------------------------------
+
+## Exercici 1 · Comptar extents
+
+Teniu dos discos, `/dev/vdb` de **10 GiB** i `/dev/vdc` de **20 GiB**, i executeu:
+
+``` bash
+sudo pvcreate /dev/vdb /dev/vdc
+sudo vgcreate datavg /dev/vdb /dev/vdc
+```
+
+Recordeu que LVM reserva l'inici de cada PV per a l'etiqueta i les metadades. Amb la configuració per defecte, la zona de dades comença a **1 MiB** de l'inici del dispositiu. Tots els càlculs d'aquest exercici suposen aquesta configuració convencional (zona de dades a 1 MiB i, si no es diu el contrari, PE de 4 MiB). Amb una altra configuració de metadades o d'alineament, les xifres serien diferents.
+
+a)  Quants PE té cada PV? I el VG en total?
+b)  Quants LE té un LV creat amb `lvcreate -n web -L 7G datavg`?
+c)  Repetiu l'apartat a) suposant que el VG s'ha creat amb `vgcreate -s 32M datavg /dev/vdb /dev/vdc`.
+d)  Amb PE de 32 MiB, què passa si executeu `lvcreate -n web -L 7000M datavg`?
+e)  Un company diu: Si poso PE de 32 MiB, el disc anirà més ràpid perquè LVM llegirà blocs més grans. Té raó?
+
+::: {.callout-tip collapse="true" title="Solució"}
+**a)** L'espai útil de cada PV és la mida total menys 1 MiB, dividida per la mida del PE (4 MiB per defecte), arrodonint cap avall perquè un PE no pot quedar a mitges:
+
+-   `vdb`: (10240 − 1) / 4 = 2559,75 → **2559 PE**.
+-   `vdc`: (20480 − 1) / 4 = 5119,75 → **5119 PE**.
+-   VG: **7678 PE**, és a dir 30712 MiB ≈ 29,99 GiB. Per això `vgs` mostra `<30.00g`, amb el símbol `<`.
+
+Recordeu que aquestes xifres depenen de la hipòtesi de l'enunciat. El que és general és el mètode: espai útil del PV dividit per la mida del PE, arrodonint cap avall.
+
+**b)** 7 GiB = 7168 MiB, i 7168 / 4 = **1792 LE**. La mida d'un LE és sempre igual a la d'un PE del seu VG.
+
+**c)** Ara cada PE fa 32 MiB:
+
+-   `vdb`: 10239 / 32 = 319,97 → **319 PE**.
+-   `vdc`: 20479 / 32 = 639,97 → **639 PE**.
+-   VG: **958 PE** = 30656 MiB. Es perden 56 MiB respecte del cas anterior, perquè el residu de cada PV que no arriba a un PE sencer és més gran.
+
+**d)** 7000 / 32 = 218,75. Un LV ha de tenir un nombre enter de LE, de manera que LVM **arrodoneix cap amunt** fins a 219 LE (7008 MiB) i ho avisa amb un missatge del tipus *Rounding up size to full physical extent*.
+
+**e)** **No.** La mida del PE només determina la **granularitat del mapatge**: amb quina precisió es pot assignar l'espai i quantes entrades té la taula LE→PE. No canvia la mida de les operacions d'E/S. Un `read()` de 4 KiB continua sent una lectura de 4 KiB al disc, sigui quina sigui la mida del PE. El preu d'uns PE grans és perdre flexibilitat (els LV creixen de 32 MiB en 32 MiB) i desaprofitar més espai als extrems dels PV.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 2 · Llegir una taula de device-mapper
+
+Un servidor té un LV `datavg/web`. Obteniu aquesta informació:
+
+``` bash
+sudo dmsetup table datavg-web
+```
+
+```         
+0 4194304 linear 254:16 2048
+4194304 2097152 linear 254:32 2048
+```
+
+``` bash
+ls -l /dev/vdb /dev/vdc
+```
+
+```         
+brw-rw---- 1 root disk 254, 16 ... /dev/vdb
+brw-rw---- 1 root disk 254, 32 ... /dev/vdc
+```
+
+a)  Quina mida té el LV? Expresseu-la en GiB. (Els sectors són de 512 bytes.)
+b)  On són físicament les dades del LV? Indiqueu-ho tram a tram.
+c)  Per què tots dos trams comencen al sector 2048 del seu disc?
+d)  Proposeu una explicació plausible de per què el LV té dos trams.
+e)  Si falla `/dev/vdc`, què es perd? I si falla `/dev/vdb`?
+
+::: {.callout-tip collapse="true" title="Solució"}
+Cada línia de la taula té el format `inici longitud tipus dispositiu offset`, amb totes les mides expressades en sectors.
+
+**a)** 4194304 + 2097152 = 6291456 sectors × 512 B = 3 221 225 472 B = **3 GiB**.
+
+**b)**
+
+-   Sectors 0 a 4194303 del LV (els primers **2 GiB**) → `vdb` (254:16), a partir del seu sector 2048.
+-   Sectors 4194304 a 6291455 del LV (l'últim **1 GiB**) → `vdc` (254:32), a partir del seu sector 2048.
+
+El mapatge és **lineal**, sense *striping*.
+
+**c)** El sector 2048 correspon a **1 MiB** (2048 × 512 B). És on comença la zona de dades de cada PV, just després de l'etiqueta i les metadades. Tots dos trams comencen al **primer PE** del seu disc.
+
+**d)** El més probable és que el LV es creés amb 2 GiB a `vdb` i que més endavant s'ampliés amb `lvextend`. L'ampliació va anar a `vdc`, per exemple perquè `vdb` ja no tenia extents lliures, o perquè l'administrador va indicar el PV explícitament (`lvextend -L +1G datavg/web /dev/vdc`). Pel sistema de fitxers no hi ha cap diferència: veu un únic dispositiu (`dm-N`) de 3 GiB.
+
+**e)** Si falla `vdc` es perd **l'últim GiB** del LV. Si falla `vdb` se'n perden **els dos primers**. En tots dos casos el que es perd és un tram del dispositiu, i el FS que hi ha a sobre queda malmès. Sense un LV redundant (`raid1`) i sense còpies de seguretat, els fitxers que hi havia en aquell tram no es poden recuperar. Repartir un LV lineal entre dos discos **augmenta** el risc: n'hi ha prou que falli qualsevol dels dos.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 3 · L'ordre de les operacions
+
+**a)** Teniu `/srv/web` (ext4) sobre `datavg/web` i voleu afegir-hi 5 GiB fent servir un disc nou, `/dev/vdc`. Ordeneu aquests passos i indiqueu quins es poden fer amb el FS muntat:
+
+```         
+(A) resize2fs /dev/datavg/web
+(B) vgextend datavg /dev/vdc
+(C) lvextend -L +5G datavg/web
+(D) pvcreate /dev/vdc
+```
+
+**b)** Un company ha reduït `/home` (ext4, 20 GiB, amb 6 GiB ocupats) a 10 GiB amb aquesta seqüència. Després el sistema no ha pogut muntar `/home`. Expliqueu exactament què ha passat i escriviu la seqüència correcta.
+
+``` bash
+sudo umount /home
+sudo lvreduce -L 10G datavg/home
+sudo resize2fs /dev/datavg/home 10G
+sudo mount /home
+```
+
+**c)** I si `/home` fos **XFS**?
+
+::: {.callout-tip collapse="true" title="Solució"}
+**a)** L'ordre correcte és **D → B → C → A**: preparar el PV, afegir-lo al pool, fer créixer el contenidor (el LV) i, finalment, el contingut (el FS). Els quatre passos es poden fer **amb el FS muntat**, perquè ext4 pot créixer en calent. El pas D és opcional, perquè `vgextend` inicialitza el PV si cal. Els passos C i A es poden fer en una sola ordre:
+
+``` bash
+sudo lvextend -r -L +5G datavg/web
+```
+
+**b)** S'ha seguit l'ordre de créixer quan calia l'invers. `lvreduce` ha retallat el LV a 10 GiB **mentre el FS encara en feia 20**. Tots els blocs del FS més enllà dels 10 GiB han deixat d'existir: hi poden haver hagut dades de fitxers, metadades, part del journal o còpies del superbloc. Que només hi hagués 6 GiB ocupats no protegeix de res, perquè ext4 reparteix les dades i les metadades per tot el volum, no les col·loca al principi. Quan després s'executa `resize2fs`, el FS ja és inconsistent.
+
+La seqüència correcta és, primer el contingut i després el contenidor:
+
+``` bash
+sudo umount /home
+sudo e2fsck -f /dev/datavg/home
+sudo resize2fs /dev/datavg/home 10G
+sudo lvreduce -L 10G datavg/home
+sudo mount /home
+```
+
+O bé, de manera equivalent i més segura, deixant que LVM coordini els passos amb `fsadm`:
+
+``` bash
+sudo umount /home
+sudo lvreduce -r -L 10G datavg/home
+sudo mount /home
+```
+
+**c)** **XFS no es pot reduir.** L'única via és fer una còpia de les dades (`xfsdump` o `rsync`), destruir el FS, reduir el LV, crear un FS nou i restaurar les dades. Per això, quan es tria XFS per a un volum, cal dimensionar-lo pensant que **només podrà créixer**.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 4 · Migrar `/home` a LVM
+
+Un servidor té `/home` com a simple directori del sistema de fitxers arrel (`/dev/vda1`), que s'està omplint. Heu afegit un disc nou, `/dev/vdb` (50 GiB), i voleu que `/home` passi a ser un LV `datavg/home` de 20 GiB amb ext4, que es munti automàticament en cada arrencada.
+
+a)  Escriviu la seqüència completa d'ordres i expliqueu per a què serveix cadascuna.
+b)  Per què és un error crear el LV i muntar-lo directament a `/home` sense haver-hi copiat res abans?
+c)  A `rsync`, quina diferència hi ha entre `/home/` i `/home` com a origen? Per què calen les opcions `-aHAX`?
+d)  A `/etc/fstab`, per què **no** s'ha de fer servir `/dev/vdb`? Quines alternatives són correctes?
+e)  El servidor és en producció i `/home` no pot quedar inaccessible més de 5 minuts, però copiar-lo sencer en triga 40. Com faríeu la còpia perquè sigui **consistent**?
+
+::: {.callout-tip collapse="true" title="Solució"}
+**a)** Una seqüència possible, amb les escriptures a `/home` aturades durant la còpia (per exemple, des de `rescue.target` o en una finestra de manteniment). L'apartat e) explica per què és necessari i com reduir-ne la durada:
+
+``` bash
+sudo pvcreate /dev/vdb                       # inicialitza el disc com a PV
+sudo vgcreate datavg /dev/vdb                # crea el pool
+sudo lvcreate -n home -L 20G datavg          # crea el LV (deixem 30 GiB lliures per al futur)
+sudo mkfs.ext4 /dev/datavg/home              # crea el FS sobre el LV
+sudo mount /dev/datavg/home /mnt             # el munta en un lloc temporal
+sudo rsync -aHAX /home/ /mnt/                # copia el contingut conservant-ne les propietats
+sudo umount /mnt
+sudo mv /home /home.old                      # aparta l'original sense esborrar-lo
+sudo mkdir /home
+sudo blkid /dev/datavg/home                  # obté l'UUID del FS
+```
+
+Afegiu a `/etc/fstab` una línia com aquesta, amb l'UUID real:
+
+```         
+UUID=<uuid-del-fs>  /home  ext4  defaults  0  2
+```
+
+Finalment, comproveu la configuració i munteu-la:
+
+``` bash
+sudo findmnt --verify        # detecta errors a /etc/fstab abans de reiniciar
+sudo systemctl daemon-reload # systemd regenera les unitats .mount a partir de fstab
+sudo mount /home
+```
+
+Quan hàgiu comprovat que tot funciona (inclòs un reinici), podeu esborrar `/home.old`.
+
+Deixar espai lliure al VG és una decisió deliberada: serà el que permetrà fer créixer `/home`, o crear altres LVs, sense haver d'afegir discos.
+
+**b)** Muntar un FS sobre un directori **amaga** el que hi havia a dins, però no ho esborra. Els usuaris veurien un `/home` buit, les dades originals continuarien ocupant espai a `/` (que era precisament el problema) i quedarien invisibles fins que es desmuntés el LV. Per això cal copiar abans les dades i apartar el directori original.
+
+**c)** Amb la barra final, `rsync` copia el **contingut** de `/home` dins de `/mnt`. Sense la barra, copia el **directori** i el resultat seria `/mnt/home/...`. Pel que fa a les opcions:
+
+-   `-a` conserva permisos, propietaris, dates i enllaços simbòlics;
+-   `-H` conserva els enllaços durs;
+-   `-A` conserva les ACL;
+-   `-X` conserva els atributs estesos (per exemple, les etiquetes SELinux o les *capabilities*).
+
+Sense aquestes opcions, la còpia pot semblar correcta però tenir permisos o propietaris diferents.
+
+**d)** Els noms `/dev/vdX` depenen de l'**ordre en què el kernel detecta els discos** i poden canviar si s'afegeix o es treu un disc. A més, `/dev/vdb` és el PV, no el FS. Hi ha dues alternatives correctes: l'**UUID del FS** (`UUID=...`) o el camí del LV (`/dev/datavg/home` o `/dev/mapper/datavg-home`), que és estable perquè el nom del VG i del LV no depèn de l'ordre dels discos.
+
+**e)** Cal distingir entre una còpia **correcta** i una còpia **consistent**. Si `rsync` copia mentre els usuaris o els serveis continuen escrivint, cada fitxer es pot copiar bé, però no tots corresponen al mateix instant: un fitxer modificat després que `rsync` hi hagi passat queda desactualitzat, i un fitxer creat durant la còpia pot no ser-hi. Per a una base de dades o un conjunt de fitxers relacionats, el resultat pot ser inservible.
+
+La solució habitual és fer-ho en **dues passades**:
+
+``` bash
+sudo rsync -aHAX /home/ /mnt/            # 1a passada, EN CALENT: copia el gruix (40 min)
+# ... finestra de manteniment: aturar els serveis i impedir les sessions d'usuari ...
+sudo rsync -aHAX --delete /home/ /mnt/   # 2a passada, AMB LES ESCRIPTURES ATURADES
+```
+
+La primera passada, feta en calent, no garanteix que els fitxers copiats siguin consistents entre ells, però això no és cap problema: la segona passada corregeix tot el que hagi canviat. El que sí és imprescindible és que durant la segona passada **ningú no escrigui a `/home`**: ni les sessions d'usuari, ni cap **servei** que hi tingui dades (un servidor de correu, un servei web amb directoris d'usuari, tasques programades...).
+
+La segona passada només transfereix les diferències respecte de la primera, i per això és ràpida: és el que fa que la finestra de manteniment pugui ser de minuts i no d'hores. L'opció `--delete` és imprescindible en aquesta passada, perquè elimina de la còpia els fitxers que s'han esborrat a l'origen entre les dues passades. Sense aquesta opció, la còpia tindria fitxers que l'original ja no té.
+
+Les escriptures han de continuar aturades fins que s'hagi completat la segona passada, s'hagi apartat el directori original i s'hagi muntat el nou LV a `/home`. Només aleshores es poden reprendre les sessions i els serveis.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 5 · Substituir un disc sense aturar el servei
+
+El VG `datavg` té un sol PV, `/dev/vdb` (500 GiB), amb diversos LVs muntats i en ús. El disc comença a donar errors (SMART) i heu instal·lat un disc nou, `/dev/vdc`. Heu de retirar `vdb` **sense aturar els serveis**.
+
+a)  Escriviu la seqüència d'ordres i justifiqueu l'ordre.
+b)  Què passaria si executéssiu `vgreduce datavg /dev/vdb` com a primer pas?
+c)  `vdc` fa 400 GiB, menys que `vdb`. Es pot fer igualment? Com ho comprovaríeu abans de començar?
+d)  A mitja migració hi ha un tall de corrent. Què cal fer en tornar a arrencar?
+e)  Quina limitació té aquest procediment si `vdb` ja té sectors il·legibles?
+
+::: {.callout-tip collapse="true" title="Solució"}
+**a)**
+
+``` bash
+sudo vgextend datavg /dev/vdc    # 1. el VG guanya PE lliures a vdc
+sudo pvmove /dev/vdb /dev/vdc     # 2. mou TOTS els PE ocupats de vdb a vdc
+sudo vgreduce datavg /dev/vdb    # 3. treu vdb del VG (ja no té cap PE assignat)
+sudo pvremove /dev/vdb           # 4. esborra l'etiqueta LVM de vdb
+```
+
+L'ordre és obligat. `pvmove` necessita un lloc de destinació dins el mateix VG, i per tant `vdc` hi ha de ser abans. `vgreduce` només accepta treure un PV que no tingui cap PE assignat. Durant el pas 2 els LVs continuen actius: `pvmove` crea un mirall temporal, i quan cada tram ja està copiat, en canvia el mapatge. Els FS no se n'adonen perquè el seu dispositiu (`dm-N`) no canvia.
+
+**b)** `vgreduce` refusaria l'operació perquè el PV encara té extents assignats a LVs. No es perdria res, però tampoc no s'hauria fet res.
+
+**c)** Sí, sempre que els PE **ocupats** de `vdb` hi càpiguen. Abans de començar, cal comparar l'espai usat de `vdb` amb l'espai lliure que tindrà el VG fora de `vdb`:
+
+``` bash
+sudo pvs -o pv_name,pv_size,pv_used,pv_free
+```
+
+Si `vdb` té 350 GiB ocupats i `vdc` en té 400 lliures (gairebé tots, un cop restades les metadades), la migració és possible. Si no hi caben, `pvmove` fallarà per manca d'espai.
+
+**d)** `pvmove` deixa constància a les metadades de l'operació en curs. En tornar a arrencar, abans de fer res, cal comprovar l'estat del VG i dels LVs amb `sudo lvs -a -o +devices`: si hi apareix el LV temporal `pvmove0`, hi ha una migració pendent. Aleshores s'executa `pvmove` **sense arguments**, que reprèn les migracions inacabades. No s'ha de començar cap migració nova fins que l'anterior estigui resolta. Després es comprova amb `lvs -a -o +devices` que ja no queda res a `vdb` i es continua amb els passos 3 i 4.
+
+**e)** `pvmove` necessita **llegir** les dades d'origen. Si un sector de `vdb` és il·legible, la còpia d'aquell tram fallarà, i aquell fragment de dades es perdrà. Un LVM lineal no té cap còpia de la qual recuperar-lo. Si el LV hagués estat `raid1`, la solució seria una altra (`lvconvert --repair`). Si no ho és, cal recórrer a les **còpies de seguretat**. Per això els avisos SMART s'han d'atendre **abans** que el disc falli.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 6 · Dimensionar un snapshot
+
+Per fer la còpia de seguretat nocturna d'un LV de 100 GiB, l'administrador crea un snapshot clàssic, en copia el contingut i després l'elimina. La còpia dura **3 hores**. Durant aquestes hores, l'aplicació escriu a l'origen a un ritme de **4 GiB/h**. Amb les dades de monitoratge sabeu que el **80 %** d'aquestes escriptures reescriuen repetidament els mateixos **2 GiB** de blocs (logs rotatius i taules molt actualitzades), i que el 20 % restant va a blocs que no s'havien modificat abans durant la còpia, sense que cap d'aquests blocs s'escrigui dues vegades.
+
+a)  Quantes dades s'escriuen a l'origen durant la còpia? Quant espai COW es consumeix, aproximadament? Justifiqueu la diferència entre els dos valors.
+b)  Quina mida mínima donaríeu al snapshot? Amb quin marge?
+c)  Què passa si el snapshot és de 4 GiB?
+d)  Un company proposa estalviar espai fent que l'aplicació, durant la còpia, només creï fitxers **nous** en lloc de modificar els existents. Hi guanya alguna cosa?
+e)  Quina opció de `lvm.conf` reduiria el risc de l'apartat c)?
+
+::: {.callout-tip collapse="true" title="Solució"}
+**a)** S'escriuen 4 GiB/h × 3 h = **12 GiB** a l'origen. El COW, però, només copia un *chunk* la **primera vegada** que es modifica després de crear el snapshot:
+
+-   Els 2 GiB calents es copien **una sola vegada**: 2 GiB de COW, tot i que s'hi escriuen 9,6 GiB.
+-   El 20 % restant (2,4 GiB) va a blocs diferents: 2,4 GiB més de COW.
+-   Total: **≈ 4,4 GiB** de COW, més una petita part per a la taula d'excepcions.
+
+La diferència entre 12 GiB escrits i 4,4 GiB consumits és el punt clau del COW: el que compta són els **blocs diferents** que es modifiquen, no el volum total d'escriptures.
+
+**b)** Com a mínim uns 5 GiB, però el raonable és **un marge ampli** (per exemple, 8–10 GiB), perquè les estimacions de ritme fallen just les nits que hi ha més activitat, i quedar-se curt és catastròfic (vegeu c). Durant la còpia, l'ocupació es pot vigilar amb `lvs -o lv_name,data_percent`.
+
+**c)** Quan l'àrea COW s'omple, el snapshot queda **invàlid**: no es pot llegir i s'ha d'eliminar. La còpia de seguretat, que estava llegint del snapshot, falla a mitja execució o queda incompleta. L'origen no es veu afectat i l'aplicació continua funcionant, de manera que el problema pot passar desapercebut si ningú no revisa els registres de la còpia.
+
+**d)** **No hi guanya res.** El snapshot treballa a nivell de **blocs**, no de fitxers. Un fitxer nou ocupa blocs de l'origen que abans eren lliures per al FS, però que també formen part de l'origen: la primera escriptura en cadascun en copia el contingut antic (encara que sigui brossa) a l'àrea COW. Fins i tot pot ser pitjor, perquè els fitxers nous es reparteixen per blocs nous, mentre que les reescriptures tornen als mateixos blocs.
+
+**e)** `snapshot_autoextend_threshold` i `snapshot_autoextend_percent`, a la secció `activation` de `/etc/lvm/lvm.conf`. Quan el snapshot arriba al llindar, `dmeventd` l'amplia automàticament un percentatge, **si el VG té espai lliure**. Per defecte el llindar és 100, és a dir, l'autoextensió està desactivada.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 7 · Revisar el disseny d'un company
+
+Un company us presenta aquest disseny per al servidor de bases de dades d'una empresa, amb quatre discos de 1 TB:
+
+> Creo el VG `vg1` amb els quatre discos i un LV *striped* de 4 TB per a la base de dades, que és el que dona més rendiment. Per protegir les dades, afegeixo un cinquè disc en un VG separat, `vg2`, i cada nit hi creo un snapshot del LV de la base de dades. Així, si falla un disc de `vg1`, restauro la base de dades des del snapshot de `vg2`.
+
+a)  Identifiqueu tots els errors conceptuals del disseny i justifiqueu per què ho són.
+b)  Proposeu una alternativa amb els mateixos quatre discos (més el cinquè si el voleu fer servir) i justifiqueu-ne els compromisos.
+
+::: {.callout-tip collapse="true" title="Solució"}
+**a)** El disseny té tres errors greus:
+
+1.  **Un LV *striped* sense redundància en 4 discos multiplica el risc.** Les dades de cada LE estan repartides en stripes per tots quatre discos. Si en falla **qualsevol**, es perd tota la base de dades. Amb una probabilitat de fallada anual *p* per disc, i **suposant que les fallades dels discos són independents**, la probabilitat de perdre-la és 1 − (1 − *p*)⁴ ≈ 4*p* (per a *p* petita): aproximadament el quàdruple que amb un sol disc. A la pràctica, aquesta hipòtesi és optimista: els discos del mateix lot i de la mateixa edat tendeixen a fallar en períodes propers, de manera que el risc real pot ser encara més alt.
+2.  **Un snapshot no pot estar en un altre VG.** L'àrea COW d'un snapshot clàssic ha de ser al **mateix VG** que el seu origen. El que proposa no es pot fer amb LVM.
+3.  **Encara que es pogués, un snapshot no és una còpia de seguretat.** Un snapshot només conté els *chunks* que han canviat des que es va crear; tota la resta es llegeix de l'**origen**. Si es perd l'origen, el snapshot és inútil. Exactament en el cas en què el company el vol fer servir (la fallada d'un disc de `vg1`), no serveix de res.
+
+**b)** Una alternativa raonable és un LV **`raid10`** amb els quatre discos:
+
+``` bash
+sudo lvcreate --type raid10 -m 1 -i 2 -L 1.8T -n db vg1
+```
+
+Compte amb les unitats. Els discos es venen en **TB decimals**: 1 TB = 10¹² bytes. LVM, en canvi, interpreta `T` com a **TiB**: 1 TiB = 2⁴⁰ bytes ≈ 1,0995 × 10¹² bytes. Quatre discos de 1 TB en RAID 10 donen 2 × 10¹² bytes útils, que són **≈ 1,82 TiB**. Una ordre amb `-L 1.9T` fallaria per manca d'espai. Amb `-L 1.8T` queden uns 19 GiB de marge per a les metadades del RAID. És el mateix raonament de l'exercici 1: abans de dimensionar un volum, cal calcular l'espai realment disponible.
+
+Els compromisos són aquests:
+
+-   **Capacitat:** uns 2 TB útils (≈ 1,82 TiB), la meitat de l'espai brut.
+-   **Rendiment:** conserva gran part del rendiment del *striping* (lectures i escriptures en paral·lel entre parelles).
+-   **Tolerància a fallades:** suporta la fallada de **qualsevol disc**, i també la de dos discos si no són de la mateixa parella de mirall.
+
+Una alternativa amb més capacitat és `raid5`: uns 3 TB útils (≈ 2,73 TiB) i tolerància a un disc, però amb una penalització a les escriptures petites (cal recalcular la paritat) que en una base de dades sol ser important.
+
+El cinquè disc no ha de contenir snapshots. Ha d'allotjar **còpies de seguretat reals**: per exemple, un FS on es desa cada nit un volcat de la base de dades. El snapshot hi pot participar, però en un altre paper: es crea al mateix VG un moment abans de la còpia, perquè el volcat llegeixi una imatge estable, i s'elimina en acabar. Millor encara si aquest volcat surt també del servidor, perquè un incendi o un ransomware afecten tots els discos alhora.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 8 · Planificar la capacitat d'un thin pool
+
+Un servidor allotja cinc aplicacions. Cadascuna té un thin LV de **500 GiB** virtuals en un thin pool de **1 TiB** reals. Avui el pool està ocupat al **70 %**, i l'ús creix a un ritme de **20 GiB/dia**.
+
+a)  Quina és la ràtio de sobreprovisionament? Què significa a la pràctica?
+b)  Quants dies queden fins que el pool arribi al 80 %? I fins que s'ompli?
+c)  Escriviu la configuració de `lvm.conf` perquè el pool s'ampliï un 20 % quan arribi al 80 %. Quina condició s'ha de complir perquè l'autoextensió funcioni? Quant espai lliure ha de tenir el VG per a la primera ampliació?
+d)  Setmanes després, l'aplicació d'`app3` es queixa que no pot escriure. `df -h` mostra que el FS d'`app3` només ocupa 320 dels seus 500 GiB, però `lvs` indica que el `Data%` del pool és del 99 %. Un company executa `lvextend -L +200G datavg/app3`. Resol el problema? Justifiqueu-ho.
+e)  Quina ordre fareu servir per vigilar el pool? Quins dos percentatges cal mirar, i per què tots dos?
+
+::: {.callout-tip collapse="true" title="Solució"}
+**a)** S'han promès 5 × 500 GiB = 2500 GiB sobre 1024 GiB reals: una ràtio de **≈ 2,44**. A la pràctica, el sistema només funciona si les aplicacions **no** fan servir alhora tot l'espai que se'ls ha promès. Si totes intentessin omplir el seu volum, el pool s'esgotaria molt abans.
+
+**b)** Un 70 % de 1024 GiB són 716,8 GiB ocupats.
+
+-   Fins al 80 % (819,2 GiB) falten 102,4 GiB → 102,4 / 20 ≈ **5 dies**.
+-   Fins al 100 % falten 307,2 GiB → 307,2 / 20 ≈ **15 dies**.
+
+**c)** A `/etc/lvm/lvm.conf`, secció `activation`:
+
+```         
+thin_pool_autoextend_threshold = 80
+thin_pool_autoextend_percent = 20
+```
+
+L'autoextensió només funciona si el pool està **monitorat** per `dmeventd` (servei `lvm2-monitor.service`, actiu per defecte a Debian) i si el **VG té espai lliure**. Totes dues condicions es poden comprovar, i la configuració de `lvm.conf` no serveix de res si en falla qualsevol:
+
+``` bash
+sudo lvs -o lv_name,seg_monitor,data_percent,metadata_percent datavg   # el pool ha de dir monitored
+sudo vgs -o vg_name,vg_free datavg
+```
+
+La primera ampliació és del 20 % de 1 TiB, és a dir **≈ 205 GiB**. Si el VG no té aquest espai lliure, l'autoextensió fallarà i el pool continuarà omplint-se.
+
+**d)** **No.** El FS d'`app3` encara té 180 GiB lliures, de manera que el problema no és la mida **virtual** del thin LV. El que s'ha esgotat és l'espai **físic** del pool (99 %). Ampliar el thin LV només augmenta la promesa: la ràtio de sobreprovisionament puja i el pool continua ple. El que cal ampliar és el pool, després d'afegir un disc al VG si no hi ha espai lliure:
+
+``` bash
+sudo lvextend -L +200G datavg/pool
+```
+
+El cas contrari també existeix. Si `df -h` mostrés el FS d'`app3` al 100 % i el pool tingués espai, el que s'hauria esgotat seria la capacitat virtual del thin LV, i aleshores `sudo lvextend -r -L +200G datavg/app3` (que amplia el LV i el FS) sí que resoldria el problema. Conclusió: amb thin provisioning, l'espai es mira a **dos nivells**: dins del thin LV (`df`) i al pool (`Data%`).
+
+**e)**
+
+``` bash
+sudo lvs -o lv_name,lv_size,data_percent,metadata_percent datavg
+```
+
+Cal vigilar el percentatge de **dades** i el de **metadades** del pool. Les metadades són una àrea separada i més petita, i es poden esgotar abans que les dades, sobretot si hi ha molts snapshots o el pool està molt fragmentat. Si s'esgoten, és una situació encara més greu. Es poden ampliar amb `lvextend --poolmetadatasize +1G datavg/pool`.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 9 · On s'atura l'arrencada?
+
+Totes aquestes màquines arrenquen en mode UEFI des d'un disc GPT. Per a cadascuna, digueu si arrenca. Si no ho fa, indiqueu **en quina etapa** s'atura (firmware, GRUB, initramfs o systemd) i **per què**.
+
+| Màquina | ESP | `/boot` | `/` | Altres |
+|:--------------|:--------------|:--------------|:--------------|:--------------|
+| A | partició FAT32 | partició ext4 | LV lineal `sysvg/root` | initramfs amb `lvm2` |
+| B | **LV** FAT32 | partició ext4 | LV lineal | — |
+| C | partició FAT32 | **LV lineal** ext4 | LV lineal | `grub-install` executat normalment |
+| D | partició FAT32 | partició ext4 | LV lineal | initramfs regenerat **sense** les eines de `lvm2` |
+| E | partició FAT32 | **thin LV** ext4 | LV lineal | — |
+
+::: {.callout-tip collapse="true" title="Solució"}
+-   **A: arrenca.** És la configuració habitual. El firmware llegeix l'ESP, GRUB llegeix `/boot` d'una partició normal, i l'initramfs activa el VG abans de muntar l'arrel.
+-   **B: s'atura al firmware.** El firmware UEFI cerca l'ESP com una **partició** GPT amb sistema de fitxers FAT, i no sap res de LVM. No troba l'executable de GRUB, i la màquina no té cap entrada d'arrencada utilitzable (*No bootable device* o el menú del firmware).
+-   **C: arrenca.** En una instal·lació de GRUB 2 amb el mòdul `lvm` incorporat a la imatge EFI, GRUB pot llegir un LV lineal. En una instal·lació Debian amb GRUB 2 correctament configurat, i amb el mòdul lvm disponible a la imatge EFI, GRUB pot llegir un LV lineal. Cal comprovar que la imatge instal·lada inclou aquest suport. Cal distingir la capacitat de GRUB de la configuració concreta de la màquina: una imatge de GRUB sense el mòdul `lvm` no arrencaria. És una configuració vàlida, encara que per convenció i robustesa se sol deixar `/boot` en una partició.
+-   **D: s'atura a l'initramfs.** El kernel arrenca, però sense les eines de LVM ningú no activa el VG, i el dispositiu indicat a `root=` no apareix mai. Amb `initramfs-tools` (Debian), després d'esperar acaba mostrant un missatge com *ALERT! /dev/mapper/sysvg-root does not exist* i obre una consola de rescat. Es pot solucionar des d'aquesta consola (si té `lvm`) o des d'un sistema *live*, reinstal·lant `lvm2` i regenerant l'initramfs amb `update-initramfs -u` dins d'un `chroot`.
+-   **E: s'atura a GRUB.** El mòdul `lvm` de GRUB **no suporta thin LVs**. GRUB no pot llegir `/boot`, i per tant no troba ni `grub.cfg` ni el kernel. Acabarà a la consola `grub rescue>` o amb un error de dispositiu no trobat.
+
+La idea general: **cada etapa ha de saber llegir el format on hi ha el que ha de carregar**. El firmware llegeix FAT, GRUB llegeix el que permeten els seus mòduls, i l'initramfs llegeix el que hi hàgiu inclòs.
+:::
+
+------------------------------------------------------------------------
+
+## Exercici 10 · Fallada d'un disc
+
+El VG `datavg` té dos PVs, `/dev/vdb` i `/dev/vdc`, tots dos amb la configuració de metadades per defecte de LVM (una àrea de metadades per PV). Conté aquests LVs:
+
+| LV         | Tipus                    | On són els seus extents             |
+|:-----------|:-------------------------|:------------------------------------|
+| `web`      | lineal, 8 GiB            | tots a `vdb`                        |
+| `logs`     | lineal, 12 GiB           | 4 GiB a `vdb` i 8 GiB a `vdc`       |
+| `db`       | `raid1`, 4 GiB           | una còpia a `vdb` i l'altra a `vdc` |
+| `web-snap` | snapshot de `web`, 2 GiB | àrea COW a `vdc`                    |
+
+Un matí, `vdc` ha mort completament. En arrencar, LVM avisa que no troba un dispositiu amb un UUID determinat i que el VG té un PV que falta.
+
+a)  Predigueu l'estat de cadascun dels quatre LVs: funciona amb normalitat, funciona degradat o s'ha perdut? Justifiqueu-ho.
+b)  Les metadades del VG s'han perdut? Com ho sabeu?
+c)  Heu instal·lat un disc nou, `/dev/vdd`. Escriviu la seqüència de recuperació i indiqueu què recupera cada pas i què **no es pot** recuperar.
+
+::: {.callout-tip collapse="true" title="Solució"}
+**a)**
+
+-   **`web`: funciona amb normalitat.** Tots els seus extents són a `vdb`, que està sa.
+-   **`logs`: s'ha perdut, a la pràctica.** Ha perdut 8 dels seus 12 GiB. Es pot forçar a activar-lo en mode parcial (`--activationmode partial`), però els trams que faltaven retornaran errors d'E/S i el FS estarà greument malmès. Com a molt, es poden intentar rescatar alguns fitxers que fossin sencers a la part de `vdb`.
+-   **`db`: funciona degradat.** La còpia de `vdb` és completa. Per defecte, LVM activa els LVs RAID en mode degradat (`activation_mode = "degraded"` a `lvm.conf`). Funciona, però ja **no té redundància**: una segona fallada seria definitiva.
+-   **`web-snap`: s'ha perdut.** La seva àrea COW era a `vdc`. L'origen `web` no es veu afectat, perquè un snapshot depèn del seu origen però no a l'inrevés.
+
+**b)** **No.** Amb la configuració per defecte que indica l'enunciat, cada PV del VG guarda una còpia completa de les metadades, i la de `vdb` està intacta. Per això LVM pot dir exactament quin PV falta i quins LVs l'utilitzaven. A més, a `/etc/lvm/backup/datavg` hi ha la darrera còpia de les metadades, i a `/etc/lvm/archive/` les versions anteriors.
+
+**c)** Una seqüència raonable:
+
+``` bash
+sudo vgchange -ay --activationmode degraded datavg   # 0. activa els LVs complets i els RAID degradats
+sudo vgextend datavg /dev/vdd            # 1. el VG té espai on reconstruir
+sudo lvconvert --repair datavg/db        # 2. reconstrueix la còpia de db a vdd
+sudo lvs -a -o lv_name,sync_percent,devices datavg   # 3. espereu que la sincronització arribi al 100 %
+```
+
+Executar `lvconvert --repair` no vol dir que la reconstrucció hagi acabat. Abans de considerar recuperada la redundància, comproveu a la sortida del pas 3 dues coses: que la nova rèplica de `db` s'ha assignat a `/dev/vdd`, i que la sincronització ha arribat al **100 %**.
+
+El pas 0 pot semblar redundant, perquè `degraded` és el mode d'activació per defecte a `lvm.conf`. Però amb un PV absent, el VG pot no haver-se activat automàticament en arrencar, i escriure el mode explícitament fa que la recuperació no depengui de la configuració concreta del sistema. Aquest mode activa els LVs complets i `db` (degradat), però no `logs`, perquè li falten trams: per a això caldria `--activationmode partial`.
+
+Després, si cal, intenteu rescatar el que es pugui de `logs`:
+
+``` bash
+sudo lvchange -ay --activationmode partial datavg/logs
+sudo mkdir -p /mnt/rescat
+sudo mount -o ro,noload /dev/datavg/logs /mnt/rescat
+# ... copieu a un altre lloc els fitxers que es puguin llegir ...
+sudo umount /mnt/rescat
+sudo lvchange -an datavg/logs
+```
+
+És un **intent** de rescat, no una recuperació garantida. Els trams que eren a `vdc` retornen errors de lectura, i qualsevol fitxer, directori o metadada del FS que hi passés pot ser il·legible. Tres precaucions:
+
+-   `ro` sol **no basta**: amb ext4, si el *journal* té transaccions pendents, el kernel les reprodueix (i escriu al dispositiu) encara que es munti només de lectura. L'opció `noload` evita que es carregui el *journal*.
+-   No executeu cap reparació automàtica (`fsck`) sobre l'original abans d'haver valorat les opcions de recuperació: una reparació pot descartar justament el que es volia salvar.
+-   Si les dades són prou valuoses, el més segur és fer abans una imatge del LV (per exemple, amb `ddrescue`) i treballar sobre la imatge.
+
+A continuació:
+
+``` bash
+sudo vgreduce --removemissing --force --test datavg   # 4. què faria? (no escriu res)
+sudo vgreduce --removemissing --force datavg          # 5. treu vdc de les metadades
+```
+
+Amb `--test`, LVM mostra què faria sense modificar les metadades: és la manera de comprovar, abans de fer-ho, quins LVs eliminarà. Amb `--force`, l'últim pas **elimina** els LVs que encara depenien de `vdc`, és a dir `logs` i `web-snap`, sencers. Per això cal haver rescatat abans el que es pugui.
+
+Finalment, recreeu `logs` (i el snapshot, si cal) i **restaureu-ne les dades des de la còpia de seguretat**.
+
+| Recuperat | No recuperable des de LVM |
+|:-----------------------------------|:-----------------------------------|
+| `web`, sense necessitat de fer res | les dades de `logs` que eren a `vdc` |
+| `db`, amb la redundància restablerta a `vdd` | `web-snap` (cal tornar-lo a crear) |
+| la coherència de les metadades del VG |  |
+
+Conclusió: **LVM aporta flexibilitat, no redundància**. Només el LV que s'havia creat explícitament com a `raid1` ha sobreviscut sense perdre dades. Per a la resta, l'única protecció real són les còpies de seguretat fora del VG.
+:::

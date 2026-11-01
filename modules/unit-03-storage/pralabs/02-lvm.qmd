@@ -1,0 +1,272 @@
+---
+title: "Emmagatzematge (II): LVM"
+author: "Jordi Mateo Fornés"
+format:
+  udl-course-html:
+    toc: false
+    number-sections: false
+---
+
+## L'escenari
+
+Administreu un servidor Debian que allotja una aplicació. Les dades de l'aplicació viuen a `/srv/app`, i el servidor té dos discos addicionals. Al llarg de la sessió fareu el que faria un administrador real amb aquest emmagatzematge: el construireu, el fareu créixer, el migrareu a un disc nou **sense aturar l'aplicació** i el protegireu d'un error humà.
+
+En acabar, sereu capaços de:
+
+-   construir la pila PV → VG → LV → FS i fer-la persistent amb `/etc/fstab`;
+-   fer créixer un volum en calent i explicar per què l'ordre de les operacions és el que és;
+-   substituir un disc amb `pvmove` i demostrar que l'aplicació no se n'ha assabentat;
+-   fer servir un snapshot com a punt de retorn i entendre quan es fa efectiva la fusió.
+
+## Preparació
+
+1.  A l'**amfitrió**, al directori on teniu `run.sh` i la imatge de la VM dels laboratoris anteriors, executeu [`./prepara-discos.sh`](./src/prepara-discos.sh). Crea dos discos virtuals de 10 GiB (`lvm-b.qcow2` i `lvm-c.qcow2`) i us mostra les dues opcions `-drive` que heu d'afegir a l'ordre de QEMU del vostre `run.sh`. Necessiteu uns 15 GB lliures a l'amfitrió.
+
+2.  Arrenqueu la VM i instal·leu-hi les eines que farem servir:
+
+    ``` bash
+    sudo apt install lvm2 thin-provisioning-tools
+    ```
+
+3.  Copia a la VM el script: [`genera-dades.sh`](./src/genera-dades.sh), al mateix directori, i dona permís d'execució amb `chmod +x`.
+
+4.  Comproveu que la VM veu els dos discos nous:
+
+    ``` bash
+    lsblk -o NAME,SERIAL,SIZE,TYPE,MOUNTPOINTS
+    ```
+
+    Hi heu de veure dos discos de 10 GiB amb els números de sèrie `lvm-b` i `lvm-c`, sense particions.
+
+    Les ordres de les fases fan servir `/dev/vda` (el disc `lvm-b`) i `/dev/vdb` (el disc `lvm-c`), que són els noms habituals. Si la vostra VM mostra altres noms, substituïu-los a **totes** les ordres segons el número de sèrie. No us baseu mai només en l'ordre alfabètic dels dispositius: els noms `vdX` els assigna el kernel per ordre de detecció i **no són una identitat persistent**. Al llarg del laboratori tornareu a fer aquesta comprovació en els moments en què és fàcil equivocar-se de disc.
+
+::: callout-warning
+Totes les ordres d'aquest laboratori que modifiquen discos són **destructives**. Executeu-les només a la VM i només sobre `vda` i `vdb`. Abans d'executar-ne cap, comproveu el nom del dispositiu dues vegades.
+:::
+
+
+
+## Fase 0 · Reconeixement
+
+Abans de tocar un disc, un administrador comprova què hi ha.
+
+``` bash
+lsblk -f
+sudo wipefs /dev/vdb
+```
+
+`lsblk -f` mostra els dispositius de blocs amb el sistema de fitxers de cadascun. `wipefs` **sense** l'opció `-a` és de només lectura: llista les signatures (de sistemes de fitxers, de taules de particions, de LVM...) que troba al dispositiu.
+
+**Predicció.** Quin és el disc del sistema? Què mostrarà `wipefs /dev/vda`?
+
+::: {.callout-note collapse="true" title="Resposta"}
+El disc del sistema és `sda`: té particions i una d'elles està muntada a `/`. `wipefs /dev/vda` no mostra **res**, perquè el disc és nou i no conté cap signatura. Si mostrés alguna cosa, voldria dir que el disc no és buit, i caldria aturar-se a esbrinar-ne el contingut abans de continuar.
+:::
+
+
+
+## Fase 1 · Construir
+
+Construïm la pila de baix a dalt.
+
+``` bash
+sudo pvcreate /dev/vda               # escriu l'etiqueta LVM i l'àrea de metadades
+sudo vgcreate datavg /dev/vda        # crea el pool d'extents
+sudo pvs                             # informe dels PVs
+```
+
+**Predicció.** Quants PE de 4 MiB tindrà el VG? Per què creieu que `pvs` mostrarà la mida com `<10.00g` i no com `10.00g`?
+
+::: {.callout-note collapse="true" title="Resposta"}
+**2559 PE**. LVM reserva el primer MiB del PV per a l'etiqueta i les metadades, i (10240 − 1) / 4 = 2559,75, que s'arrodoneix cap avall. L'espai útil és lleugerament inferior a 10 GiB, i el símbol `<` ho indica. Ho podeu comprovar amb `sudo vgs -o vg_name,vg_extent_size,vg_extent_count datavg`.
+:::
+
+Ara creem el LV, el sistema de fitxers i el punt de muntatge:
+
+``` bash
+sudo lvcreate -n app -L 4G datavg    # LV de 4 GiB → /dev/datavg/app
+sudo mkfs.ext4 /dev/datavg/app       # el FS va sobre el LV
+sudo mkdir -p /srv/app
+sudo blkid -s UUID -o value /dev/datavg/app
+```
+
+L'última ordre mostra l'UUID del sistema de fitxers. Afegiu una línia a `/etc/fstab` (amb `sudo nano /etc/fstab`), substituint `<uuid>` pel valor real:
+
+```         
+UUID=<uuid>  /srv/app  ext4  defaults,nofail  0  2
+```
+
+L'opció `nofail` indica que, si el dispositiu no hi és en arrencar, el sistema ha de continuar igualment. Ja veurem per què és important a la part B.
+
+``` bash
+sudo findmnt --verify          # detecta errors a fstab abans que ho faci l'arrencada
+sudo systemctl daemon-reload   # systemd regenera les unitats .mount a partir de fstab
+sudo mount -a                  # munta el que hi ha a fstab i encara no està muntat
+findmnt /srv/app
+```
+
+Finalment, generem les dades de l'aplicació i el manifest:
+
+``` bash
+sudo ./genera-dades.sh
+sudo verifica-app
+```
+
+::: {.callout-note collapse="true" title="Per què el manifest és a /root i no a /srv/app?"}
+Perquè ha de ser un testimoni **independent** del LV. A la Fase 4 farem tornar el LV a un estat anterior. Si el manifest fos dins del LV, també tornaria enrere, i no podríem detectar res. Un testimoni que viu dins el sistema que vol vigilar no és fiable.
+:::
+
+
+
+## Fase 2 · Créixer
+
+L'aplicació necessita més espai. Primer, comprovem quin espai hi ha disponible:
+
+``` bash
+sudo vgs datavg
+df -h /srv/app
+```
+
+Ara ampliem el LV en 2 GiB. **Fixeu-vos que no fem servir `-r`.**
+
+``` bash
+sudo lvextend -L +2G datavg/app
+```
+
+**Predicció.** Quina mida mostrarà ara `df -h /srv/app`? I `sudo lvs datavg`?
+
+::: {.callout-note collapse="true" title="Resposta"}
+`lvs` mostrarà un LV de **6 GiB**, però `df -h` continuarà mostrant la mida d'abans (uns **3,9 GiB**). El LV, el contenidor, ha crescut. El sistema de fitxers, el contingut, encara no ho sap: la seva estructura interna continua descrivint 4 GiB. És el model de capes en acció: cada capa només sap el que li diu la seva.
+:::
+
+``` bash
+df -h /srv/app
+sudo lvs datavg
+sudo resize2fs /dev/datavg/app      # ara sí: el FS ocupa tot el LV (en calent)
+df -h /srv/app
+lsblk /dev/vdb
+sudo verifica-app
+```
+
+En una situació real, les ordres `lvextend` i `resize2fs` es farien en un sol pas amb `sudo lvextend -r -L +2G datavg/app`. Aquí les hem separat perquè es vegi què fa cadascuna.
+
+
+
+## Fase 3
+
+El disc `vda` dona avisos SMART i s'ha de retirar. Ho farem **sense aturar l'aplicació**. Abans d'incorporar el disc nou, comproveu quin és:
+
+``` bash
+lsblk -o NAME,SERIAL,SIZE,TYPE,MOUNTPOINTS         # vdb ha de ser lvm-c, buit
+sudo vgextend datavg /dev/vdb                      # el VG guanya els PE lliures de vdb
+sudo pvs -o pv_name,pv_size,pv_used,pv_free        # hi cap a vdb el que ocupa vda?
+sudo lvs -a -o lv_name,devices datavg              # on són ara els extents d'app?
+```
+
+Per simular que l'aplicació continua treballant, posem en marxa un procés que hi escriu una línia cada segon:
+
+``` bash
+sudo sh -c 'while true; do date +%T >> /srv/app/viu.log; sleep 1; done' &
+```
+
+**Predicció.** Ara movem tots els extents d'`app` de `vda` a `vdb`. Durant la migració, el procés deixarà d'escriure? En acabar, el manifest donarà errors?
+
+::: {.callout-note collapse="true" title="Resposta"}
+**No i no.** `pvmove` treballa amb el LV actiu. Internament crea un mirall temporal entre l'origen i la destinació, copia les dades i, quan cada tram està copiat, canvia el mapatge LE→PE. El sistema de fitxers continua parlant amb el mateix dispositiu (`/dev/dm-N`), i no s'assabenta que les dades han canviat de disc. És la indirecció que hem vist a la teoria, ara amb conseqüències visibles.
+:::
+
+``` bash
+sudo pvmove -i 5 /dev/vda /dev/vdb    # -i 5: mostra el progrés cada 5 segons
+```
+
+Quan acabi, comproveu si el procés ha escrit cada segon sense interrupcions. Aquesta ordre detecta qualsevol forat de més de 2 segons al registre:
+
+``` bash
+awk -F: '{t=$1*3600+$2*60+$3; if (NR>1 && t-p>2) print "forat de " t-p " s abans de " $0; p=t} END {print NR " línies"}' /srv/app/viu.log
+```
+
+Si no mostra cap forat, aturem el procés i retirem el disc:
+
+``` bash
+kill %1                                  # atura el procés en segon pla
+sudo lvs -a -o lv_name,devices datavg    # ja no ha de quedar res a vda
+sudo vgreduce datavg /dev/vda            # treu vda del VG
+sudo pvremove /dev/vda                   # esborra l'etiqueta LVM
+sudo pvs
+sudo verifica-app
+```
+
+::: {.callout-note collapse="true" title="I si haguéssim fet vgreduce abans de pvmove?"}
+`vgreduce` ho hauria refusat, perquè `vda` encara tenia extents assignats. Si `pvmove` s'interromp (un tall de corrent, per exemple), es reprèn executant `sudo pvmove` sense arguments. El PV no es pot retirar fins que la migració hagi acabat.
+:::
+
+
+
+## Fase 4 · Protegir i tornar enrere
+
+Abans d'una operació arriscada a l'aplicació, creem un punt de retorn.
+
+``` bash
+sudo lvcreate -s -L 1G -n app-snap datavg/app
+sudo lvs -o lv_name,lv_attr,origin,data_percent datavg
+```
+
+Ara, l'accident: algú esborra fitxers i en sobreescriu un altre.
+
+``` bash
+sudo rm /srv/app/data/fitxer-00[1-9].bin
+sudo sh -c 'echo corrupte > /srv/app/data/config.ini'
+sudo verifica-app
+sudo lvs -o lv_name,lv_attr,origin,data_percent datavg
+```
+
+El manifest **ha de fallar**: és el resultat esperat. Fixeu-vos també en com ha canviat `data_percent` del snapshot.
+
+::: {.callout-note collapse="true" title="Per què data_percent ha crescut tan poc?"}
+Esborrar un fitxer no esborra el seu contingut: només modifica unes quantes estructures del sistema de fitxers (el directori, els mapes de blocs lliures, l'inode). L'àrea COW només ha de copiar els *chunks* d'aquestes estructures, que són pocs. El snapshot no sap què és un fitxer: només veu blocs de l'origen que canvien.
+:::
+
+Demanem la fusió del snapshot amb l'origen, **amb `/srv/app` encara muntat**:
+
+``` bash
+sudo lvconvert --merge datavg/app-snap
+```
+
+**Predicció.** Els fitxers esborrats, ja han tornat? Què mostrarà `ls /srv/app/data | head -n 3`?
+
+::: {.callout-note collapse="true" title="Resposta"}
+**No.** Com que l'origen està obert (muntat), LVM no pot canviar-ne el contingut per sota del sistema de fitxers sense corrompre'l. La fusió queda **pendent fins a la propera activació** de l'origen, i LVM ho indica amb un missatge. `ls` continua mostrant la llista començant per `fitxer-010.bin`. Si `/srv/app` fos l'arrel del sistema, la propera activació voldria dir el proper reinici.
+:::
+
+``` bash
+ls /srv/app/data | head -n 3
+cd /                                  # si teniu el directori de treball dins /srv/app, umount fallarà
+sudo umount /srv/app
+sudo lvchange -an datavg/app          # desactiva l'origen
+sudo lvchange -ay datavg/app          # el reactiva: ara comença la fusió
+sudo mount /srv/app
+sudo lvs -a datavg
+sudo verifica-app
+```
+
+Ara el manifest ha de tornar a passar, i el snapshot ha desaparegut: s'ha consumit en la fusió.
+
+::: {.callout-note collapse="true" title="Si umount diu target is busy"}
+Algun procés té un fitxer obert o el directori de treball dins `/srv/app`. Ho podeu esbrinar amb `sudo fuser -vm /srv/app`. Sovint és el mateix terminal: feu `cd /`. També pot ser que el procés de la Fase 3 encara estigui en marxa, i aleshores cal fer `kill %1`.
+:::
+
+
+
+## Tancament
+
+``` bash
+lsblk -o NAME,SERIAL,SIZE,TYPE,MOUNTPOINTS
+sudo lvs -a -o lv_name,lv_size,devices datavg
+```
+
+Compareu aquesta sortida amb la de la Fase 0. Les dades de l'aplicació han canviat de disc, han crescut i han tornat a un estat anterior, i en tot moment s'han muntat al mateix lloc i amb el mateix UUID. 
+
+Recordeu:
+
+-   **L'ordre de les operacions** es dedueix del model de capes: per créixer, primer el contenidor i després el contingut; per reduir, l'invers.
+-   **Un snapshot és un punt de retorn, no una còpia de seguretat.** Ens ha salvat d'un error humà, però no ens hauria salvat de la fallada del disc on viu.
